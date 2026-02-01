@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/apiFetch";
 import { ApiConfig } from "@/configs/api-configs";
+import { Button } from "./ui/button";
+import { Search } from "lucide-react";
 
 const Header = () => {
   const [show, setShow] = useState(true);
@@ -82,7 +84,7 @@ const Header = () => {
                   : undefined
             }
             className={`${page.label === "Logout" ? "text-red-400" : "text-muted-foreground"} font-inter text-center font-medium 
-              tracking-tight cursor-pointer px-2.5 py-1.5 hover:bg-active-bg ${page.label === "Logout" ? "hover:text-red-500" : "hover:text-foreground"} hover:tracking-wide 
+              tracking-tight cursor-pointer px-2.5 py-1.5 hover:bg-active-bg ${page.label === "Logout" ? "hover:text-red-500" : "hover:text-white"} hover:tracking-wide 
               transition-all duration-300 rounded-xl hover:px-4`}
             key={page.url}
           >
@@ -90,6 +92,12 @@ const Header = () => {
           </div>
         ))}
       </motion.nav>
+
+      <div className="absolute right-5 top-5">
+        <Button variant={"default"} className="cursor-pointer border border-card-border hover:bg-transparent" onClick={() => router.push("/search/p")}>
+          <Search />
+        </Button>
+      </div>
     </header>
   );
 };

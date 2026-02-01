@@ -9,6 +9,6 @@ export async function GET() {
 
     return NextResponse.json({ user, ok: true }, { status: 200})
   } catch (err) {
-    return NextResponse.json({ ok:false }, {status: 500})
+    return NextResponse.json({ ok:false }, {status: 401})
   }
 }

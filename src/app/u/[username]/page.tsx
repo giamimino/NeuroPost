@@ -1,14 +1,22 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import Line from "@/components/ui/Line";
 import Title from "@/components/ui/title";
 import { apiFetch } from "@/lib/apiFetch";
 import { Post } from "@/types/neon";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 
-const ProfilePage = () => {
+const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
+  const { username } = use(params);
   const [user, setUser] = useState<{
     id: string;
     name: string;
@@ -18,15 +26,18 @@ const ProfilePage = () => {
     posts?: Post[];
   } | null>(null);
   useEffect(() => {
-    apiFetch("/api/user")
+    apiFetch(`/api/user/${username}`)
       .then((res) => res?.json())
-      .then((data) =>
-        setUser({ id: data.user.payload.userId, ...data.user.user }),
-      );
+      .then((data) => {
+        if (data.ok) {
+          setUser(data.user[0]);
+        }
+      });
   }, []);
 
   useEffect(() => {
     if (!user || user.posts) return;
+
     apiFetch(`/api/post/u/${user.id}`)
       .then((res) => res?.json())
       .then((data) => {
@@ -34,7 +45,7 @@ const ProfilePage = () => {
           setUser((prev: any) => ({ ...(prev ?? {}), posts: data.posts }));
         }
       });
-  }, [user]);  
+  }, [user]);
 
   return (
     <div className="pt-32">
@@ -58,19 +69,21 @@ const ProfilePage = () => {
         <Line />
         <div className="flex w-full gap-8 flex-wrap justify-center mt-5">
           {user?.posts?.map((post) => (
-            <Card className="w-1/4 gap-2 pb-0 overflow-hidden" key={post.id}>
+            <Card className="w-1/4 gap-2 pb-0 overflow-hidden justify-between" key={post.id}>
               <CardHeader>
                 <CardTitle>{post.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription>
-                  {post.description}
-                </CardDescription>
+                <CardDescription className="self-start">{post.description}</CardDescription>
               </CardContent>
-              <CardFooter className="bg-card-footer/60 border-t border-card-border max-h-15">
+              <CardFooter className="bg-card-footer/60 border-t border-card-border">
                 <div className="py-2 w-full">
-                <Button variant={"outline"} className="bg-button-bg border border-button-border cursor-pointer w-full">View</Button>
-
+                  <Button
+                    variant={"outline"}
+                    className="bg-button-bg border border-button-border cursor-pointer w-full"
+                  >
+                    View
+                  </Button>
                 </div>
               </CardFooter>
             </Card>
@@ -81,4 +94,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage;
+export default UserPage;
