@@ -30,7 +30,7 @@ const getPosts = async () => {
 
     await db`
     INSERT INTO search_index ("index")
-    VALUES (${indexObject})
+    VALUES (${JSON.stringify(indexObject)})
   `;
   }
 

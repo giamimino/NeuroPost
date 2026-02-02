@@ -17,3 +17,9 @@ export interface User {
   updated_at: Date,
   bio: string | null,
 }
+
+export interface Index {
+  id: string,
+  index: Record<string, Record<string, { title?: boolean, description?: boolean }[]>>,
+  updated_at: Date
+}
