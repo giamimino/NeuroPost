@@ -6,6 +6,7 @@ import Title from "@/components/ui/title";
 import { apiFetch } from "@/lib/apiFetch";
 import { Post } from "@/types/neon";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const ProfilePage = () => {
@@ -17,6 +18,12 @@ const ProfilePage = () => {
     bio: string | null;
     posts?: Post[];
   } | null>(null);
+  const router = useRouter()
+
+  const handleViewPost = (id: number) => {
+    router.push(`/post/${id}`)
+  }
+
   useEffect(() => {
     apiFetch("/api/user")
       .then((res) => res?.json())
@@ -36,8 +43,9 @@ const ProfilePage = () => {
       });
   }, [user]);  
 
+
   return (
-    <div className="pt-32">
+    <div className="pt-32 bg-background">
       <div className="flex flex-col items-center gap-1 px-10">
         <Image
           src={"/user.jpg"}
@@ -63,13 +71,13 @@ const ProfilePage = () => {
                 <CardTitle>{post.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription>
+                <CardDescription className=" line-clamp-3">
                   {post.description}
                 </CardDescription>
               </CardContent>
               <CardFooter className="bg-card-footer/60 border-t border-card-border max-h-15">
                 <div className="py-2 w-full">
-                <Button variant={"outline"} className="bg-button-bg border border-button-border cursor-pointer w-full">View</Button>
+                <Button variant={"outline"} onClick={() => handleViewPost(post.id)} className="bg-button-bg border border-button-border cursor-pointer w-full">View</Button>
 
                 </div>
               </CardFooter>

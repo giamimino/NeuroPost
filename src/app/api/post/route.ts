@@ -8,9 +8,18 @@ import { GENERIC_ERROR } from "@/constants/error-handling";
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const { limit, col, dir, cursor } = Object.fromEntries(
+    const { limit, col, dir, cursor, id } = Object.fromEntries(
       searchParams.entries(),
     );
+    if (id) {
+      const posts = await sql.query("SELECT p.*, u.name, u.username FROM posts p JOIN users u ON p.author_id=u.id WHERE p.id = $1", [
+        Number(id),
+      ]);
+      console.log(posts);
+      
+
+      return NextResponse.json({ ok: true, posts }, { status: 200 });
+    }
     const columns = ["created_at", "title"];
     const directions = ["ASC", "DESC"];
 
@@ -22,11 +31,8 @@ export async function GET(req: Request) {
       cursor && !isNaN(new Date(cursor).getTime())
         ? new Date(cursor).toISOString()
         : new Date(Date.now()).toISOString();
-        
-    console.log(date);
 
     const rawSql = `SELECT * FROM posts WHERE created_at < $2 ORDER BY ${col} ${dir} LIMIT $1`;
-    console.log(rawSql);
 
     const posts = await sql.query(rawSql, [Number(limit) || 20, date]);
 

@@ -9,12 +9,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SkeletonPost } from "@/components/ui/Skeleton-examples";
 import { Spinner } from "@/components/ui/spinner";
 import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import useDebounce from "@/hook/useDebounce";
 import { apiFetch } from "@/lib/apiFetch";
 import { Post } from "@/types/neon";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const SearchPostsPage = () => {
@@ -22,27 +24,32 @@ const SearchPostsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchValue, setSearchValue] = useState("");
   const debouncedSearch = useDebounce(searchValue);
+  const router = useRouter()
 
   useEffect(() => {
+    if (posts.length !== 0) return;
+    const controller = new AbortController();
+    const signal = controller.signal
     const url = `/api/post?limit=4&col=created_at&dir=DESC`;
-    apiFetch(url)
-      .then((res) => res?.json())
-      .then((data) => {
-        if (data.ok) {
-          setPosts((prev) => [...prev, ...data.posts]);
+
+    (async () => {
+      try {
+        const res = await fetch(url, {...ApiConfig.get, signal})
+        const data = await res?.json()
+        if(data.ok) {
+          setPosts(() => data.posts)
         }
-        setLoading(false);
-      });
-  }, []);
-
-  async function index() {
-    fetch("/api/index")
-      .then((res) => res.json())
-      .then((data) => console.log(data));
-  }
-
-  useEffect(() => {
-    index();
+        setLoading(false)
+      } catch (error: any) {
+        if(error.name === "AbortError") {
+          console.log("Fetch Aborted");
+        } else {
+          console.error(error);
+        }
+      }
+    })()
+    
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
@@ -68,14 +75,14 @@ const SearchPostsPage = () => {
       setPosts(result.posts);
     })();
   }, [debouncedSearch]);
-
+  
   return (
     <div className="w-full pt-32">
       <div className="w-full flex justify-center">
         <div className="max-w-100 flex flex-col items-center gap-2">
           <Title title="Search For Posts" />
           <Input
-            className="text-white"
+            className="text-foreground"
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
           />
@@ -91,14 +98,13 @@ const SearchPostsPage = () => {
               <CardTitle>{post.title}</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>{post.description}</CardDescription>
+              <CardDescription className=" line-clamp-3">
+                {post.description}
+              </CardDescription>
             </CardContent>
-            <CardFooter className="bg-card-footer/60 border-t border-card-border max-h-15">
+            <CardFooter className="">
               <div className="py-2 w-full">
-                <Button
-                  variant={"outline"}
-                  className="bg-button-bg border border-button-border cursor-pointer w-full"
-                >
+                <Button variant={"outline"} className="w-full cursor-pointer" onClick={() => router.push(`/post/${post.id}`)}>
                   View
                 </Button>
               </div>
@@ -106,10 +112,18 @@ const SearchPostsPage = () => {
           </Card>
         ))}
       </div>
-      <div className="w-full flex justify-center text-white mt-5">
-        {loading && <Spinner className="size-12" />}
+      <div className="w-full flex justify-center flex-wrap gap-8 text-white mt-5 px-20">
+        {loading && (
+          <>
+          {Array.from({ length: 4 }).fill("").map((_, index) => (
+            <div key={index} className="w-2/7">
+              <SkeletonPost />
+
+            </div>
+          ))}
+          </>
+        )}
       </div>
-      <Button onClick={() => index()}>fetch</Button>
     </div>
   );
 };

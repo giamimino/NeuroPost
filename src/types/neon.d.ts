@@ -8,6 +8,11 @@ export interface Post {
   title: string,
 }
 
+export interface UserJoin {
+  name: string,
+  username: string,
+}
+
 export interface User {
   id: string,
   emai: string,

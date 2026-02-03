@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/apiFetch";
 import { ApiConfig } from "@/configs/api-configs";
 import { Button } from "./ui/button";
-import { Search } from "lucide-react";
+import { ArrowBigLeftDash, Search } from "lucide-react";
+import { ThemeToggle } from "./theme-provider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const Header = () => {
   const [show, setShow] = useState(true);
@@ -66,6 +73,12 @@ const Header = () => {
     <header
       className={`w-full px-12 flex justify-center items-center py-3 fixed top-0 left-0 z-99 transition-all duration-300`}
     >
+      <div className="absolute left-5 top-5 flex gap-3.5">
+        <ThemeToggle />
+        <Button className="cursor-pointer" onClick={() => router.back()}>
+          <ArrowBigLeftDash />
+        </Button>
+      </div>
       <motion.nav
         initial={{ opacity: 0, y: "-100%" }}
         animate={show ? { opacity: 1, y: 0 } : { opacity: 0.5, y: "-150%" }}
@@ -94,9 +107,21 @@ const Header = () => {
       </motion.nav>
 
       <div className="absolute right-5 top-5">
-        <Button variant={"default"} className="cursor-pointer border border-card-border hover:bg-transparent" onClick={() => router.push("/search/p")}>
-          <Search />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant={"outline"} className="cursor-pointer">
+              <Search />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => router.push("/search/posts")} className="cursor-pointer">
+              <p>Posts</p>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/search/users")} className="cursor-pointer">
+              <p>Users</p>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
