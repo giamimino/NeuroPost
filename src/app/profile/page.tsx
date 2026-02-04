@@ -1,7 +1,16 @@
 "use client";
+import DataFetcher from "@/components/data-fetcher";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import Line from "@/components/ui/Line";
+import { SkeletonPost } from "@/components/ui/Skeleton-examples";
 import Title from "@/components/ui/title";
 import { apiFetch } from "@/lib/apiFetch";
 import { Post } from "@/types/neon";
@@ -16,13 +25,12 @@ const ProfilePage = () => {
     email: string;
     username: string;
     bio: string | null;
-    posts?: Post[];
   } | null>(null);
-  const router = useRouter()
+  const router = useRouter();
 
   const handleViewPost = (id: number) => {
-    router.push(`/post/${id}`)
-  }
+    router.push(`/post/${id}`);
+  };
 
   useEffect(() => {
     apiFetch("/api/user")
@@ -32,17 +40,16 @@ const ProfilePage = () => {
       );
   }, []);
 
-  useEffect(() => {
-    if (!user || user.posts) return;
-    apiFetch(`/api/post/u/${user.id}`)
-      .then((res) => res?.json())
-      .then((data) => {
-        if (data.ok) {
-          setUser((prev: any) => ({ ...(prev ?? {}), posts: data.posts }));
-        }
-      });
-  }, [user]);  
-
+  // useEffect(() => {
+  //   if (!user || user.posts) return;
+  //   apiFetch(`/api/post/u/${user.id}`)
+  //     .then((res) => res?.json())
+  //     .then((data) => {
+  //       if (data.ok) {
+  //         setUser((prev: any) => ({ ...(prev ?? {}), posts: data.posts }));
+  //       }
+  //     });
+  // }, [user]);
 
   return (
     <div className="pt-32 bg-background">
@@ -65,24 +72,40 @@ const ProfilePage = () => {
         </div>
         <Line />
         <div className="flex w-full gap-8 flex-wrap justify-center mt-5">
-          {user?.posts?.map((post) => (
-            <Card className="w-1/4 gap-2 pb-0 overflow-hidden" key={post.id}>
-              <CardHeader>
-                <CardTitle>{post.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className=" line-clamp-3">
-                  {post.description}
-                </CardDescription>
-              </CardContent>
-              <CardFooter className="bg-card-footer/60 border-t border-card-border max-h-15">
-                <div className="py-2 w-full">
-                <Button variant={"outline"} onClick={() => handleViewPost(post.id)} className="bg-button-bg border border-button-border cursor-pointer w-full">View</Button>
-
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
+          {user?.id && (
+            <DataFetcher url={`/api/post/u/${user.id}`} targetKey="posts" loadingUI={<SkeletonPost className="w-1/4" />}>
+              {(posts: Post[]) => (
+                <>
+                  {posts.map((post) => (
+                    <Card
+                      className="w-1/4 gap-2 pb-0 overflow-hidden"
+                      key={post.id}
+                    >
+                      <CardHeader>
+                        <CardTitle>{post.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription className=" line-clamp-3">
+                          {post.description}
+                        </CardDescription>
+                      </CardContent>
+                      <CardFooter className="bg-card-footer/60 border-t border-card-border max-h-15">
+                        <div className="py-2 w-full">
+                          <Button
+                            variant={"outline"}
+                            onClick={() => handleViewPost(post.id)}
+                            className="bg-button-bg border border-button-border cursor-pointer w-full"
+                          >
+                            View
+                          </Button>
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </>
+              )}
+            </DataFetcher>
+          )}
         </div>
       </div>
     </div>

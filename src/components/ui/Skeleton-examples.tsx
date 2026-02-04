@@ -16,9 +16,9 @@ function SkeletonCard() {
   )
 }
 
-function SkeletonPost() {
+function SkeletonPost({ className }: {className?: string}) {
   return (
-    <Card className="gap-4">
+    <Card className={`gap-4 ${className}`}>
       <CardHeader>
         <Skeleton className="h-4 w-2/3" />
       </CardHeader>
