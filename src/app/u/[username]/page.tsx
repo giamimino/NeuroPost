@@ -74,7 +74,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                 <CardTitle>{post.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription className="self-start">{post.description}</CardDescription>
+                <CardDescription className="self-start line-clamp-3">{post.description}</CardDescription>
               </CardContent>
               <CardFooter className="bg-card-footer/60 border-t border-card-border">
                 <div className="py-2 w-full">

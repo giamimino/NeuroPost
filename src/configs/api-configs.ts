@@ -1,10 +1,14 @@
 
-export const ApiConfig = {
+export const ApiConfig: Record<string, RequestInit> = {
   get: {
     method: "GET"
   },
   post: {
     method: "POST",
-    header: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
+  },
+  delete: {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
   }
 }

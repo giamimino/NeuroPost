@@ -40,17 +40,6 @@ const ProfilePage = () => {
       );
   }, []);
 
-  // useEffect(() => {
-  //   if (!user || user.posts) return;
-  //   apiFetch(`/api/post/u/${user.id}`)
-  //     .then((res) => res?.json())
-  //     .then((data) => {
-  //       if (data.ok) {
-  //         setUser((prev: any) => ({ ...(prev ?? {}), posts: data.posts }));
-  //       }
-  //     });
-  // }, [user]);
-
   return (
     <div className="pt-32 bg-background">
       <div className="flex flex-col items-center gap-1 px-10">

@@ -28,3 +28,20 @@ export interface Index {
   index: Record<string, Record<string, { title?: boolean, description?: boolean }[]>>,
   updated_at: Date
 }
+
+export interface JoinLike {
+  like_id: string | undefined | null
+}
+
+export interface Like {
+  user_id: string,
+  post_id: number,
+  created_at: Date,
+  id: string,
+}
+
+export interface Tag {
+  id: number,
+  tag: string,
+  created_at: Date
+}

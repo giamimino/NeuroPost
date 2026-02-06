@@ -1,12 +1,15 @@
 import { Children } from "@/types/global";
 import Line from "../ui/Line";
 import { useEffect, useRef, useState } from "react";
+import { HandleLikeArgs } from "@/types/arguments";
+import { Heart } from "lucide-react";
+import { ApiConfig } from "@/configs/api-configs";
 
-export const PostsContainer = ({ children }: Children) => {
+const PostsContainer = ({ children }: Children) => {
   return <section className="flex flex-col w-full gap-2.5">{children}</section>;
 };
 
-export const PostWrapper = ({ children }: Children) => {
+const PostWrapper = ({ children }: Children) => {
   const [animate, setAnimate] = useState(false);
   const postRef = useRef<HTMLDivElement>(null);
 
@@ -22,16 +25,16 @@ export const PostWrapper = ({ children }: Children) => {
       { threshold: 0.3 },
     );
 
-    if(postRef.current) {
-      observer.observe(postRef.current)
+    if (postRef.current) {
+      observer.observe(postRef.current);
     }
 
     return () => {
-      if(postRef.current) {
-        observer.unobserve(postRef.current)
-        observer.disconnect()
+      if (postRef.current) {
+        observer.unobserve(postRef.current);
+        observer.disconnect();
       }
-    }
+    };
   }, []);
 
   return (
@@ -44,3 +47,50 @@ export const PostWrapper = ({ children }: Children) => {
     </div>
   );
 };
+
+const PostActions = ({
+  userId,
+  postId,
+}: {
+  userId: string;
+  postId: number;
+}) => {
+  const handleLike = async (args: HandleLikeArgs) => {
+    try {
+      const res = await fetch("/api/post/like", {
+        ...ApiConfig[args.action],
+        body: JSON.stringify(
+          args.action === "post"
+            ? {
+                userId: args.userId,
+                postId: args.postId,
+              }
+            : { id: args.id },
+        ),
+      });
+      const data = await res.json();
+      console.log(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center mt-3">
+      <button
+        className="cursor-pointer w-fit"
+        onClick={() =>
+          handleLike({
+            action: "post",
+            userId,
+            postId,
+          })
+        }
+      >
+        <Heart width={18} height={18} />
+      </button>
+    </div>
+  );
+};
+
+export { PostWrapper, PostsContainer, PostActions };
