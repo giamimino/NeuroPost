@@ -11,17 +11,17 @@ export interface Props<T> {
   errorUI?: React.ReactNode;
   loadingUI?: React.ReactNode;
   children: (data: T) => React.ReactNode;
-  targetKey?: string;
+  targetKey?: keyof T;
 }
 
-export default function DataFetcher<T>({
+const DataFetcher = <T,>({
   url,
   config,
   errorUI,
   loadingUI,
   children,
   targetKey,
-}: Props<T>) {
+}: Props<T>) => {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -31,28 +31,28 @@ export default function DataFetcher<T>({
   useEffect(() => {
     if (config?.enabled === false) return;
 
-    let ignore = false;
+    const controller = new AbortController()
 
     async function fetchData() {
       try {
         setLoading(true)
-        const res = await fetch(url, config);
+        const res = await fetch(url, {...config, signal: controller.signal});
         if (!res.ok) throw new Error("Fetch Error");
         const json = await res.json();
-        if (!ignore) setData(targetKey ? json[targetKey] : json);
+        setData(targetKey ? json[targetKey] : json);
       } catch (error: any) {
-        if (!ignore) setError(error);
+        setError(error);
       } finally {
-        if (!ignore) setLoading(false);
+        setLoading(false);
       }
     }
 
     fetchData();
 
     return () => {
-      ignore = true;
+      controller.abort()
     };
-  }, [url, memoConfig]);
+  }, [url, memoConfig, config?.enabled]);
 
   if (loading) return loadingUI ?? <div>loading...</div>;
   if (error)
@@ -63,3 +63,5 @@ export default function DataFetcher<T>({
 
   return <>{children(data)}</>;
 }
+
+export default React.memo(DataFetcher) as typeof DataFetcher

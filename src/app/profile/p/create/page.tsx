@@ -18,7 +18,6 @@ import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
 import { Tag } from "@/types/neon";
-import { pre } from "framer-motion/client";
 import { Plus } from "lucide-react";
 import React, { useRef, useState } from "react";
 
@@ -27,29 +26,33 @@ const PostUploadPage = () => {
   const [loading, setLoading] = useState(false);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const handleUploadPost = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("call");
-
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string | undefined;
-    const url = "/api/post";
-
-    if (!title.trim() || (description && !description.trim())) return;
-
-    setLoading(true);
-    apiFetch(url, {
-      ...ApiConfig.post,
-      body: JSON.stringify({ title, description, tags }),
-    })
-      .then((res) => res?.json())
-      .then((data) => {
-        setLoading(false);
-        console.log(data);
-        form.reset();
-      });
+    try {
+      e.preventDefault();
+      console.log("call");
+  
+      const form = e.currentTarget;
+      const formData = new FormData(form);
+  
+      const title = formData.get("title") as string;
+      const description = formData.get("description") as string | undefined;
+      const url = "/api/post";
+  
+      if (!title.trim() || (description && !description.trim())) return;
+  
+      setLoading(true);
+      apiFetch(url, {
+        ...ApiConfig.post,
+        body: JSON.stringify({ title, description, tags }),
+      })
+        .then((res) => res?.json())
+        .then((data) => {
+          console.log(data);
+        });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false)
+    }
   };
 
   const handleAddTag = (tag: string, id?: string) => {
@@ -57,12 +60,14 @@ const PostUploadPage = () => {
     setTags((prev) => [...(prev ?? []), { tag, id }]);
     tagInputRef.current!.value = "";
   };
-  console.log(tags);
 
   return (
     <div>
       <div className="flex justify-center w-full mt-35">
-        <form onSubmit={handleUploadPost} className="flex flex-col gap-4.5 max-w-85">
+        <form
+          onSubmit={handleUploadPost}
+          className="flex flex-col gap-4.5 max-w-85"
+        >
           <div className="text-center">
             <Title title="Upload a post..." font="--font-plusJakartaSans" />
           </div>
@@ -79,9 +84,13 @@ const PostUploadPage = () => {
             <CardContent className="flex gap-2.5 flex-wrap select-none">
               {!!tags.length &&
                 tags.map((tag) => (
-                  <TagItem key={`${tag.id}-${tag.tag}`} {...tag} onClick={() => {
-                    setTags(prev => prev.filter(t => t.tag !== tag.tag))
-                  }} />
+                  <TagItem
+                    key={`${tag.id}-${tag.tag}`}
+                    {...tag}
+                    onClick={() => {
+                      setTags((prev) => prev.filter((t) => t.tag !== tag.tag));
+                    }}
+                  />
                 ))}
             </CardContent>
             <CardAction className="px-6 flex items-center gap-2.5">
@@ -98,6 +107,7 @@ const PostUploadPage = () => {
                 }}
               />
               <Button
+                type="button"
                 size={"sm"}
                 variant={"outline"}
                 className="cursor-pointer"
@@ -108,9 +118,9 @@ const PostUploadPage = () => {
             </CardAction>
             <CardFooter className="flex flex-col gap-2.5 items-start">
               <CardTitle>Suggested tags</CardTitle>
-              <DataFetcher url="/api/tags?dir=ASC&limit=20" targetKey="tags">
+              <DataFetcher url="/api/tags?dir=ASC&limit=20" targetKey={'tags' as any}>
                 {(data: Tag[]) => (
-                  <div>
+                  <div className="flex gap-3 flex-wrap select-none">
                     {!!data.length ? (
                       data
                         .filter(
@@ -154,6 +164,7 @@ const PostUploadPage = () => {
           )}
         </form>
       </div>
+      <div className="h-50"></div>
     </div>
   );
 };
