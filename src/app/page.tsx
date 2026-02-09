@@ -29,6 +29,8 @@ export default function Home() {
       .then((res) => res?.json())
       .then((data) => {
         if (data.ok) {
+          console.log(data);
+          
           setPosts((prev) => [...prev, ...data.posts]);
 
           if (data.posts.length <= 3) {

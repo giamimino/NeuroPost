@@ -1,5 +1,5 @@
 
-export const ApiConfig: Record<string, RequestInit> = {
+export const ApiConfig: Record<string, RequestInit & { enabled?: boolean}> = {
   get: {
     method: "GET"
   },
@@ -10,5 +10,10 @@ export const ApiConfig: Record<string, RequestInit> = {
   delete: {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
+  },
+  dataFetcher: {
+    cache: "no-store",
+    method: "GET",
+    enabled: true
   }
 }

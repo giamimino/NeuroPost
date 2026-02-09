@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
 import { GENERIC_ERROR } from "@/constants/error-handling";
-import { Tag } from "@/types/neon";
 
 interface TagInput {
   id?: number;
@@ -18,7 +17,7 @@ interface DBTag {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const { limit, col, dir, cursor, id, joinLikes } = Object.fromEntries(
+    const { limit, col, dir, cursor, id, joinLikes, tags } = Object.fromEntries(
       searchParams.entries(),
     );
     if (id) {
@@ -26,7 +25,6 @@ export async function GET(req: Request) {
         "SELECT p.*, u.name, u.username FROM posts p JOIN users u ON p.author_id=u.id WHERE p.id = $1",
         [Number(id)],
       );
-      console.log(posts);
 
       return NextResponse.json({ ok: true, posts }, { status: 200 });
     }
@@ -37,28 +35,18 @@ export async function GET(req: Request) {
       throw new Error("Nice try, hacker.");
     }
 
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)?.value;
-    if (!accessToken) return NextResponse.json({ ok: false }, { status: 401 });
-    const payload = jwt.verify(accessToken, process.env.ACCESS_SECRET!) as any;
-
     const date =
       cursor && !isNaN(new Date(cursor).getTime())
         ? new Date(cursor).toISOString()
         : new Date(Date.now()).toISOString();
 
     const rawSql = `
-      SELECT p.*, l.id as like_id FROM posts p 
-      FULL JOIN likes l ON p.id=l.post_id AND l.user_id = $3 
-      WHERE p.created_at < $2 ORDER BY ${col} ${dir} LIMIT $1
+      SELECT p.*, json_agg(json_build_object('id', t.id, 'tag', t.tag)) as tags FROM posts p
+      JOIN post_tag pt ON p.id = pt.post_id
+      JOIN tags t ON t.id = pt.tag_id
+      WHERE p.created_at < $2 GROUP BY p.id ORDER BY p.${col} ${dir} LIMIT $1 
     `;
-    const posts = await sql.query(rawSql, [
-      Number(limit) || 20,
-      date,
-      payload.userId,
-    ]);
-
-    console.log(posts);
+    const posts = await sql.query(rawSql, [Number(limit) || 20, date]);
 
     return NextResponse.json({ ok: true, posts }, { status: 200 });
   } catch (err) {
@@ -78,20 +66,23 @@ export async function POST(req: Request) {
       tags,
     }: {
       title: string;
-      description: string | undefined;
+      description?: string;
       tags: TagInput[];
     } = await req.json();
 
-    if (!title || !Array.isArray(tags))
+    if (!title || !Array.isArray(tags)) {
       return NextResponse.json(
-        { ok: false, message: "Invalid Input" },
+        { ok: false, message: "Invalid input" },
         { status: 400 },
       );
+    }
 
     const cookieStore = await cookies();
     const accessToken = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)?.value;
 
-    if (!accessToken) return NextResponse.json({ ok: false }, { status: 401 });
+    if (!accessToken) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
 
     let payload: JWTUserPaylaod;
 
@@ -100,44 +91,52 @@ export async function POST(req: Request) {
         accessToken,
         process.env.ACCESS_SECRET!,
       ) as JWTUserPaylaod;
-    } catch (error) {
+    } catch {
       return NextResponse.json({ ok: false }, { status: 401 });
     }
+
     await sql.query("BEGIN");
 
     const postResult = await sql.query(
-      `INSERT INTO posts (title, description, author_id) VALUES ($1, $2, $3) RETURNING id, title, description, author_id`,
-      [title, description || null, payload.userId],
+      `INSERT INTO posts (title, description, author_id)
+       VALUES ($1, $2, $3)
+       RETURNING id, title, description, author_id`,
+      [title, description ?? null, payload.userId],
     );
 
     const post = postResult[0];
 
-    if (!post.id) {
-      await sql.query(`ROLLBACK`);
+    if (!post?.id) {
+      await sql.query("ROLLBACK");
       return NextResponse.json({ ok: false }, { status: 500 });
     }
 
     if (tags.length === 0) {
       await sql.query("COMMIT");
-      return NextResponse.json({ ok: false }, { status: 200 });
+      return NextResponse.json({ ok: true, post }, { status: 200 });
     }
-    const newTags = tags
-      .filter((tag) => typeof tag.id === "undefined")
-      .map((tag) => tag.id) as number[];
 
-    let existTags: DBTag[] = [];
-    if (newTags.length > 0) {
-      const placeholders = newTags.map((_, i) => `$${i + 1}`).join(",");
+    const newTagNames = tags
+      .filter((t) => typeof t.id === "undefined")
+      .map((t) => t.tag);
 
-      existTags = (await sql.query(
+    let existingTags: DBTag[] = [];
+
+    if (newTagNames.length > 0) {
+      const placeholders = newTagNames.map((_, i) => `$${i + 1}`).join(",");
+
+      existingTags = (await sql.query(
         `SELECT id, tag FROM tags WHERE tag IN (${placeholders})`,
-        newTags,
-      )) as { id: number; tag: string }[];
+        newTagNames,
+      )) as DBTag[];
     }
 
-    const existTagNames = new Set(existTags.map((t) => Number(t.tag)));
+    const existingTagNames = new Set(existingTags.map((t) => t.tag));
 
-    const tagsToInsert = newTags.filter((tag) => !existTagNames.has(tag));
+    const tagsToInsert = newTagNames.filter(
+      (tag) => !existingTagNames.has(tag),
+    );
+
     let insertedTags: DBTag[] = [];
 
     if (tagsToInsert.length > 0) {
@@ -149,12 +148,13 @@ export async function POST(req: Request) {
       )) as DBTag[];
     }
 
-    const allTags: DBTag[] = [...(existTags ?? []), ...(insertedTags ?? [])];
+    const existTags = tags.filter(tag => typeof tag.id !== "undefined") as DBTag[]
+    const allTags: DBTag[] = [...existingTags, ...insertedTags, ...existTags];
 
     if (allTags.length > 0) {
-      const relationValues = allTags.map((_, i) => `($1, $${i + 1})`).join(",");
+      const relationValues = allTags.map((_, i) => `($1, $${i + 2})`).join(",");
 
-      const params = [post.id, ...allTags];
+      const params = [post.id, ...allTags.map((t) => t.id)];
 
       await sql.query(
         `INSERT INTO post_tag (post_id, tag_id) VALUES ${relationValues}`,
@@ -162,12 +162,12 @@ export async function POST(req: Request) {
       );
     }
 
-    await sql.query("COMMIT")
+    await sql.query("COMMIT");
 
-    return NextResponse.json({ ok: true, post: post[0] }, { status: 200 });
-  } catch (err) {
-    console.error(err);
-    await sql.query("ROLLBACK")
+    return NextResponse.json({ ok: true, post }, { status: 200 });
+  } catch (error) {
+    console.error("POST /posts error:", error);
+    await sql.query("ROLLBACK");
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 }

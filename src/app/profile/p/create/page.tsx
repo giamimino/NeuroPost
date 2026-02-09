@@ -19,26 +19,26 @@ import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
 import { Tag } from "@/types/neon";
 import { Plus } from "lucide-react";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 
 const PostUploadPage = () => {
   const [tags, setTags] = useState<{ tag: string; id?: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const handleUploadPost = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     try {
-      e.preventDefault();
-      console.log("call");
-  
+      setLoading(true)
+
       const form = e.currentTarget;
       const formData = new FormData(form);
-  
+
       const title = formData.get("title") as string;
       const description = formData.get("description") as string | undefined;
       const url = "/api/post";
-  
+
       if (!title.trim() || (description && !description.trim())) return;
-  
+
       setLoading(true);
       apiFetch(url, {
         ...ApiConfig.post,
@@ -51,7 +51,7 @@ const PostUploadPage = () => {
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
@@ -60,6 +60,8 @@ const PostUploadPage = () => {
     setTags((prev) => [...(prev ?? []), { tag, id }]);
     tagInputRef.current!.value = "";
   };
+
+  const TagsFetchConfigs = useMemo(() => ApiConfig.dataFetcher, []);
 
   return (
     <div>
@@ -118,30 +120,40 @@ const PostUploadPage = () => {
             </CardAction>
             <CardFooter className="flex flex-col gap-2.5 items-start">
               <CardTitle>Suggested tags</CardTitle>
-              <DataFetcher url="/api/tags?dir=ASC&limit=20" targetKey={'tags' as any}>
-                {(data: Tag[]) => (
-                  <div className="flex gap-3 flex-wrap select-none">
-                    {!!data.length ? (
-                      data
-                        .filter(
-                          (tag) =>
-                            !tags.some((t) => Number(tag.id) === Number(t.id)),
-                        )
-                        .map((tag) => (
-                          <TagItem
-                            id={String(tag.id)}
-                            tag={tag.tag}
-                            key={`${tag.id}-tag-${tag.tag}`}
-                            onClick={() =>
-                              handleAddTag(tag.tag, String(tag.id))
-                            }
-                          />
-                        ))
-                    ) : (
-                      <p>No Tags Found.</p>
-                    )}
-                  </div>
-                )}
+              <DataFetcher
+                url="/api/tags?dir=ASC&limit=20"
+                config={TagsFetchConfigs}
+                targetKey={"tags"}
+              >
+                {(data: Tag[]) => {
+                  console.log(data);
+
+                  return (
+                    <div className="flex gap-3 flex-wrap select-none">
+                      {!!data.length ? (
+                        data
+                          .filter(
+                            (tag) =>
+                              !tags.some(
+                                (t) => Number(tag.id) === Number(t.id),
+                              ),
+                          )
+                          .map((tag) => (
+                            <TagItem
+                              id={String(tag.id)}
+                              tag={tag.tag}
+                              key={`${tag.id}-tag-${tag.tag}`}
+                              onClick={() =>
+                                handleAddTag(tag.tag, String(tag.id))
+                              }
+                            />
+                          ))
+                      ) : (
+                        <p>No Tags Found.</p>
+                      )}
+                    </div>
+                  );
+                }}
               </DataFetcher>
             </CardFooter>
           </Card>

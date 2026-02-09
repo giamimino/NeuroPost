@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "typecheck": "next typegen && tsc --noEmit",
+    "clean": "rimraf .next node_modules",
+    "test": "node test.js"
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
