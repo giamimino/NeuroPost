@@ -4,40 +4,42 @@ import {
   PostsContainer,
   PostWrapper,
 } from "@/components/common/post-components";
+import { TagItem } from "@/components/ui/tag";
 import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
 import { HandleLikeArgs } from "@/types/arguments";
+import { TagType } from "@/types/global";
 import { Post } from "@/types/neon";
 import { Heart } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<(Post & { tags: TagType[] })[]>([]);
   const [took, setTook] = useState<number>(0);
   const tickingRef = useRef(false);
   const reachedRef = useRef(false);
-  const latestPost = useRef<Date>(undefined);
+  const latestPost = useRef<Date>(null);
 
   const fetchPosts = () => {
     if (tickingRef.current || reachedRef.current) return;
     const now = new Date().getTime();
 
     tickingRef.current = true;
-    const url = `/api/post?limit=4&col=created_at&dir=DESC&cursor=${latestPost.current || ""}`;
+    const url = `/api/post?limit=10&col=created_at&dir=DESC&cursor=${latestPost.current || ""}`;
     apiFetch(url)
       .then((res) => res?.json())
       .then((data) => {
         if (data.ok) {
           console.log(data);
-          
+
           setPosts((prev) => [...prev, ...data.posts]);
 
-          if (data.posts.length <= 3) {
-            reachedRef.current = true;
-            console.log(reachedRef.current);
-          }
+          if (data.posts.length < 10) reachedRef.current = true;
         }
+      })
+      .catch((err) => console.error(err))
+      .finally(() => {
         tickingRef.current = false;
         setTook(new Date().getTime() - now);
       });
@@ -48,7 +50,9 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    latestPost.current = posts.findLast((p) => p.created_at)?.created_at;
+    latestPost.current = posts.length
+      ? posts[posts.length - 1].created_at
+      : null;
   }, [posts]);
 
   useEffect(() => {
@@ -84,7 +88,19 @@ export default function Home() {
                 <p className="text-muted-foreground max-w-3/5">
                   {post.description}
                 </p>
-                <PostActions userId={post.author_id} postId={post.id}  />
+                <div className="flex gap-1.5 flex-wrap w-1/2 justify-center mt-5">
+                  {post.tags.map((tag) => {
+                    if(tag.id === null || tag.tag === null) return null
+                    return (
+                      <TagItem
+                        tag={`#${tag.tag}`}
+                        key={`${tag.id}-${tag.tag}-${post.id}`}
+                        variant="none"
+                      />
+                    );
+                  })}
+                </div>
+                <PostActions userId={post.author_id} postId={post.id} />
               </div>
             </div>
           </PostWrapper>

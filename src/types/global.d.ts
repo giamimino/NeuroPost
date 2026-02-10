@@ -9,3 +9,8 @@ export interface JWTUserPaylaod {
   iat: number,
   userId: number
 }
+
+export interface TagType {
+  id: number,
+  tag: string
+}

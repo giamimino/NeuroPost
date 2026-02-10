@@ -3,29 +3,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@theme light {
-  --color-bg: #fafafa;
-  --color-foreground: #111111;
-  --color-muted-foreground: #6b6b70;
-  --color-input-stroke: #c4c4c6;
-  --color-secondary-bg: #f5f5f5;
-  --color-light-bg: #ffffff;
-  --color-active-bg: #ededed;
-  --color-card-bg: #ffffff;
-  --color-card-border: #dddddd;
-  --color-card-footer: #f3f3f3;
-  --color-card-footer-border: #cccccc;
-  --color-button-bg: #f0f0f0;
-  --color-button-border: #cccccc;
-
-  --background: var(--color-bg);
-  --foreground: var(--color-foreground);
-}
-
-@theme dark {
+@theme {
   --color-bg: #020107;
-  --color-foreground: #fafafa;
-  --color-muted-foreground: #a1a1aa;
   --color-input-stroke: #3f3f46;
   --color-secondary-bg: #09090b;
   --color-light-bg: #090705;
@@ -39,17 +18,13 @@
 
   --background: var(--color-bg);
   --foreground: var(--color-foreground);
-}
-
-@theme {
+  
   --font-plusJakartaSans: "Plus Jakarta Sans", sans-serif;
   --font-inter: "Inter", sans-serif;
 
   --animate-fadeUpDown: fadeUpDown 0.4s ease forwards;
   /* --shadow-ifs: 0 0 1px #fff, 0 0 3px #fff; input-focus-shadow */
 }
-
-@custom-variant dark (&:is(.dark *));
 
 * {
   scrollbar-width: thin;

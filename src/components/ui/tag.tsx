@@ -1,11 +1,27 @@
 import { CardDescription } from "./card";
+import clsx from "clsx";
 
-function TagItem({id, tag, onClick}: { id?: string, tag: string, onClick?: () => void}) {
+function TagItem({
+  tag,
+  onClick,
+  variant = "default",
+}: {
+  tag: string;
+  onClick?: () => void;
+  variant?: "default" | "none";
+}) {
   return (
-    <div key={`${id}-tag-${tag}`} className="p-1 px-2 rounded-sm border border-card-border truncate" onClick={onClick}>
-      <CardDescription className="cursor-pointer">{tag}</CardDescription>
+    <div
+      className={clsx(
+        "p-1 px-2 rounded-sm truncate",
+        variant === "default" && "border border-card-border",
+        variant === "none" && "",
+      )}
+      onClick={onClick}
+    >
+      <CardDescription className="cursor-pointer hover:text-black dark:hover:text-amber-50/90">{tag}</CardDescription>
     </div>
   );
 }
 
-export { TagItem }
+export { TagItem };

@@ -65,7 +65,7 @@ const PostUploadPage = () => {
 
   return (
     <div>
-      <div className="flex justify-center w-full mt-35">
+      <div className="flex justify-center w-full mt-25">
         <form
           onSubmit={handleUploadPost}
           className="flex flex-col gap-4.5 max-w-85"
@@ -73,7 +73,7 @@ const PostUploadPage = () => {
           <div className="text-center">
             <Title title="Upload a post..." font="--font-plusJakartaSans" />
           </div>
-          <DefaultInput name="title" placeholder="title" />
+          <Input name="title" placeholder="title" />
           <DefaultTextarea
             name="description"
             placeholder="description"
@@ -121,7 +121,7 @@ const PostUploadPage = () => {
             <CardFooter className="flex flex-col gap-2.5 items-start">
               <CardTitle>Suggested tags</CardTitle>
               <DataFetcher
-                url="/api/tags?dir=ASC&limit=20"
+                url="/api/tags?dir=ASC&limit=10"
                 config={TagsFetchConfigs}
                 targetKey={"tags"}
               >
@@ -165,7 +165,7 @@ const PostUploadPage = () => {
           </button>
           <button
             type="submit"
-            className="rounded-md bg-foreground text-secondary-bg py-3 cursor-pointer font-plusJakartaSans font-semibold text-lg tracking-tight hover:bg-foreground/60"
+            className="rounded-md bg-foreground dark:text-secondary-bg text-white py-3 cursor-pointer font-plusJakartaSans font-semibold text-lg tracking-tight hover:bg-foreground/60"
           >
             submit
           </button>

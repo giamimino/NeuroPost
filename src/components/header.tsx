@@ -84,8 +84,8 @@ const Header = () => {
         animate={show ? { opacity: 1, y: 0 } : { opacity: 0.5, y: "-150%" }}
         transition={{ stiffness: 80, type: "spring" }}
         layout
-        className={`flex gap-4 items-center px-4 py-2.5 bg-secondary-bg border 
-      border-input-stroke shadow-[0_5px_10px] shadow-white/10 rounded-full`}
+        className={`flex gap-4 items-center px-4 py-2.5 dark:bg-secondary-bg  
+       rounded-full border-input ring ring-ring/40`}
       >
         {pages.current.map((page) => (
           <div

@@ -10,9 +10,13 @@
     "lint:fix": "eslint --fix",
     "typecheck": "next typegen && tsc --noEmit",
     "clean": "rimraf .next node_modules",
-    "test": "node test.js"
+    "test": "node test.js",
+    "test:ts": "ts-node test.ts",
+    "g:posts": "node generatePosts.js",
+    "g:tags": "ts-node generateTags.ts"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.3.0",
     "@iconify/react": "^6.0.2",
     "@neondatabase/serverless": "^1.0.2",
     "@radix-ui/react-slot": "^1.2.4",
