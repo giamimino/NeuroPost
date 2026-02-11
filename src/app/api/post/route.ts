@@ -18,18 +18,18 @@ interface DBTag {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const { limit, col, dir, cursor, id, joinLikes, tag } = Object.fromEntries(
+    const { limit, col, dir, cursor, id, joinLikes, tag, withTags } = Object.fromEntries(
       searchParams.entries(),
     );
     if (tag) {
       const posts = await sql.query(
         `SELECT P.*, json_agg(json_build_object('id', t.id, 'tag', t.tag)) as tags FROM tags t 
-        JOIN post_tag pt ON t.id = pt.post_id 
+        JOIN post_tag pt ON t.id = pt.tag_id 
         JOIN posts p ON p.id = pt.post_id
         WHERE t.tag = $1 GROUP BY p.id`,
         [tag],
       );
-
+      
       return NextResponse.json({ ok: true, posts }, { status: 200 });
     }
     if (id) {
@@ -52,12 +52,12 @@ export async function GET(req: Request) {
         ? new Date(cursor).toISOString()
         : new Date(Date.now()).toISOString();
     // const userId = joinLikes ? await auth({ userId: true }) : null;
-    const rawSql = `
+    const rawSql = withTags ? `
       SELECT p.*, json_agg(json_build_object('id', t.id, 'tag', t.tag)) as tags FROM posts p
       LEFT JOIN post_tag pt ON p.id = pt.post_id
       LEFT JOIN tags t ON t.id = pt.tag_id
       WHERE p.created_at < $2 GROUP BY p.id ORDER BY p.${col} ${dir} LIMIT $1 
-    `;
+    ` : `SELECT * FROM posts WHERE created_at < $2 ORDER BY ${col} ${dir} LIMIT $1`;
     const posts = await sql.query(rawSql, [Number(limit) || 20, date]);
 
     return NextResponse.json({ ok: true, posts }, { status: 200 });

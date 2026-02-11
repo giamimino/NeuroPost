@@ -27,11 +27,11 @@ export default function RootLayout({
           attribute={"class"}
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
         >
           <ScrollContextProvider>
             <Header />
             {children}
+            <div className="h-10"></div>
           </ScrollContextProvider>
         </ThemeProvider>
       </body>

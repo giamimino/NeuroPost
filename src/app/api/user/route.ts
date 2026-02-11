@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const user = await auth();
+    const user = await auth({ userId: false});
 
-    if (!user) return NextResponse.json({ ok: false }, {status: 401});
+    if (!user || user.status === 401) return NextResponse.json({ ok: false }, {status: 401});
 
     return NextResponse.json({ user, ok: true }, { status: 200})
   } catch (err) {

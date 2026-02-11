@@ -12,6 +12,7 @@ import { HandleLikeArgs } from "@/types/arguments";
 import { TagType } from "@/types/global";
 import { Post } from "@/types/neon";
 import { Heart } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
@@ -20,13 +21,14 @@ export default function Home() {
   const tickingRef = useRef(false);
   const reachedRef = useRef(false);
   const latestPost = useRef<Date>(null);
+  const router = useRouter()
 
   const fetchPosts = () => {
     if (tickingRef.current || reachedRef.current) return;
     const now = new Date().getTime();
 
     tickingRef.current = true;
-    const url = `/api/post?limit=10&col=created_at&dir=DESC&cursor=${latestPost.current || ""}`;
+    const url = `/api/post?limit=10&col=created_at&dir=DESC&cursor=${latestPost.current || ""}&withTags=true`;
     apiFetch(url)
       .then((res) => res?.json())
       .then((data) => {
@@ -96,6 +98,7 @@ export default function Home() {
                         tag={`#${tag.tag}`}
                         key={`${tag.id}-${tag.tag}-${post.id}`}
                         variant="none"
+                        onClick={() => router.push(`/tags/${tag.tag}`)}
                       />
                     );
                   })}

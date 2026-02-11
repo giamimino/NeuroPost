@@ -102,7 +102,7 @@ const SearchPostsPage = () => {
                 {post.description}
               </CardDescription>
             </CardContent>
-            <CardFooter className="">
+            <CardFooter>
               <div className="py-2 w-full">
                 <Button variant={"outline"} className="w-full cursor-pointer" onClick={() => router.push(`/post/${post.id}`)}>
                   View
