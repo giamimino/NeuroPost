@@ -34,6 +34,7 @@ const DataFetcher = <T,>({
     async function fetchData() {
       try {
         setLoading(true);
+        setError(null)
         const res = await fetch(url, { ...config, signal: controller.signal });
         if (!res.ok) throw new Error("Fetch Error");
         const json = await res.json();

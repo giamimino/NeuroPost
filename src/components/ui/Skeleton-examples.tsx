@@ -1,6 +1,7 @@
+import clsx from "clsx";
 import { Card, CardContent, CardFooter, CardHeader } from "./card";
 import { Skeleton } from "./skeleton";
-
+import { cn } from "@/lib/utils";
 
 function SkeletonCard() {
   return (
@@ -13,12 +14,12 @@ function SkeletonCard() {
         <Skeleton className="aspect-video w-full" />
       </CardContent>
     </Card>
-  )
+  );
 }
 
-function SkeletonPost({ className }: {className?: string}) {
+function SkeletonPost({ className }: { className?: string }) {
   return (
-    <Card className={`gap-4 ${className}`}>
+    <Card className={cn("gap-4", className)}>
       <CardHeader>
         <Skeleton className="h-4 w-2/3" />
       </CardHeader>
@@ -29,7 +30,34 @@ function SkeletonPost({ className }: {className?: string}) {
         <Skeleton className="h-4 w-1/3" />
       </CardFooter>
     </Card>
+  );
+}
+
+function SkeletonPosts({
+  className,
+  length = 5,
+  postClassName
+}: {
+  className?: string;
+  length: number;
+  postClassName?: string
+}) {
+  return (
+    <div className={cn("flex gap-6 flex-wrap justify-center w-full", className)}>
+      {Array.from({ length }).map((_, i) => (
+        <SkeletonPost className={cn("w-1/4", postClassName)} key={i} />
+      ))}
+    </div>
   )
 }
 
-export { SkeletonCard, SkeletonPost }
+function SkeletonArticle({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex flex-col gap-2.5 w-full", className)}>
+      <Skeleton className="w-1/3 h-5" />
+      <Skeleton className="w-2/3 h-5" />
+    </div>
+  );
+}
+
+export { SkeletonCard, SkeletonPost, SkeletonArticle, SkeletonPosts };

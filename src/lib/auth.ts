@@ -4,7 +4,13 @@ import jwt from "jsonwebtoken";
 import { sql } from "./db";
 import { JWTUserPaylaod } from "@/types/global";
 
-export async function auth({ userId }: { userId?: boolean }) {
+export async function auth({
+  userId,
+  bio,
+}: {
+  userId?: boolean;
+  bio?: boolean;
+}) {
   const start = new Date();
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)?.value;
@@ -23,7 +29,7 @@ export async function auth({ userId }: { userId?: boolean }) {
 
   if (userId) return { userId: payload.userId };
 
-  const rawSql = `SELECT email, name, username FROM users id WHERE id = $1`;
+  const rawSql = `SELECT email, name, username ${bio ? ", bio" : ""} FROM users id WHERE id = $1`;
   const user = await sql.query(rawSql, [payload.userId]);
 
   const end = new Date();

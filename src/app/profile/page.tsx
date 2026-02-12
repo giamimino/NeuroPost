@@ -10,8 +10,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Line from "@/components/ui/Line";
-import { SkeletonPost } from "@/components/ui/Skeleton-examples";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  SkeletonArticle,
+  SkeletonPost,
+  SkeletonPosts,
+} from "@/components/ui/Skeleton-examples";
 import Title from "@/components/ui/title";
+import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
 import { Post } from "@/types/neon";
 import Image from "next/image";
@@ -32,6 +38,8 @@ const ProfilePage = () => {
     router.push(`/post/${id}`);
   };
 
+  console.log(user);
+
   useEffect(() => {
     apiFetch("/api/user")
       .then((res) => res?.json())
@@ -42,27 +50,37 @@ const ProfilePage = () => {
 
   return (
     <div className="pt-32 bg-background">
-      <div className="flex flex-col items-center gap-1 px-10">
-        <Image
-          src={"/user.jpg"}
-          width={82}
-          height={82}
-          alt="user-profile"
-          className="rounded-full"
-        />
-        <div className="flex items-end gap-1">
-          <Title title={user?.name ?? "[name]"} />
-          <p className="text-muted-foreground">
-            @{user?.username ?? "[username]"}
-          </p>
-        </div>
-        <div className="my-3">
-          <p className="text-foreground">{user?.bio ?? "No bio yet."}</p>
+      <div className="flex flex-col items-start gap-1">
+        <div className="pl-5.5 w-1/2">
+          {user ? <Image
+            src={"/user.jpg"}
+            width={82}
+            height={82}
+            alt="user-profile"
+            className="rounded-full"
+          /> : <Skeleton className="w-20.5 h-20.5 rounded-full" />}
+          {user ? (
+            <>
+              <div className="flex items-end gap-1 w-full">
+                <Title title={user.name} />
+                <p className="text-muted-foreground">@{user.username}</p>
+              </div>
+              <div className="my-3">
+                <p className="text-foreground">{user?.bio ?? "No bio yet."}</p>
+              </div>
+            </>
+          ) : (
+            <SkeletonArticle className="mt-5" />
+          )}
         </div>
         <Line />
         <div className="flex w-full gap-8 flex-wrap justify-center mt-5">
-          {user?.id && (
-            <DataFetcher url={`/api/post/u/${user.id}`} targetKey="posts" loadingUI={<SkeletonPost className="w-1/4" />}>
+            <DataFetcher
+              url={`/api/post/u/${user?.id}`}
+              config={{ ...ApiConfig.get, enabled: user !== null }}
+              targetKey="posts"
+              loadingUI={<SkeletonPosts length={5} />}
+            >
               {(posts: Post[]) => (
                 <>
                   {posts.map((post) => (
@@ -94,7 +112,6 @@ const ProfilePage = () => {
                 </>
               )}
             </DataFetcher>
-          )}
         </div>
       </div>
     </div>
