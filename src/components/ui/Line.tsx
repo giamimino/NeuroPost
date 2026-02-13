@@ -1,8 +1,14 @@
+import { cn } from "@/lib/utils";
 import React from "react";
 
-const Line = () => {
+const Line = ({ className }: { className?: string }) => {
   return (
-    <span className="w-full h-0.5 bg-muted-foreground/20 rounded-full mb-2"></span>
+    <div
+      className={cn(
+        "w-full h-0.5 bg-muted-foreground/20 rounded-full mb-2",
+        className,
+      )}
+    ></div>
   );
 };
 

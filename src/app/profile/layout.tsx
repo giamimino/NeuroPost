@@ -1,5 +1,7 @@
+"use client"
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 const pages: {
@@ -21,6 +23,7 @@ const pages: {
 ];
 
 const ProfileLayout = ({ children }: { children: React.ReactNode }) => {
+  const router = useRouter()
   return (
     <div className="flex w-full">
       <div className="py-20 pl-4 h-full w-1/4">
@@ -35,6 +38,7 @@ const ProfileLayout = ({ children }: { children: React.ReactNode }) => {
                   variant={page.variant}
                   key={`${page.label}`}
                   className="w-full rounded-none cursor-pointer"
+                  onClick={() => router.push(page.url)}
                 >
                   {page.label}
                 </Button>

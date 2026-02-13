@@ -38,8 +38,6 @@ const ProfilePage = () => {
     router.push(`/post/${id}`);
   };
 
-  console.log(user);
-
   useEffect(() => {
     apiFetch("/api/user")
       .then((res) => res?.json())

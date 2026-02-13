@@ -47,7 +47,8 @@ const PostUploadPage = () => {
         .then((res) => res?.json())
         .then((data) => {
           console.log(data);
-        });
+        })
+        .finally(() => form.reset())
     } catch (error) {
       console.error(error);
     } finally {
@@ -140,7 +141,6 @@ const PostUploadPage = () => {
                           )
                           .map((tag) => (
                             <TagItem
-                              id={String(tag.id)}
                               tag={tag.tag}
                               key={`${tag.id}-tag-${tag.tag}`}
                               onClick={() =>
