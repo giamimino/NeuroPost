@@ -15,5 +15,9 @@ export const ApiConfig: Record<string, RequestInit & { enabled?: boolean}> = {
     cache: "no-store",
     method: "GET",
     enabled: true
+  },
+  put: {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" }
   }
 }

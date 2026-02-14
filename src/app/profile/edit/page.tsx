@@ -13,62 +13,115 @@ import {
 import { Input } from "@/components/ui/input";
 import Line from "@/components/ui/Line";
 import { ApiConfig } from "@/configs/api-configs";
+import { UsernameRefference } from "@/constants/refference";
 import { apiFetch } from "@/lib/apiFetch";
 import { User } from "@/types/neon";
 import React, { Ref, useEffect, useMemo, useRef, useState } from "react";
 
 const ProfileEditPage = () => {
   const [user, setUser] = useState<User | null>(null);
-  const username = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
-  const name = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
-  const bio = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
+  const [bio, setBio] = useState("");
+  const [changed, setChanged] = useState(false);
 
-  const fields = useMemo(
-    () => [
-      {
-        label: "Username",
-        name: "username",
-        description:
-          "Usernames can only contain letters, numbers, underscores, and periods. Changing your username will also change your profile link.",
-        ref: username,
-        type: "input",
-      },
-      {
-        label: "Name",
-        name: "name",
-        description: null,
-        ref: name,
-        type: "input",
-      },
-      {
-        label: "Bio",
-        name: "bio",
-        description: null,
-        ref: bio,
-        type: "textarea",
-      },
-    ],
-    [],
-  );
+  const fields = [
+    {
+      label: "Username",
+      name: "username",
+      description: UsernameRefference,
+      type: "input",
+      state: username,
+      setState: setUsername,
+    },
+    {
+      label: "Name",
+      name: "name",
+      description: null,
+      type: "input",
+      state: name,
+      setState: setName,
+    },
+    {
+      label: "Bio",
+      name: "bio",
+      description: null,
+      type: "textarea",
+      state: bio,
+      setState: setBio,
+    },
+  ];
+
   useEffect(() => {
-    const controller = new AbortController();
-    const { signal } = controller;
-    apiFetch("/api/user", { ...ApiConfig.get, signal })
+    apiFetch("/api/user")
       .then((res) => res?.json())
       .then((data) => {
         if (data.ok) {
           const u = { id: data.user.payload.userId, ...data.user.user } as User;
           setUser(u);
-          if (!username.current || !name.current || !bio.current) return;
 
-          username.current.value = u.username;
-          name.current.value = u.name;
-          bio.current.value = u.bio || "";
+          setUsername(u.username);
+          setName(u.name);
+          setBio(u.bio || "");
         }
       });
-
-    return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    if (
+      (name !== user.name || username !== user.username || bio !== user.bio) &&
+      !changed
+    ) {
+      setChanged(true);
+    } else if (
+      name === user.name &&
+      username === user.username &&
+      bio === user.bio &&
+      changed
+    ) {
+      setChanged(false);
+    }
+  }, [name, username, bio, user]);
+
+  const handleCancel = () => {
+    if (!user) return;
+    setBio(user.bio || "");
+    setName(user.name);
+    setUsername(user.username);
+  };
+  
+  console.log(user);
+  
+
+  const handleSave = async () => {
+    if (!changed || !user) return;
+    const regex = /^[a-zA-Z0-9_.]+$/;
+    if (
+      !username.trim() ||
+      !name.trim() ||
+      !bio.trim() ||
+      !regex.test(username)
+    )
+      return;
+
+    const res = await fetch("/api/user", {
+      ...ApiConfig.put,
+      body: JSON.stringify({ name, username, bio }),
+    });
+    const data = await res.json();
+    console.log(data);
+    
+    if (data.ok) {
+      setUser((prev) => ({
+        ...prev!,
+        bio: data.user.bio,
+        name: data.user.name,
+        username: data.user.username,
+      }));
+    }
+  };
+
   return (
     <div className="pt-20 px-6">
       <Card>
@@ -88,12 +141,22 @@ const ProfileEditPage = () => {
                 <CardTitle className="sm:w-25 lg:w-1/5">{f.label}</CardTitle>
                 <div className="max-w-61">
                   {f.type === "input" ? (
-                    <Input ref={f.ref as React.RefObject<HTMLInputElement>} className="w-fit" />
+                    <Input
+                      value={f.state}
+                      onChange={(e) => f.setState(e.target.value)}
+                      className="w-fit"
+                    />
                   ) : (
-                    <DefaultTextarea ref={f.ref as React.RefObject<HTMLTextAreaElement>} className="w-61" />
+                    <DefaultTextarea
+                      value={f.state}
+                      onChange={(e) => f.setState(e.target.value)}
+                      className="w-61"
+                    />
                   )}
                   {f.description && (
-                    <CardDescription>{f.description}</CardDescription>
+                    <CardDescription className="mt-2">
+                      {f.description}
+                    </CardDescription>
                   )}
                 </div>
               </div>
@@ -103,10 +166,18 @@ const ProfileEditPage = () => {
         </CardContent>
         <CardFooter className="justify-end">
           <div className="flex gap-3 font-plusJakartaSans">
-            <Button variant={"secondary"} className="cursor-pointer">
+            <Button
+              variant={"secondary"}
+              onClick={handleCancel}
+              className="cursor-pointer"
+            >
               Cancel
             </Button>
-            <Button variant={"disabled"} className="">
+            <Button
+              variant={!changed ? "disabled" : "destructive"}
+              className={`${changed ? "cursor-pointer" : ""}`}
+              onClick={handleSave}
+            >
               Save
             </Button>
           </div>

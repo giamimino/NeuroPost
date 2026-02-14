@@ -30,7 +30,6 @@ const Header = () => {
     { label: "Home", url: "/", type: "router" },
     { label: "Profile", url: "/profile", type: "router" },
     { label: "Upload", url: "/profile/p/create", type: "router" },
-    { label: "Test", url: "/test", type: "router" },
     {
       label: "Logout",
       url: "/auth/login",
