@@ -1,0 +1,42 @@
+import { S3Client } from "@aws-sdk/client-s3";
+
+export const s3 = new S3Client({
+  region: "auto",
+  endpoint:
+    "https://" + process.env.R2_ACCOUNT_ID! + ".r2.cloudflarestorage.com",
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+  },
+});
+
+// // Upload a file
+// await s3.send(
+//   new PutObjectCommand({
+//     Bucket: "my-bucket",
+//     Key: "myfile.txt",
+//     Body: "Hello, R2!",
+//   }),
+// );
+// console.log("Uploaded myfile.txt");
+
+// // Download a file
+// const response = await s3.send(
+//   new GetObjectCommand({
+//     Bucket: "my-bucket",
+//     Key: "myfile.txt",
+//   }),
+// );
+// const content = response.Body ? await response.Body.transformToString() : null;
+// console.log("Downloaded:", content);
+
+// // List objects
+// const list = await s3.send(
+//   new ListObjectsV2Command({
+//     Bucket: "my-bucket",
+//   }),
+// );
+// console.log(
+//   "Objects:",
+//   list.Contents?.map((obj) => obj.Key),
+// );
