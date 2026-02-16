@@ -103,7 +103,7 @@ export default function Home() {
                     );
                   })}
                 </div>
-                <PostActions userId={post.author_id} postId={post.id} />
+                <PostActions postId={post.id} />
               </div>
             </div>
           </PostWrapper>

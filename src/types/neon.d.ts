@@ -15,12 +15,13 @@ export interface UserJoin {
 
 export interface User {
   id: string,
-  emai: string,
+  email: string,
   name: string,
   username: string,
   created_at: Date,
   updated_at: Date,
   bio: string | null,
+  profile_url?: null | string
 }
 
 export interface Index {

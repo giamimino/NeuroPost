@@ -1,7 +1,7 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/apiFetch";
 import { ApiConfig } from "@/configs/api-configs";
 import { Button } from "./ui/button";
@@ -13,6 +13,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { Card, CardHeader, CardTitle } from "./ui/card";
+import clsx from "clsx";
 
 const Header = () => {
   const [show, setShow] = useState(true);
@@ -79,13 +81,13 @@ const Header = () => {
           <ArrowBigLeftDash />
         </Button>
       </div>
-      <motion.nav
+      <motion.div
         initial={{ opacity: 0, y: "-100%" }}
         animate={show ? { opacity: 1, y: 0 } : { opacity: 0.5, y: "-150%" }}
         transition={{ stiffness: 80, type: "spring" }}
         layout
-        className={`flex gap-4 items-center px-4 py-2.5 dark:bg-secondary-bg  
-       rounded-full border-input ring ring-ring/40`}
+        className={`flex gap-4 items-center px-4 py-2.5 dark:bg-card
+       rounded-full border-input ring ring-ring/80`}
       >
         {pages.current.map((page) => (
           <div
@@ -104,7 +106,7 @@ const Header = () => {
             {page.label}
           </div>
         ))}
-      </motion.nav>
+      </motion.div>
 
       <div className="absolute right-5 top-5">
         <DropdownMenu>
@@ -114,10 +116,16 @@ const Header = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => router.push("/search/posts")} className="cursor-pointer">
+            <DropdownMenuItem
+              onClick={() => router.push("/search/posts")}
+              className="cursor-pointer"
+            >
               <p>Posts</p>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/search/users")} className="cursor-pointer">
+            <DropdownMenuItem
+              onClick={() => router.push("/search/users")}
+              className="cursor-pointer"
+            >
               <p>Users</p>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -127,4 +135,57 @@ const Header = () => {
   );
 };
 
-export default Header;
+const ProfileNavigation = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const pages: {
+    url: string;
+    label: string;
+    variant:
+      | "ghost"
+      | "link"
+      | "default"
+      | "destructive"
+      | "outline"
+      | "secondary";
+  }[] = useMemo(
+    () => [
+      { url: "/profile/p/create", label: "Upload", variant: "default" },
+      { url: "/profile", label: "Profile", variant: "ghost" },
+      { url: "/profile/saves", label: "Saves", variant: "ghost" },
+      { url: "/profile/edit", label: "Edit", variant: "ghost" },
+      { url: "/profile/settings", label: "Settings", variant: "ghost" },
+    ],
+    [],
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Menu</CardTitle>
+      </CardHeader>
+      <div>
+        <nav>
+          {pages.map((page) => (
+            <Button
+              variant={page.variant}
+              key={`${page.label}`}
+              className={"w-full rounded-none cursor-pointer"}
+              onClick={() => router.push(page.url)}
+            >
+              <p
+                className={
+                  pathname === page.url ? "text-current font-bold" : "text-current/90"
+                }
+              >
+                {page.label}
+              </p>
+            </Button>
+          ))}
+        </nav>
+      </div>
+    </Card>
+  );
+};
+
+export { Header, ProfileNavigation };

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { HandleLikeArgs } from "@/types/arguments";
 import { Heart } from "lucide-react";
 import { ApiConfig } from "@/configs/api-configs";
+import { apiFetch } from "@/lib/apiFetch";
 
 const PostsContainer = ({ children }: Children) => {
   return <section className="flex flex-col w-full gap-2.5">{children}</section>;
@@ -49,26 +50,23 @@ const PostWrapper = ({ children }: Children) => {
 };
 
 const PostActions = ({
-  userId,
   postId,
 }: {
-  userId: string;
   postId: number;
 }) => {
   const handleLike = async (args: HandleLikeArgs) => {
     try {
-      const res = await fetch("/api/post/like", {
+      const res = await apiFetch("/api/post/like", {
         ...ApiConfig[args.action],
         body: JSON.stringify(
           args.action === "post"
             ? {
-                userId: args.userId,
                 postId: args.postId,
               }
             : { id: args.id },
         ),
       });
-      const data = await res.json();
+      const data = await res?.json();
       console.log(data);
     } catch (error) {
       console.error(error);
@@ -82,7 +80,6 @@ const PostActions = ({
         onClick={() =>
           handleLike({
             action: "post",
-            userId,
             postId,
           })
         }

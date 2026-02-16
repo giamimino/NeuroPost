@@ -4,29 +4,24 @@ import jwt from "jsonwebtoken";
 import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
 
-function errorResponse(message: string) {
-  return NextResponse.json({
-    success: false,
-    message,
-  });
-}
-
-export async function POST(req: Request) {
+export async function POST() {
   try {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)?.value;
 
     if (!accessToken) return NextResponse.json({ ok: false }, { status: 401 });
-    
-    const paylaod = jwt.verify(
-      accessToken,
-      process.env.ACCESS_SECRET!,
-    ) as JWTUserPaylaod;
-    
-    if (!paylaod) return NextResponse.json({ ok: false }, { status: 401 });
 
-    const rawSql = `DELETE FROM refresh_tokens WHERE user_id = $1`;
-    await sql.query(rawSql, [paylaod.userId]);
+    let paylaod;
+    try {
+      paylaod = jwt.verify(
+        accessToken,
+        process.env.ACCESS_SECRET!,
+      ) as JWTUserPaylaod;
+    } catch (error) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+
+    await sql.query(`DELETE FROM refresh_tokens WHERE user_id = $1`, [paylaod.userId]);
 
     cookieStore.delete(process.env.ACCESS_COOKIE_NAME!);
     cookieStore.delete(process.env.REFRESH_COOKIE_NAME!);
@@ -35,6 +30,5 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error(err);
     return NextResponse.json({ ok: true }, { status: 401 });
-
   }
 }

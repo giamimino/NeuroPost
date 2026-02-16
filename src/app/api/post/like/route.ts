@@ -1,13 +1,29 @@
 import { sql } from "@/lib/db";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+import { JWTUserPaylaod } from "@/types/global";
 
 export async function POST(req: Request) {
   try {
-    const { userId, postId }: { userId: string; postId: number } =
-      await req.json();
+    const { postId }: { postId: number } = await req.json();
+
+    if (!postId) return NextResponse.json({ ok: false }, { status: 400 });
+    const cookieStore = await cookies();
+    const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
+      ?.value as string;
+    let payload;
+    try {
+      payload = jwt.verify(
+        access_token,
+        process.env.ACCESS_SECRET!,
+      ) as JWTUserPaylaod;
+    } catch (error) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
 
     const rawSQL = `INSERT INTO likes (user_id, post_id) VALUES ($1, $2)`;
-    await sql.query(rawSQL, [userId, postId]);
+    await sql.query(rawSQL, [payload.userId, postId]);
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/header";
+import { Header } from "@/components/header";
 import { ScrollContextProvider } from "@/store/contexts/ScrollContext";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -21,13 +21,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" style={{ colorScheme: 'dark' }} suppressHydrationWarning>
+    <html lang="en" style={{ colorScheme: "dark" }} suppressHydrationWarning>
       <body className={`${plusJakartaSans.variable} antialiased`}>
-        <ThemeProvider
-          attribute={"class"}
-          defaultTheme="system"
-          enableSystem
-        >
+        <ThemeProvider attribute={"class"} defaultTheme="system" enableSystem>
           <ScrollContextProvider>
             <Header />
             {children}
