@@ -29,7 +29,7 @@ export async function auth({
 
   if (userId) return { userId: payload.userId };
 
-  const rawSql = `SELECT email, name, username ${bio ? ", bio" : ""} FROM users id WHERE id = $1`;
+  const rawSql = `SELECT email, name, username, profile_url ${bio ? ", bio" : ""} FROM users id WHERE id = $1`;
   const user = await sql.query(rawSql, [payload.userId]);
 
   const end = new Date();

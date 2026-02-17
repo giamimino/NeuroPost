@@ -1,6 +1,7 @@
 "use client";
 import DefaultInput from "@/components/common/DefaultInput";
 import DefaultTextarea from "@/components/common/DefaultTextarea";
+import ProfileUpload from "@/components/common/Profile-upload";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,8 +28,6 @@ const ProfileEditPage = () => {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [changed, setChanged] = useState(false);
-  const [image, setImage] = useState<File | string | null>(null);
-  const imageUploadRef = useRef<HTMLInputElement>(null);
   const fields = [
     {
       label: "Username",
@@ -61,7 +60,6 @@ const ProfileEditPage = () => {
     setBio(user.bio || "");
     setName(user.name);
     setUsername(user.username);
-    setImage(user.profile_url || "/user.jpg")
   };
 
   const handleSave = async () => {
@@ -77,7 +75,7 @@ const ProfileEditPage = () => {
 
     const res = await fetch("/api/user", {
       ...ApiConfig.put,
-      body: JSON.stringify({ name, username, bio, file: typeof image === "string" || image === null ? undefined : image, profile_url: user.profile_url  }),
+      body: JSON.stringify({ name, username, bio }),
     });
     const data = await res.json();
     console.log(data);
@@ -92,21 +90,6 @@ const ProfileEditPage = () => {
     }
   };
 
-  const pickFile = () => imageUploadRef.current?.click();
-
-  const uploadFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const error = ImageValidator(file);
-    if (error) {
-      alert(error);
-      return;
-    }
-
-    setImage(file);
-  };
-
   useEffect(() => {
     apiFetch("/api/user")
       .then((res) => res?.json())
@@ -118,7 +101,6 @@ const ProfileEditPage = () => {
           setUsername(u.username);
           setName(u.name);
           setBio(u.bio || "");
-          setImage("/user.jpg");
         }
       });
   }, []);
@@ -126,19 +108,19 @@ const ProfileEditPage = () => {
   useEffect(() => {
     if (!user) return;
     if (
-      (name !== user.name || username !== user.username || bio !== user.bio || image !== (user.profile_url || "/user.jpg")) &&
+      (name !== user.name || username !== user.username || bio !== user.bio) &&
       !changed
     ) {
       setChanged(true);
     } else if (
       name === user.name &&
       username === user.username &&
-      bio === user.bio && image === (user.profile_url || "/user.jpg") &&
+      bio === user.bio &&
       changed
     ) {
       setChanged(false);
     }
-  }, [name, username, bio, user, image]);
+  }, [name, username, bio, user]);
 
   return (
     <div className="pt-20 px-6">
@@ -147,44 +129,14 @@ const ProfileEditPage = () => {
           <CardTitle>Edit profile</CardTitle>
         </CardHeader>
         <CardContent>
-          <div>
-            <div className="flex">
-              <CardTitle className="sm:w-25 lg:w-1/5">Profile photo</CardTitle>
-              <div>
-                <input
-                  type="file"
-                  accept={"image/png, image/jpeg, image/jpg, image/webp"}
-                  hidden
-                  ref={imageUploadRef}
-                  onChange={uploadFile}
-                />
-                <div className="relative">
-                  {image !== null && (
-                    <Image
-                      src={
-                        typeof image === "string"
-                          ? image
-                          : URL.createObjectURL(image)
-                      }
-                      width={96}
-                      height={96}
-                      alt="edit_profile"
-                      className="rounded-full object-cover w-24 h-24"
-                    />
-                  )}
-                  <Button
-                    variant={"secondary"}
-                    onClick={pickFile}
-                    size={"icon-sm"}
-                    className="rounded-full absolute right-0 bottom-0 hover:bg-secondary border border-primary cursor-pointer"
-                  >
-                    <PenLine />
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <Line className="mt-5" />
-          </div>
+          <ProfileUpload
+            profile_url={user?.profile_url || "/user.jpg"}
+            save={(signedUrl) =>
+              setUser((prev) =>
+                prev ? { ...prev, profile_url: signedUrl } : prev,
+              )
+            }
+          />
           {fields.map((f) => (
             <div key={`${f.name}`}>
               <div className="flex">

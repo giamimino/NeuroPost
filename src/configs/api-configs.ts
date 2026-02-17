@@ -1,11 +1,13 @@
-
-export const ApiConfig: Record<string, RequestInit & { enabled?: boolean}> = {
+export const ApiConfig: Record<string, RequestInit & { enabled?: boolean }> = {
   get: {
-    method: "GET"
+    method: "GET",
   },
   post: {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+  },
+  postForm: {
+    method: "POST",
   },
   delete: {
     method: "DELETE",
@@ -14,10 +16,13 @@ export const ApiConfig: Record<string, RequestInit & { enabled?: boolean}> = {
   dataFetcher: {
     cache: "no-store",
     method: "GET",
-    enabled: true
+    enabled: true,
   },
   put: {
     method: "PUT",
-    headers: { "Content-Type": "application/json" }
-  }
-}
+    headers: { "Content-Type": "application/json" },
+  },
+  purForm: {
+    method: "PUT",
+  },
+};

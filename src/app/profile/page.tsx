@@ -31,7 +31,9 @@ const ProfilePage = () => {
     email: string;
     username: string;
     bio: string | null;
+    profile_url: string | null
   } | null>(null);
+  const [signedUrl, setSignedUrl] = useState(null)
   const router = useRouter();
 
   const handleViewPost = (id: number) => {
@@ -46,17 +48,27 @@ const ProfilePage = () => {
       );
   }, []);
 
+  useEffect(() => {
+    if(!user) return
+
+    fetch("/api/r2/image", {...ApiConfig.post, body: JSON.stringify({ image_url: user.profile_url})}).then(res => res.json()).then(data => {
+      if(data.ok) {
+        setSignedUrl(data.profileImage)
+      }
+    })
+  }, [user])
+
   return (
     <div className="pt-32 bg-background">
       <div className="flex flex-col items-start gap-1">
         <div className="pl-5.5 w-1/2">
-          {user ? <Image
-            src={"/user.jpg"}
-            width={82}
-            height={82}
+          {signedUrl ? <Image
+            src={signedUrl}
+            width={96}
+            height={96}
             alt="user-profile"
-            className="rounded-full"
-          /> : <Skeleton className="w-20.5 h-20.5 rounded-full" />}
+            className="rounded-full w-24 h-24 object-cover"
+          /> : <Skeleton className="w-24 h-24 rounded-full" />}
           {user ? (
             <>
               <div className="flex items-end gap-1 w-full">
