@@ -28,6 +28,8 @@ const ProfileEditPage = () => {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [changed, setChanged] = useState(false);
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true)
   const fields = [
     {
       label: "Username",
@@ -91,6 +93,7 @@ const ProfileEditPage = () => {
   };
 
   useEffect(() => {
+    setLoading(true)
     apiFetch("/api/user")
       .then((res) => res?.json())
       .then((data) => {
@@ -102,7 +105,7 @@ const ProfileEditPage = () => {
           setName(u.name);
           setBio(u.bio || "");
         }
-      });
+      }).finally(() => setLoading(false))
   }, []);
 
   useEffect(() => {
@@ -122,6 +125,21 @@ const ProfileEditPage = () => {
     }
   }, [name, username, bio, user]);
 
+  useEffect(() => {
+    if (!user?.profile_url) return;
+
+    fetch("/api/r2/image", {
+      ...ApiConfig.post,
+      body: JSON.stringify({ image_url: user.profile_url }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok) {
+          setSignedUrl(data.profileImage);
+        }
+      });
+  }, [user]);
+
   return (
     <div className="pt-20 px-6">
       <Card>
@@ -130,7 +148,9 @@ const ProfileEditPage = () => {
         </CardHeader>
         <CardContent>
           <ProfileUpload
+            signed_url={signedUrl}
             profile_url={user?.profile_url || "/user.jpg"}
+            loading={loading}
             save={(signedUrl) =>
               setUser((prev) =>
                 prev ? { ...prev, profile_url: signedUrl } : prev,

@@ -18,7 +18,7 @@ interface DBTag {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const { limit, col, dir, cursor, id, joinLikes, tag, withTags } = Object.fromEntries(
+    const { limit, col, dir, cursor, id, tag, withTags } = Object.fromEntries(
       searchParams.entries(),
     );
     if (tag) {

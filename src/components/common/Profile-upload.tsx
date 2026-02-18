@@ -6,17 +6,26 @@ import Image from "next/image";
 import { CardTitle } from "../ui/card";
 import { ImageValidator } from "@/utils/imageValidator";
 import { ApiConfig } from "@/configs/api-configs";
+import { Skeleton } from "../ui/skeleton";
 
 const ProfileUpload = ({
   profile_url,
+  signed_url,
   save,
+  loading,
 }: {
-  profile_url: string;
+  signed_url: string | null;
+  profile_url: string | null;
   save: (signedUrl: string) => void;
+  loading: boolean;
 }) => {
   const imageUploadRef = useRef<HTMLInputElement>(null);
-  const [image, setImage] = useState<File | string>(profile_url);
+  const [image, setImage] = useState<File | string | null>(null);
   const [changed, setChanged] = useState(false);
+
+  useEffect(() => {
+    setImage(signed_url || "/user.jpg");
+  }, [signed_url]);
 
   const uploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,7 +58,7 @@ const ProfileUpload = ({
       });
       const signedUrl = await signRes.json();
       if (signedUrl.ok) {
-        save(signedUrl.profileImage)
+        save(signedUrl.profileImage);
       }
     }
   };
@@ -79,16 +88,22 @@ const ProfileUpload = ({
             onChange={uploadImage}
           />
           <div className="relative">
-            {image !== "" && (
-              <Image
-                src={
-                  typeof image === "string" ? image : URL.createObjectURL(image)
-                }
-                width={96}
-                height={96}
-                alt="edit_profile"
-                className="rounded-full object-cover w-24 h-24"
-              />
+            {loading ? (
+              <Skeleton className="w-24 h-24 rounded-full" />
+            ) : (
+              image !== null && (
+                <Image
+                  src={
+                    typeof image === "string"
+                      ? image
+                      : URL.createObjectURL(image)
+                  }
+                  width={96}
+                  height={96}
+                  alt="edit_profile"
+                  className="rounded-full object-cover w-24 h-24"
+                />
+              )
             )}
             <Button
               variant={"secondary"}

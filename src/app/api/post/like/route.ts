@@ -22,10 +22,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false }, { status: 401 });
     }
 
-    const rawSQL = `INSERT INTO likes (user_id, post_id) VALUES ($1, $2)`;
-    await sql.query(rawSQL, [payload.userId, postId]);
+    const rawSQL = `INSERT INTO likes (user_id, post_id) VALUES ($1, $2) RETURNING id as like_id`;
+    const likes = await sql.query(rawSQL, [payload.userId, postId]) as any;
 
-    return NextResponse.json({ ok: true }, { status: 200 });
+    return NextResponse.json({ ok: true, like: likes[0].like_id }, { status: 200 });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ ok: false, message: "" }, { status: 500 });

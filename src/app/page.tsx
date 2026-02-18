@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
-  const [posts, setPosts] = useState<(Post & { tags: TagType[] })[]>([]);
+  const [posts, setPosts] = useState<(Post & { tags: TagType[], like_id: string | null })[]>([]);
   const [took, setTook] = useState<number>(0);
   const tickingRef = useRef(false);
   const reachedRef = useRef(false);
@@ -28,7 +28,7 @@ export default function Home() {
     const now = new Date().getTime();
 
     tickingRef.current = true;
-    const url = `/api/post?limit=10&col=created_at&dir=DESC&cursor=${latestPost.current || ""}&withTags=true`;
+    const url = `/api/post/foryou?limit=10&col=created_at&dir=DESC&cursor=${latestPost.current || ""}`;
     apiFetch(url)
       .then((res) => res?.json())
       .then((data) => {
@@ -103,7 +103,14 @@ export default function Home() {
                     );
                   })}
                 </div>
-                <PostActions postId={post.id} />
+                <PostActions onChange={(args: HandleLikeArgs, data) => {
+                  if(args.action === "delete" && data.ok) {
+                    setPosts(prev => prev.map((p) => p.id === post.id ? {...p, like_id: null } : p))
+                  } else if(args.action === "post" && data.ok) {
+                    setPosts(prev => prev.map(p => p.id === post.id ? {...p, like_id: data.like} : p))
+                  }
+                  
+                }} likeId={post.like_id} postId={post.id} />
               </div>
             </div>
           </PostWrapper>

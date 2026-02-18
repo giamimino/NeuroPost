@@ -51,8 +51,12 @@ const PostWrapper = ({ children }: Children) => {
 
 const PostActions = ({
   postId,
+  likeId,
+  onChange
 }: {
   postId: number;
+  likeId: string | null;
+  onChange: (args: HandleLikeArgs, data: any) => void
 }) => {
   const handleLike = async (args: HandleLikeArgs) => {
     try {
@@ -67,7 +71,7 @@ const PostActions = ({
         ),
       });
       const data = await res?.json();
-      console.log(data);
+      onChange(args, data)
     } catch (error) {
       console.error(error);
     }
@@ -76,15 +80,24 @@ const PostActions = ({
   return (
     <div className="flex flex-col items-center mt-3">
       <button
-        className="cursor-pointer w-fit"
+        className={`cursor-pointer w-fit`}
         onClick={() =>
-          handleLike({
-            action: "post",
-            postId,
-          })
+          handleLike(
+            likeId
+              ? { action: "delete", id: likeId }
+              : {
+                  action: "post",
+                  postId,
+                },
+          )
         }
       >
-        <Heart width={18} height={18} />
+        <Heart
+          width={18}
+          height={18}
+          className={`${likeId ? "text-red-600" : ""}`}
+          {...(likeId ? { fill: "#ff0000" } : {})}
+        />
       </button>
     </div>
   );
