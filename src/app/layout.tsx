@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/header";
 import { ScrollContextProvider } from "@/store/contexts/ScrollContext";
 import { ThemeProvider } from "@/components/theme-provider";
+import AlertsProvider from "@/components/providers/AlertsProvider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -26,6 +27,7 @@ export default function RootLayout({
         <ThemeProvider attribute={"class"} defaultTheme="system" enableSystem>
           <ScrollContextProvider>
             <Header />
+            <AlertsProvider />
             {children}
             <div className="h-10"></div>
           </ScrollContextProvider>

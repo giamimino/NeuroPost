@@ -4,7 +4,6 @@ export interface Post {
   created_at: Date,
   description: string | null,
   author_id: string,
-  image: string | null,
   title: string,
 }
 
@@ -44,5 +43,15 @@ export interface Like {
 export interface Tag {
   id: number,
   tag: string,
+  created_at: Date
+}
+
+export type MediaEnumType = "image" | "video"
+
+export interface MediaType {
+  id: string,
+  fileurl: string,
+  type: MediaEnumType,
+  post_id: number,
   created_at: Date
 }

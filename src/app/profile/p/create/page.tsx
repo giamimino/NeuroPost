@@ -16,44 +16,68 @@ import { Input } from "@/components/ui/input";
 import { TagItem } from "@/components/ui/tag";
 import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
+import {
+  ALLOWED_IMAGE_TYPES,
+  ALLOWED_VIDEO_TYPES,
+} from "@/constants/validators";
 import { apiFetch } from "@/lib/apiFetch";
 import { Tag } from "@/types/neon";
+import { MediaValidator } from "@/utils/validator";
 import { Plus } from "lucide-react";
+import Image from "next/image";
 import React, { useMemo, useRef, useState } from "react";
 
 const PostUploadPage = () => {
   const [tags, setTags] = useState<{ tag: string; id?: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [media, setMedia] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
+
+
   const handleUploadPost = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      setLoading(true)
+      setLoading(true);
 
       const form = e.currentTarget;
       const formData = new FormData(form);
-
-      const title = formData.get("title") as string;
-      const description = formData.get("description") as string | undefined;
+      formData.append("tags", JSON.stringify(tags))
+      if(media) {
+        formData.append("file", media)
+      }
       const url = "/api/post";
 
-      if (!title.trim() || (description && !description.trim())) return;
-
-      setLoading(true);
       apiFetch(url, {
-        ...ApiConfig.post,
-        body: JSON.stringify({ title, description, tags }),
+        ...ApiConfig.postForm,
+        body: formData,
       })
         .then((res) => res?.json())
         .then((data) => {
           console.log(data);
         })
-        .finally(() => form.reset())
+        .finally(() => form.reset());
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const pickMedia = () => fileRef.current?.click();
+
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const error = MediaValidator(file);
+    if (error) {
+      alert(error);
+      return;
+    }
+
+    setMedia(file);
   };
 
   const handleAddTag = (tag: string, id?: string) => {
@@ -65,21 +89,20 @@ const PostUploadPage = () => {
   const TagsFetchConfigs = useMemo(() => ApiConfig.dataFetcher, []);
 
   return (
-    <div>
-      <div className="flex justify-center w-full mt-25">
-        <form
-          onSubmit={handleUploadPost}
-          className="flex flex-col gap-4.5 max-w-85"
-        >
+    <div className="p-20 max-lg:px-15 max-md:px-10 max-sm:px-5">
+      <div className="flex justify-center w-full">
+        <div className="flex flex-col gap-4.5 sm:w-full lg:w-1/2">
           <div className="text-center">
             <Title title="Upload a post..." font="--font-plusJakartaSans" />
           </div>
-          <Input name="title" placeholder="title" />
-          <DefaultTextarea
-            name="description"
-            placeholder="description"
-            cols={8}
-          />
+          <form ref={formRef} onSubmit={handleUploadPost} className="flex flex-col gap-4.5">
+            <Input name="title" placeholder="title" />
+            <DefaultTextarea
+              name="description"
+              placeholder="description"
+              cols={8}
+            />
+          </form>
           <Card>
             <CardHeader>
               <CardTitle>Tags</CardTitle>
@@ -157,15 +180,42 @@ const PostUploadPage = () => {
               </DataFetcher>
             </CardFooter>
           </Card>
+          <div>
+            {(media && ALLOWED_IMAGE_TYPES.includes(media.type)) && (
+              <Image
+                src={URL.createObjectURL(media)}
+                width={1080}
+                height={720}
+                quality={90}
+                alt="uploaded-media"
+                className="rounded-lg w-full"
+              />
+            )}
+          </div>
+          <div>
+            <input
+              type="file"
+              accept={`${ALLOWED_IMAGE_TYPES.join(",")}, ${ALLOWED_VIDEO_TYPES.join(",")}`}
+              ref={fileRef}
+              onChange={handleMediaChange}
+              hidden
+              className="w-0 h-0 scale-0 hidden"
+            />
+            <button
+              type="button"
+              className="text-muted-foreground tracking-wide font-plusJakartaSans text-sm w-full p-2.5 flex justify-center border border-active-bg rounded-lg cursor-pointer"
+              onClick={pickMedia}
+            >
+              Upload a picture/video
+            </button>
+          </div>
           <button
-            type="button"
-            className="text-muted-foreground w-full p-2.5 flex justify-center border border-active-bg rounded-lg cursor-pointer"
-          >
-            upload a picture
-          </button>
-          <button
-            type="submit"
-            className="rounded-md bg-foreground dark:text-secondary-bg text-white py-3 cursor-pointer font-plusJakartaSans font-semibold text-lg tracking-tight hover:bg-foreground/60"
+            className={`
+              rounded-md bg-foreground dark:text-secondary-bg 
+              text-white py-3 cursor-pointer font-plusJakartaSans 
+              font-semibold text-lg tracking-tight hover:bg-foreground/60
+            `}
+            onClick={() => formRef.current?.requestSubmit()}
           >
             submit
           </button>
@@ -174,7 +224,7 @@ const PostUploadPage = () => {
               <Title title="loading..." text="--text-base" />
             </div>
           )}
-        </form>
+        </div>
       </div>
       <div className="h-50"></div>
     </div>

@@ -1,4 +1,5 @@
 "use client";
+import Comment from "@/components/common/Comment";
 import {
   PostActions,
   PostsContainer,
@@ -16,12 +17,15 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
-  const [posts, setPosts] = useState<(Post & { tags: TagType[], like_id: string | null })[]>([]);
+  const [posts, setPosts] = useState<
+    (Post & { tags: TagType[]; like_id: string | null })[]
+  >([]);
   const [took, setTook] = useState<number>(0);
+  const [comments, setComments] = useState(false)
   const tickingRef = useRef(false);
   const reachedRef = useRef(false);
   const latestPost = useRef<Date>(null);
-  const router = useRouter()
+  const router = useRouter();
 
   const fetchPosts = () => {
     if (tickingRef.current || reachedRef.current) return;
@@ -33,8 +37,6 @@ export default function Home() {
       .then((res) => res?.json())
       .then((data) => {
         if (data.ok) {
-          console.log(data);
-
           setPosts((prev) => [...prev, ...data.posts]);
 
           if (data.posts.length < 10) reachedRef.current = true;
@@ -75,7 +77,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="w-full pt-32">
+    <div className="w-full flex pt-32">
       <PostsContainer>
         {posts.map((post) => (
           <PostWrapper
@@ -84,15 +86,12 @@ export default function Home() {
             <div className="w-full flex justify-center">
               <div className="font-plusJakartaSans text-center flex flex-col items-center border border-card-border p-5 rounded-lg">
                 <Title title={post.title} />
-                {post.image && (
-                  <img src={post.image} alt="bg" className="w-2/5 rounded-xl" />
-                )}
                 <p className="text-muted-foreground max-w-3/5">
                   {post.description}
                 </p>
                 <div className="flex gap-1.5 flex-wrap w-1/2 justify-center mt-5">
                   {post.tags.map((tag) => {
-                    if(tag.id === null || tag.tag === null) return null
+                    if (tag.id === null || tag.tag === null) return null;
                     return (
                       <TagItem
                         tag={`#${tag.tag}`}
@@ -103,14 +102,26 @@ export default function Home() {
                     );
                   })}
                 </div>
-                <PostActions onChange={(args: HandleLikeArgs, data) => {
-                  if(args.action === "delete" && data.ok) {
-                    setPosts(prev => prev.map((p) => p.id === post.id ? {...p, like_id: null } : p))
-                  } else if(args.action === "post" && data.ok) {
-                    setPosts(prev => prev.map(p => p.id === post.id ? {...p, like_id: data.like} : p))
-                  }
-                  
-                }} likeId={post.like_id} postId={post.id} />
+                <PostActions
+                  setComments={setComments}
+                  onChange={(args: HandleLikeArgs, data) => {
+                    if (args.action === "delete" && data.ok) {
+                      setPosts((prev) =>
+                        prev.map((p) =>
+                          p.id === post.id ? { ...p, like_id: null } : p,
+                        ),
+                      );
+                    } else if (args.action === "post" && data.ok) {
+                      setPosts((prev) =>
+                        prev.map((p) =>
+                          p.id === post.id ? { ...p, like_id: data.like } : p,
+                        ),
+                      );
+                    }
+                  }}
+                  likeId={post.like_id}
+                  postId={post.id}
+                />
               </div>
             </div>
           </PostWrapper>
@@ -119,6 +130,9 @@ export default function Home() {
       <div className="fixed top-0 left-0 text-white z-99">
         {posts.length} / {took}ms
       </div>
+      {comments && (
+        <Comment />
+      )}
     </div>
   );
 }

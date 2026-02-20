@@ -10,7 +10,7 @@ export async function GET(
     const { searchParams } = new URL(req.url)
     const { limit } = Object.fromEntries(searchParams.entries())
 
-    const rawSql = `SELECT id, title, description, image, created_at FROM posts WHERE author_id = $1 LIMIT $2`;
+    const rawSql = `SELECT id, title, description, created_at FROM posts WHERE author_id = $1 LIMIT $2`;
     const posts = await sql.query(rawSql, [id, Number(limit) || 18]);
 
     return NextResponse.json({ ok: true, posts }, { status: 200 });

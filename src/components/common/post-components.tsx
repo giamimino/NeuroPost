@@ -2,7 +2,7 @@ import { Children } from "@/types/global";
 import Line from "../ui/Line";
 import { useEffect, useRef, useState } from "react";
 import { HandleLikeArgs } from "@/types/arguments";
-import { Heart } from "lucide-react";
+import { Heart, MessageCircleMore } from "lucide-react";
 import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
 
@@ -52,11 +52,13 @@ const PostWrapper = ({ children }: Children) => {
 const PostActions = ({
   postId,
   likeId,
-  onChange
+  onChange,
+  setComments
 }: {
   postId: number;
   likeId: string | null;
-  onChange: (args: HandleLikeArgs, data: any) => void
+  onChange: (args: HandleLikeArgs, data: any) => void;
+  setComments: React.Dispatch<React.SetStateAction<boolean>>
 }) => {
   const handleLike = async (args: HandleLikeArgs) => {
     try {
@@ -71,14 +73,14 @@ const PostActions = ({
         ),
       });
       const data = await res?.json();
-      onChange(args, data)
+      onChange(args, data);
     } catch (error) {
       console.error(error);
     }
   };
 
   return (
-    <div className="flex flex-col items-center mt-3">
+    <div className="flex gap-3 items-center mt-3">
       <button
         className={`cursor-pointer w-fit`}
         onClick={() =>
@@ -97,6 +99,14 @@ const PostActions = ({
           height={18}
           className={`${likeId ? "text-red-600" : ""}`}
           {...(likeId ? { fill: "#ff0000" } : {})}
+        />
+      </button>
+      <button className={`cursor-pointer w-fit`}>
+        <MessageCircleMore
+          width={18}
+          height={18}
+          className={`${likeId ? "text-red-600" : ""}`}
+          onClick={() => setComments(prev => !prev)}
         />
       </button>
     </div>

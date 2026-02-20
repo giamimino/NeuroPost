@@ -13,6 +13,7 @@ import Title from "@/components/ui/title";
 import { apiFetch } from "@/lib/apiFetch";
 import { Post } from "@/types/neon";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { use, useEffect, useState } from "react";
 
 const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
@@ -25,6 +26,8 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     bio: string | null;
     posts?: Post[];
   } | null>(null);
+  const router = useRouter()
+
   useEffect(() => {
     apiFetch(`/api/user/${username}`)
       .then((res) => res?.json())
@@ -81,6 +84,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                   <Button
                     variant={"outline"}
                     className="bg-button-bg border border-button-border cursor-pointer w-full"
+                    onClick={() => router.push(`/post/${post.id}`)}
                   >
                     View
                   </Button>

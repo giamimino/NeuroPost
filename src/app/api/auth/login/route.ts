@@ -2,6 +2,7 @@ import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { createAccessToken, createRefreshToken } from "@/lib/jwt";
+import { ERRORS } from "@/constants/error-handling";
 
 function errorResponse(message: string) {
   return NextResponse.json({
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
 
     if (users.length === 0) {
       return NextResponse.json(
-        { error: "Invalid credentials" },
+        { error: ERRORS.TOKEN_INVALID },
         { status: 401 },
       );
     }
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
       return NextResponse.json(
-        { error: "Invalid credentials" },
+        { error: ERRORS.TOKEN_INVALID },
         { status: 401 },
       );
     }

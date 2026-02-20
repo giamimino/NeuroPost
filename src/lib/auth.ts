@@ -33,7 +33,6 @@ export async function auth({
   const user = await sql.query(rawSql, [payload.userId]);
 
   const end = new Date();
-  console.log(`GET auth 200 in ${end.getTime() - start.getTime()}ms`);
 
   return { payload, user: user[0] };
 }

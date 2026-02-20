@@ -115,7 +115,7 @@ const ProfilePage = () => {
               <>
                 {posts.map((post) => (
                   <Card
-                    className="w-1/4 gap-2 pb-0 overflow-hidden"
+                    className="w-1/4 gap-2 pb-0 overflow-hidden justify-between"
                     key={post.id}
                   >
                     <CardHeader>
