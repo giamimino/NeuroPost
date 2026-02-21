@@ -13,7 +13,7 @@ const AlertsProvider = () => {
 
     const timer = setTimeout(
       () => removeAlert(currentAlert.id),
-      currentAlert.duration,
+      currentAlert.duration || 2000,
     );
 
     return () => clearTimeout(timer);

@@ -272,4 +272,21 @@ export const ERRORS = {
     title: "Update Required",
     description: "Your app version is no longer supported. Please update.",
   },
+  INVALID_REQUEST_ERROR: {
+    title: "Invalid request",
+    description: "Please try again.",
+  },
+  COMMENT_EMPTY_ERROR: {
+    title: "Nothing to send",
+    description: "Please write something before submitting.",
+  },
+  POST_NOT_FOUND_ERROR: {
+    title: "Post not found",
+    description: "This post may have been deleted or is no longer available.",
+  },
+
+  GENERIC_SUBMIT_ERROR: {
+    title: "Something went wrong",
+    description: "Your comment could not be sent. Please try again.",
+  },
 } as const;

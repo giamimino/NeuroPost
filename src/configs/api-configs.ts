@@ -1,4 +1,4 @@
-export const ApiConfig: Record<string, RequestInit & { enabled?: boolean }> = {
+export const ApiConfig = {
   get: {
     method: "GET",
   },

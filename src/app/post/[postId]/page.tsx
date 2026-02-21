@@ -15,12 +15,22 @@ import { Spinner } from "@/components/ui/spinner";
 import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import { auth } from "@/lib/auth";
-import { MediaType, Post, UserJoin } from "@/types/neon";
-import { Settings } from "lucide-react";
+import {
+  CommentType,
+  CommentUserType,
+  MediaType,
+  Post,
+  UserJoin,
+} from "@/types/neon";
+import { Send, Settings } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { use, useEffect, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/apiFetch";
+import { Input } from "@/components/ui/input";
+import Line from "@/components/ui/Line";
+import { useAlertStore } from "@/store/zustand/alertStore";
+import { ERRORS } from "@/constants/error-handling";
 
 const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
   const { postId } = use(params);
@@ -35,6 +45,11 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
   >(null);
   const [loading, setLoading] = useState(true);
   const [deleted, setDeleted] = useState(false);
+  const [comments, setComments] = useState<
+    (CommentType & { user: CommentUserType })[]
+  >([]);
+  const commentInputRef = useRef<HTMLInputElement>(null);
+  const { addAlert } = useAlertStore();
 
   const handleDelete = async () => {
     if (!post) return;
@@ -48,17 +63,35 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
       });
       const data = await res?.json();
       console.log(data);
-      
-  
+
       if (data.ok) {
         setDeleted(true);
       }
     } catch (error) {
       console.error(error);
     }
-    
+  };
 
-  
+  const addComment = async () => {
+    if (!post) return;
+
+    const content = commentInputRef.current?.value;
+    const res = await apiFetch("/api/post/comment", {
+      ...ApiConfig.post,
+      body: JSON.stringify({ post_id: post.id, content }),
+    });
+    const data = await res?.json();
+    if (data.ok) {
+      setComments((prev) => [data.comment, ...prev]);
+    } else {
+      addAlert({
+        id: crypto.randomUUID(),
+        title: data.error.title || ERRORS.GENERIC_ERROR.title,
+        description: data.error.description || ERRORS.GENERIC_ERROR.description,
+        type: "error",
+        duration: 1500,
+      });
+    }
   };
 
   useEffect(() => {
@@ -76,6 +109,17 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
       .catch((err) => console.error(err));
   }, []);
 
+  useEffect(() => {
+    if(!post) return
+    
+    const url = `/api/post/comment?postId=${post.id}&limit=20` 
+    fetch(url).then(res => res.json()).then(data => {
+      if(data.ok) {
+        setComments(data.comments)
+      }
+    })
+  }, [post])
+
   if (deleted)
     return (
       <div className="pt-25 flex justify-center">
@@ -83,7 +127,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
       </div>
     );
   return (
-    <div className="pt-25">
+    <div className="pt-25 flex flex-col gap-5">
       <div className="flex items-center justify-center w-full">
         {loading ? (
           <div className="w-1/2">
@@ -197,6 +241,36 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
             )}
           </Card>
         )}
+      </div>
+      <div className="w-full flex items-center justify-center">
+        <Card className="w-1/2">
+          <CardHeader>
+            <CardTitle>Comments</CardTitle>
+            <div className="flex gap-2.5 items-center">
+              <Input ref={commentInputRef} placeholder="Add a comment..." />
+              <Button
+                variant={"outline"}
+                className="cursor-pointer"
+                onClick={addComment}
+              >
+                <Send />
+              </Button>
+            </div>
+            <Line className="mt-5" />
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2.5">
+            {comments.map((c) => (
+              <Card key={`${c.id}-${c.post_id}`} className="rounded-none border-t-0 border-l-0 border-r-0 p-3">
+                <CardContent className="flex flex-col gap-3 px-0">
+                  <CardTitle>
+                    {c.user.name}
+                  </CardTitle>
+                  <CardDescription>{c.content}</CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </CardContent>
+        </Card>
       </div>
       <div className="h-50"></div>
     </div>

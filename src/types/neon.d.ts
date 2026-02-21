@@ -55,3 +55,17 @@ export interface MediaType {
   post_id: number,
   created_at: Date
 }
+
+export interface CommentType {
+  id: string,
+  content: string,
+  post_id: number,
+  user_id: string,
+  created_at: Date
+}
+
+export interface CommentUserType {
+  id: string,
+  name: string,
+  profile_url: string,
+}
