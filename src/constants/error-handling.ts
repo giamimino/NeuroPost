@@ -1,13 +1,19 @@
+import { a } from "framer-motion/client";
 import {
   MAX_POST_IMAGE_SIZE,
   MAX_POST_VIDEO_SIZE,
   MAX_PROFILE_IMAGE_SIZE,
 } from "./validators";
-
+// allowed
 export const ERRORS = {
   GENERIC_ERROR: {
     title: "Unexpected Error",
     description: "Something went wrong. Please try again later.",
+  },
+
+  NOT_ALLOWED: {
+    title: "Action Not Allowed",
+    description: "You don’t have permission to perform this action",
   },
 
   IMAGE_TYPE_ERROR: {

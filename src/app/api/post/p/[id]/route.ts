@@ -25,7 +25,7 @@ export async function GET(
     }
 
     const posts = await sql.query(
-      "SELECT p.*, u.name, u.username FROM posts p JOIN users u ON p.author_id=u.id WHERE p.id = $1",
+      "SELECT p.*, json_build_object('name', u.name, 'username', u.username) as user, l.id as likeId FROM posts p JOIN users u ON p.author_id=u.id LEFT JOIN likes l ON l.post_id = $1 WHERE p.id = $1",
       [Number(id)],
     );
     const post = posts[0];

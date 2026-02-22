@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
-import { GENERIC_ERROR } from "@/constants/error-handling";
+import { ERRORS } from "@/constants/error-handling";
 import { auth } from "@/lib/auth";
 import { MediaValidator } from "@/utils/validator";
 import { s3 } from "@/lib/aws-sdk";
@@ -67,7 +67,7 @@ export async function GET(req: Request) {
   } catch (err) {
     console.error(err);
     return NextResponse.json(
-      { ok: false, message: GENERIC_ERROR },
+      { ok: false, message: ERRORS.GENERIC_ERROR },
       { status: 500 },
     );
   }
@@ -252,7 +252,7 @@ export async function DELETE(req: Request) {
     if (!post) return NextResponse.json({ ok: false }, { status: 404 });
 
     if (post.author_id !== payload.userId)
-      return NextResponse.json({ ok: false }, { status: 403 });
+      return NextResponse.json({ ok: false, error: ERRORS.NOT_ALLOWED }, { status: 403 });
 
     await sql.query(`DELETE FROM posts WHERE author_id = $1 and id = $2`, [
       payload.userId,

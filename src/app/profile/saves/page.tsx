@@ -9,8 +9,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Line from "@/components/ui/Line";
+import { monthsShort } from "@/constants/months";
 import { apiFetch } from "@/lib/apiFetch";
-import { Post } from "@/types/neon";
+import { CommentType, Post } from "@/types/neon";
 import clsx from "clsx";
 import { Heart, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -27,6 +28,7 @@ const ActivitySections = [
 const ProfileSavesPage = () => {
   const [section, setSection] = useState<"likes" | "comments">("likes");
   const [likes, setLikes] = useState<Post[]>([]);
+  const [comments, setComments] = useState<CommentType[]>([]);
   const router = useRouter();
   const fetchCache = useRef<{ likes: boolean; comments: boolean }>({
     likes: false,
@@ -37,24 +39,19 @@ const ProfileSavesPage = () => {
     router.push(`/post/${id}`);
   };
 
-  const filteredContent = useMemo(
-    () => (section === "likes" ? likes : []),
-    [section, likes],
-  );
-
-  console.log(filteredContent);
-
   useEffect(() => {
-    if (fetchCache.current.likes || fetchCache.current.comments) return;
+    if (fetchCache.current[section]) return;
 
     const url = `/api/user/${section}`;
     apiFetch(url)
       .then((res) => res?.json())
       .then((data) => {
         if (data.ok) {
-          console.log(data);
-
-          setLikes(data.posts);
+          if (section === "comments") {
+            setComments(data.comments);
+          } else if (section === "likes") {
+            setLikes(data.likes);
+          }
         }
       })
       .catch((err) => console.error(err))
@@ -94,32 +91,59 @@ const ProfileSavesPage = () => {
           <Line />
         </CardHeader>
         <CardContent className="grid  gap-6 grid-cols-3 justify-center">
-          {filteredContent.map((item) => (
-            <Card
-              className="gap-0 pb-0  overflow-hidden justify-between"
-              key={item.id}
-            >
-              <CardHeader>
-                <CardTitle>{item.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className=" line-clamp-3">
-                  {item.description}
-                </CardDescription>
-              </CardContent>
-              <CardFooter>
-                <div className="py-2 w-full">
-                  <Button
-                    variant={"outline"}
-                    className="w-full cursor-pointer"
-                    onClick={() => handleViewPost(item.id)}
-                  >
-                    View
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
+          {section === "likes" &&
+            likes.map((item) => (
+              <Card
+                className="gap-0 pb-0  overflow-hidden justify-between"
+                key={item.id}
+              >
+                <CardHeader>
+                  <CardTitle>{item.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className=" line-clamp-3">
+                    {item.description}
+                  </CardDescription>
+                </CardContent>
+                <CardFooter>
+                  <div className="py-2 w-full">
+                    <Button
+                      variant={"outline"}
+                      className="w-full cursor-pointer"
+                      onClick={() => handleViewPost(item.id)}
+                    >
+                      View
+                    </Button>
+                  </div>
+                </CardFooter>
+              </Card>
+            ))}
+          {section === "comments" &&
+            comments.map((item) => (
+              <Card key={item.id} className="relative p-4">
+                <Button
+                  className="absolute top-3 right-3 cursor-pointer"
+                  variant={"link"}
+                  onClick={() => router.push(`/post/${item.post_id}`)}
+                >
+                  view post
+                </Button>
+                <CardHeader className="px-0">
+                  <CardDescription className="flex flex-col">
+                    <span>
+                      {`${new Date(item.created_at).getHours()}:${new Date(item.created_at).getMinutes().toFixed().padStart(2, "0")}`}
+                    </span>
+                    <span>
+                      {`${new Date(item.created_at).getDate()} 
+                      ${monthsShort[new Date(item.created_at).getMonth()]}
+                      ${new Date(item.created_at).getFullYear()}
+                      `}
+                    </span>
+                  </CardDescription>
+                  <CardTitle>{item.content}</CardTitle>
+                </CardHeader>
+              </Card>
+            ))}
         </CardContent>
       </Card>
     </div>

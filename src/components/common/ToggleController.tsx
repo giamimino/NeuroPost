@@ -12,7 +12,7 @@ const ToggleController = ({
   whatToShow: ({
     handleShow,
   }: {
-    handleShow?: React.Dispatch<React.SetStateAction<boolean>>;
+    handleShow: React.Dispatch<React.SetStateAction<boolean>>;
   }) => React.ReactNode;
   children: ({
     setShow,
@@ -29,9 +29,11 @@ const ToggleController = ({
     <div className={cn("flex flex-col gap-5", className)}>
       {children({ setShow })}
       {animatePresence ? (
-        <AnimatePresence>{show && whatToShow({ handleShow: setShow})}</AnimatePresence>
+        <AnimatePresence>
+          {show ? whatToShow({ handleShow: setShow }) : null}
+        </AnimatePresence>
       ) : (
-        show && whatToShow({ handleShow: setShow})
+        show && whatToShow({ handleShow: setShow })
       )}
     </div>
   );

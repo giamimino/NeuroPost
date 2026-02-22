@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 
     const posts = await sql.query(`SELECT p.* FROM likes l JOIN posts p ON p.id = l.post_id WHERE l.user_id = $1`, [payload.userId])
 
-    return NextResponse.json({ ok: true, posts }, { status: 200 })
+    return NextResponse.json({ ok: true, likes: posts }, { status: 200 })
   } catch (err) {
     console.error(err);
     return NextResponse.json({ ok: false, message: "" }, { status: 500 })

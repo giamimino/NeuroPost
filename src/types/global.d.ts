@@ -7,7 +7,7 @@ export interface Children {
 export interface JWTUserPaylaod {
   exp: number,
   iat: number,
-  userId: number
+  userId: string
 }
 
 export interface TagType {
