@@ -3,12 +3,13 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { JWTUserPaylaod } from "@/types/global";
+import { ERRORS } from "@/constants/error-handling";
 
 export async function POST(req: Request) {
   try {
     const { postId }: { postId: number } = await req.json();
 
-    if (!postId) return NextResponse.json({ ok: false }, { status: 400 });
+    if (!postId) return NextResponse.json({ ok: false, error: ERRORS.INVALID_REQUEST_ERROR }, { status: 400 });
     const cookieStore = await cookies();
     const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
       ?.value as string;
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, like: likes[0].like_id }, { status: 200 });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ ok: false, message: "" }, { status: 500 });
+    return NextResponse.json({ ok: false }, { status: 500 });
   }
 }
 

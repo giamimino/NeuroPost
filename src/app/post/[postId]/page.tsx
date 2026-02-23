@@ -31,6 +31,8 @@ import { Input } from "@/components/ui/input";
 import Line from "@/components/ui/Line";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { ERRORS } from "@/constants/error-handling";
+import { handleLike } from "@/utils/functions/LikeActions";
+import { HandleLikeArgs } from "@/types/arguments";
 
 const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
   const { postId } = use(params);
@@ -40,7 +42,8 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
         media?: MediaType;
         signedUrl?: string | undefined;
         role: "creator" | "guest";
-        user: UserJoin
+        user: UserJoin;
+        likeid: string | null;
       })
     | null
   >(null);
@@ -124,7 +127,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
       .then((data) => {
         if (data.ok) {
           console.log(data);
-          
+
           setPost(data.post);
         }
         setLoading(false);
@@ -157,7 +160,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
         <div className="w-1/2 flex flex-col gap-5">
           <div className="flex items-center justify-center w-full">
             {loading ? (
-              <div className="w-1/2">
+              <div className="w-full">
                 <SkeletonCard />
               </div>
             ) : (
@@ -169,7 +172,24 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                 </CardHeader>
                 <CardContent>
                   <CardDescription>{post?.description}</CardDescription>
-                  <div>
+                  <div className="flex items-center mt-2 gap-2.5">
+                    {typeof post?.user.profile_url === "string" ? (
+                      <Image
+                        src={post.user.profile_url}
+                        width={40}
+                        height={40}
+                        alt="user-profile"
+                        className="w-10 h-10 object-cover rounded-full"
+                      />
+                    ) : (
+                      <Image
+                        src={"/user.jpg"}
+                        width={40}
+                        height={40}
+                        alt="user-profile"
+                        className="w-10 h-10 object-cover rounded-full"
+                      />
+                    )}
                     <button
                       className="text-foreground cursor-pointer hover:underline"
                       onClick={() => router.push(`/u/${post?.user.username}`)}
@@ -179,7 +199,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                   </div>
                 </CardContent>
                 {post?.signedUrl && post.media?.type === "image" && (
-                  <CardFooter className="px-0 mt-10">
+                  <CardFooter className="px-0 mt-5">
                     <img
                       src={post.signedUrl}
                       className="w-full object-cover max-h-150 rounded-xl"
@@ -320,10 +340,35 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
           <Card className="p-3 w-full relative flex flex-col gap-2">
             <Button
               size={"icon-xs"}
-              className="rounded-sm cursor-pointer"
+              className={`rounded-sm cursor-pointer ${post?.likeid && "text-red-600"}`}
               variant={"outline"}
+              onClick={
+                post
+                  ? async () => {
+                      const args: HandleLikeArgs = post.likeid
+                        ? { action: "delete", id: post.likeid }
+                        : {
+                            action: "post",
+                            postId: post.id,
+                          };
+                      const data = await handleLike(args);
+                      if (args.action === "delete" && data.ok) {
+                        setPost((p) => (p ? { ...p, likeid: null } : p));
+                      } else if (args.action === "post" && data.ok) {
+                        setPost((p) => (p ? { ...p, likeid: data.like } : p));
+                      } else if (data.error) {
+                        addAlert({
+                          ...data.error,
+                          id: crypto.randomUUID(),
+                          duration: 3 * 1000,
+                          type: "error",
+                        });
+                      }
+                    }
+                  : undefined
+              }
             >
-              <Heart />
+              <Heart {...(post?.likeid ? { fill: "#ff0000" } : {})} />
             </Button>
             {post?.role === "creator" && (
               <ToggleController

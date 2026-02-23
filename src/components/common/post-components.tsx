@@ -5,6 +5,7 @@ import { HandleLikeArgs } from "@/types/arguments";
 import { Heart, MessageCircleMore } from "lucide-react";
 import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
+import { handleLike } from "@/utils/functions/LikeActions";
 
 const PostsContainer = ({ children }: Children) => {
   return <section className="flex flex-col w-full gap-2.5">{children}</section>;
@@ -53,46 +54,28 @@ const PostActions = ({
   postId,
   likeId,
   onChange,
-  setComments
+  setComments,
 }: {
   postId: number;
   likeId: string | null;
   onChange: (args: HandleLikeArgs, data: any) => void;
-  setComments: React.Dispatch<React.SetStateAction<boolean>>
+  setComments: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const handleLike = async (args: HandleLikeArgs) => {
-    try {
-      const res = await apiFetch("/api/post/like", {
-        ...ApiConfig[args.action],
-        body: JSON.stringify(
-          args.action === "post"
-            ? {
-                postId: args.postId,
-              }
-            : { id: args.id },
-        ),
-      });
-      const data = await res?.json();
-      onChange(args, data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
     <div className="flex gap-3 items-center mt-3">
       <button
         className={`cursor-pointer w-fit`}
-        onClick={() =>
-          handleLike(
-            likeId
-              ? { action: "delete", id: likeId }
-              : {
-                  action: "post",
-                  postId,
-                },
-          )
-        }
+        onClick={async () => {
+          const args: HandleLikeArgs = likeId
+            ? { action: "delete", id: likeId }
+            : {
+                action: "post",
+                postId,
+              };
+          const data = await handleLike(args);
+          if(data.ok)
+            onChange(args, data);
+        }}
       >
         <Heart
           width={18}
@@ -106,7 +89,7 @@ const PostActions = ({
           width={18}
           height={18}
           className={`${likeId ? "text-red-600" : ""}`}
-          onClick={() => setComments(prev => !prev)}
+          onClick={() => setComments((prev) => !prev)}
         />
       </button>
     </div>

@@ -25,7 +25,10 @@ export async function GET(
     }
 
     const posts = await sql.query(
-      "SELECT p.*, json_build_object('name', u.name, 'username', u.username) as user, l.id as likeId FROM posts p JOIN users u ON p.author_id=u.id LEFT JOIN likes l ON l.post_id = $1 WHERE p.id = $1",
+      `SELECT p.*, json_build_object('name', u.name, 'username', u.username, 'profile_url', u.profile_url) as user, l.id as likeId 
+      FROM posts p JOIN users u ON p.author_id=u.id 
+      LEFT JOIN likes l ON l.post_id = $1 
+      WHERE p.id = $1`,
       [Number(id)],
     );
     const post = posts[0];
@@ -41,22 +44,23 @@ export async function GET(
       post.id,
     ]);
     const media = medias[0];
-    if (!media)
-      return NextResponse.json(
-        { ok: true, post: { ...post, role } },
-        { status: 200 },
-      );
-    const command = new GetObjectCommand({
-      Bucket: "neuropost",
-      Key: media.fileurl,
-    });
+    const keys = [post.user.profile_url || "", media?.fileurl || ""];
 
-    const signedUrl = await getSignedUrl(s3, command, {
-      expiresIn: 60 * 5,
-    });
+    const signedUrls = await Promise.all(
+      keys.map((key) => {
+        const command = new GetObjectCommand({
+          Bucket: "neuropost",
+          Key: key,
+        });
+        return getSignedUrl(s3, command, { expiresIn: 60 * 5 })
+      }),
+    );
 
     return NextResponse.json(
-      { ok: true, post: { ...post, signedUrl, media, role } },
+      {
+        ok: true,
+        post: { ...post, signedUrl: signedUrls[1] || null, media, role, user: { ...post.user, profile_url: signedUrls[0] } },
+      },
       { status: 200 },
     );
   } catch (err) {
