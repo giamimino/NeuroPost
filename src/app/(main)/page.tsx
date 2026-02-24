@@ -1,5 +1,4 @@
 "use client";
-import Comment from "@/components/common/Comment";
 import {
   PostActions,
   PostsContainer,
@@ -7,21 +6,19 @@ import {
 } from "@/components/common/post-components";
 import { TagItem } from "@/components/ui/tag";
 import Title from "@/components/ui/title";
-import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
 import { HandleLikeArgs } from "@/types/arguments";
 import { TagType } from "@/types/global";
 import { Post } from "@/types/neon";
-import { Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 
 export default function Home() {
   const [posts, setPosts] = useState<
     (Post & { tags: TagType[]; like_id: string | null })[]
   >([]);
   const [took, setTook] = useState<number>(0);
-  const [comments, setComments] = useState(false)
   const tickingRef = useRef(false);
   const reachedRef = useRef(false);
   const latestPost = useRef<Date>(null);
@@ -77,7 +74,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="w-full flex pt-32">
+    <motion.div className="w-full flex pt-20 transition duration-300">
       <PostsContainer>
         {posts.map((post) => (
           <PostWrapper
@@ -103,7 +100,6 @@ export default function Home() {
                   })}
                 </div>
                 <PostActions
-                  setComments={setComments}
                   onChange={(args: HandleLikeArgs, data) => {
                     if (args.action === "delete" && data.ok) {
                       setPosts((prev) =>
@@ -130,9 +126,6 @@ export default function Home() {
       <div className="fixed top-0 left-0 text-white z-99">
         {posts.length} / {took}ms
       </div>
-      {comments && (
-        <Comment />
-      )}
-    </div>
+    </motion.div>
   );
 }

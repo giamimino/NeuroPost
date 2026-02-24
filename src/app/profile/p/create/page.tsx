@@ -35,7 +35,6 @@ const PostUploadPage = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
 
-
   const handleUploadPost = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -43,9 +42,9 @@ const PostUploadPage = () => {
 
       const form = e.currentTarget;
       const formData = new FormData(form);
-      formData.append("tags", JSON.stringify(tags))
-      if(media) {
-        formData.append("file", media)
+      formData.append("tags", JSON.stringify(tags));
+      if (media) {
+        formData.append("file", media);
       }
       const url = "/api/post";
 
@@ -95,7 +94,11 @@ const PostUploadPage = () => {
           <div className="text-center">
             <Title title="Upload a post..." font="--font-plusJakartaSans" />
           </div>
-          <form ref={formRef} onSubmit={handleUploadPost} className="flex flex-col gap-4.5">
+          <form
+            ref={formRef}
+            onSubmit={handleUploadPost}
+            className="flex flex-col gap-4.5"
+          >
             <Input name="title" placeholder="title" />
             <DefaultTextarea
               name="description"
@@ -146,7 +149,7 @@ const PostUploadPage = () => {
               <CardTitle>Suggested tags</CardTitle>
               <DataFetcher
                 url="/api/tags?dir=ASC&limit=10"
-                config={TagsFetchConfigs}
+                config={TagsFetchConfigs as RequestInit & { enabled: boolean }}
                 targetKey={"tags"}
               >
                 {(data: Tag[]) => {
@@ -181,7 +184,7 @@ const PostUploadPage = () => {
             </CardFooter>
           </Card>
           <div>
-            {(media && ALLOWED_IMAGE_TYPES.includes(media.type)) && (
+            {media && ALLOWED_IMAGE_TYPES.includes(media.type) && (
               <Image
                 src={URL.createObjectURL(media)}
                 width={1080}

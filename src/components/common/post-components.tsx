@@ -6,6 +6,7 @@ import { Heart, MessageCircleMore } from "lucide-react";
 import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
 import { handleLike } from "@/utils/functions/LikeActions";
+import { useCommentsStore } from "@/store/zustand/commentsStore";
 
 const PostsContainer = ({ children }: Children) => {
   return <section className="flex flex-col w-full gap-2.5">{children}</section>;
@@ -54,13 +55,12 @@ const PostActions = ({
   postId,
   likeId,
   onChange,
-  setComments,
 }: {
   postId: number;
   likeId: string | null;
   onChange: (args: HandleLikeArgs, data: any) => void;
-  setComments: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
+  const { onOpen } = useCommentsStore()
   return (
     <div className="flex gap-3 items-center mt-3">
       <button
@@ -88,8 +88,7 @@ const PostActions = ({
         <MessageCircleMore
           width={18}
           height={18}
-          className={`${likeId ? "text-red-600" : ""}`}
-          onClick={() => setComments((prev) => !prev)}
+          onClick={() => onOpen(postId)}
         />
       </button>
     </div>

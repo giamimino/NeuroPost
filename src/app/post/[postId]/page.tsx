@@ -22,7 +22,15 @@ import {
   Post,
   UserJoin,
 } from "@/types/neon";
-import { Ellipsis, Heart, Send, Settings } from "lucide-react";
+import {
+  Ellipsis,
+  ExternalLink,
+  Heart,
+  MessageCircleMore,
+  Send,
+  Settings,
+  XIcon,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { use, useEffect, useRef, useState } from "react";
@@ -33,6 +41,12 @@ import { useAlertStore } from "@/store/zustand/alertStore";
 import { ERRORS } from "@/constants/error-handling";
 import { handleLike } from "@/utils/functions/LikeActions";
 import { HandleLikeArgs } from "@/types/arguments";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
   const { postId } = use(params);
@@ -370,6 +384,35 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
             >
               <Heart {...(post?.likeid ? { fill: "#ff0000" } : {})} />
             </Button>
+            <ToggleController
+              whatToShow={({ handleShow }) => (
+                <Card className="fixed top-1/2 left-1/2 -translate-1/2 min-w-40 py-4">
+                  <div className="px-4 flex items-center">
+                    <Button
+                      className="w-fit rounded-sm flex-1 max-w-6 cursor-pointer"
+                      size={"xs"}
+                      variant={"outline"}
+                      onClick={() => handleShow(false)}
+                    >
+                      <XIcon />
+                    </Button>
+                    <CardTitle className="flex-1 text-center">Share</CardTitle>
+                  </div>
+                  <CardContent></CardContent>
+                </Card>
+              )}
+            >
+              {({ setShow }) => (
+                <Button
+                  size={"icon-xs"}
+                  variant={"outline"}
+                  className="cursor-pointer rounded-sm"
+                  onClick={() => setShow((prev) => !prev)}
+                >
+                  <ExternalLink />
+                </Button>
+              )}
+            </ToggleController>
             {post?.role === "creator" && (
               <ToggleController
                 animatePresence
@@ -378,10 +421,17 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                     initial={{ opacity: 0, y: 10, scale: 0.5 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute -bottom-16 right-5"
+                    className="absolute -bottom-[135%] right-0"
                   >
                     <Card className="py-3">
-                      <CardContent className="px-3">
+                      <CardContent className="px-3 flex flex-col gap-2.5">
+                        <Button
+                          size={"md"}
+                          variant={"outline"}
+                          className="cursor-pointer w-full"
+                        >
+                          Edit
+                        </Button>
                         <ToggleController
                           animatePresence
                           whatToShow={({ handleShow }) => (
@@ -425,7 +475,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                             <Button
                               size={"md"}
                               variant={"outline"}
-                              className="cursor-pointer hover:text-red-600"
+                              className="cursor-pointer w-full hover:text-red-600"
                               onClick={() => setShow(true)}
                             >
                               Delete

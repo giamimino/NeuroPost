@@ -115,7 +115,12 @@ const Header = () => {
               <Search />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent>
+          <DropdownMenuContent
+            side="left"
+            align="start"
+            sideOffset={4}
+            className="max-h-60 overflow-y-auto"
+          >
             <DropdownMenuItem
               onClick={() => router.push("/search/posts")}
               className="cursor-pointer"

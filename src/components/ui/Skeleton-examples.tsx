@@ -36,19 +36,21 @@ function SkeletonPost({ className }: { className?: string }) {
 function SkeletonPosts({
   className,
   length = 5,
-  postClassName
+  postClassName,
 }: {
   className?: string;
   length: number;
-  postClassName?: string
+  postClassName?: string;
 }) {
   return (
-    <div className={cn("flex gap-6 flex-wrap justify-center w-full", className)}>
+    <div
+      className={cn("flex gap-6 flex-wrap justify-center w-full", className)}
+    >
       {Array.from({ length }).map((_, i) => (
         <SkeletonPost className={cn("w-1/4", postClassName)} key={i} />
       ))}
     </div>
-  )
+  );
 }
 
 function SkeletonArticle({ className }: { className?: string }) {
@@ -60,4 +62,28 @@ function SkeletonArticle({ className }: { className?: string }) {
   );
 }
 
-export { SkeletonCard, SkeletonPost, SkeletonArticle, SkeletonPosts };
+function SkeletonComment({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex flex-col gap-2.5 w-full", className)}>
+      <Skeleton className="w-1/4 h-5" />
+      <Skeleton className="w-3/4 h-10" />
+    </div>
+  );
+}
+
+function SkeletonComments({ className, length = 6 }: { className?: string, length?: number}) {
+  return (
+    <div className={cn("flex flex-col gap-3", className)}>
+      {Array.from({ length }).map((_, i) => <SkeletonComment key={i} />)}
+    </div>
+  )
+}
+
+export {
+  SkeletonCard,
+  SkeletonPost,
+  SkeletonArticle,
+  SkeletonPosts,
+  SkeletonComment,
+  SkeletonComments
+};

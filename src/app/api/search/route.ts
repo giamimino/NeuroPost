@@ -1,4 +1,4 @@
-import { GENERIC_ERROR } from "@/constants/error-handling";
+import { ERRORS } from "@/constants/error-handling";
 import { sql } from "@/lib/db";
 import { getScore } from "@/utils/getScore";
 import { NextRequest, NextResponse } from "next/server";
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const indexData = await indexFetch.json();
     if (!indexFetch.ok)
       return NextResponse.json(
-        { ok: false, message: GENERIC_ERROR },
+        { ok: false, error: ERRORS.GENERIC_ERROR },
         { status: 400 },
       );
 
