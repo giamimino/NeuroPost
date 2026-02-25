@@ -68,5 +68,18 @@ export interface CommentType {
 export interface CommentUserType {
   id: string,
   name: string,
-  profile_url: string,
+  username: string,
+  profile_url?: string | null,
+}
+
+export interface FollowType {
+  id: string,
+  follow_id: string,
+  follower_id: string,
+  created_at: Date
+}
+
+export interface UserFollowJoinType {
+  id: string,
+  created_at: Date
 }

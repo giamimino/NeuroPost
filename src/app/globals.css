@@ -15,6 +15,7 @@
   --color-card-footer-border: #343535;
   --color-button-bg: #151515;
   --color-button-border: #2f2f2f;
+  --color-btn-secondary: #ff2b56;
 
   --background: var(--color-bg);
   --foreground: var(--color-foreground);

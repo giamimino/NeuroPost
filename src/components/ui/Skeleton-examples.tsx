@@ -71,12 +71,22 @@ function SkeletonComment({ className }: { className?: string }) {
   );
 }
 
-function SkeletonComments({ className, length = 6 }: { className?: string, length?: number}) {
+function SkeletonComments({
+  className,
+  length = 6,
+  commentClassName,
+}: {
+  className?: string;
+  length?: number;
+  commentClassName?: string;
+}) {
   return (
     <div className={cn("flex flex-col gap-3", className)}>
-      {Array.from({ length }).map((_, i) => <SkeletonComment key={i} />)}
+      {Array.from({ length }).map((_, i) => (
+        <SkeletonComment key={i} className={commentClassName} />
+      ))}
     </div>
-  )
+  );
 }
 
 export {
@@ -85,5 +95,5 @@ export {
   SkeletonArticle,
   SkeletonPosts,
   SkeletonComment,
-  SkeletonComments
+  SkeletonComments,
 };

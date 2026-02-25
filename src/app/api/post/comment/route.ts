@@ -5,6 +5,9 @@ import jwt from "jsonwebtoken";
 import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
 import { CommentType, CommentUserType } from "@/types/neon";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { s3 } from "@/lib/aws-sdk";
 
 export async function POST(req: Request) {
   try {
@@ -41,8 +44,26 @@ export async function POST(req: Request) {
       [content, post_id, payload.userId],
     );
 
+    const key = comment[0].user.profile_url;
+    let signedUrl;
+    if (key) {
+      const command = new GetObjectCommand({
+        Bucket: "neuropost",
+        Key: key,
+      });
+
+      signedUrl = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
+    }
+
     return NextResponse.json(
-      { ok: true, comment: comment[0] },
+      {
+        ok: true,
+        comment: {
+          ...comment[0],
+          user: { ...comment[0].user, profile_url: signedUrl || key },
+          role: "creator",
+        },
+      },
       { status: 200 },
     );
   } catch (err) {
@@ -54,7 +75,9 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const { postId, limit } = Object.fromEntries(searchParams.entries());
+    const { postId, limit, withProfile } = Object.fromEntries(
+      searchParams.entries(),
+    );
 
     if (!postId || !Number(postId))
       return NextResponse.json(
@@ -77,7 +100,7 @@ export async function GET(req: Request) {
     }
 
     const comments = (await sql.query(
-      `SELECT c.*, json_build_object('id', u.id, 'name', u.name, 'profile_url', u.profile_url) as user FROM comments c 
+      `SELECT c.*, json_build_object('id', u.id, 'name', u.name, 'username', u.username, 'profile_url', u.profile_url) as user FROM comments c 
       JOIN users u ON u.id = c.user_id WHERE c.post_id = $1 ORDER BY c.created_at DESC LIMIT $2`,
       [postId, Number(limit) || 20],
     )) as (CommentType & { user: CommentUserType })[];
@@ -92,8 +115,38 @@ export async function GET(req: Request) {
         { status: 404 },
       );
 
+    let signedComments = null;
+    if (Boolean(withProfile) === true) {
+      const keys = comments.map((c) => c.user.profile_url || "");
+
+      const signedUrls = await Promise.all(
+        keys.map((key) => {
+          const command = new GetObjectCommand({
+            Bucket: "neuropost",
+            Key: key,
+          });
+
+          return getSignedUrl(s3, command, { expiresIn: 5 * 60 });
+        }),
+      );
+
+      signedComments = commentItems.map((c, i) => ({
+        ...c,
+        user: {
+          ...c.user,
+          profile_url: c.user.profile_url ? signedUrls[i] : "/user.jpg",
+        },
+      }));
+    }
+
     return NextResponse.json(
-      { ok: true, comments: commentItems },
+      {
+        ok: true,
+        comments:
+          withProfile && signedComments && signedComments.length > 0
+            ? signedComments
+            : commentItems,
+      },
       { status: 200 },
     );
   } catch (err) {

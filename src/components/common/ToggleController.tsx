@@ -26,7 +26,7 @@ const ToggleController = ({
   const [show, setShow] = useState(defaultOpen);
 
   return (
-    <div className={cn("flex flex-col gap-5", className)}>
+    <div className={cn("flex flex-col", className)}>
       {children({ setShow })}
       {animatePresence ? (
         <AnimatePresence>

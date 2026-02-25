@@ -10,8 +10,10 @@ import {
 } from "@/components/ui/card";
 import Line from "@/components/ui/Line";
 import Title from "@/components/ui/title";
+import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
-import { Post } from "@/types/neon";
+import { Post, UserFollowJoinType } from "@/types/neon";
+import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { use, useEffect, useState } from "react";
@@ -25,8 +27,25 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     username: string;
     bio: string | null;
     posts?: Post[];
+    follow: UserFollowJoinType;
   } | null>(null);
-  const router = useRouter()
+  const router = useRouter();
+
+  const handleFollow = async () => {
+    if (!user) return;
+    const method = user.follow.id ? "delete" : "post";
+
+    const url = "/api/follow";
+    const res = await fetch(url, {
+      ...ApiConfig[method],
+      body: JSON.stringify({
+        followId: method === "post" ? user.id : user.follow.id,
+      }),
+    });
+    const data = await res.json();
+
+    console.log(data);
+  };
 
   useEffect(() => {
     apiFetch(`/api/user/${username}`)
@@ -66,18 +85,37 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
             @{user?.username ?? "[username]"}
           </p>
         </div>
+        <div>
+          <Button
+            variant={user?.follow.id ? "outline" : "default"}
+            className={clsx(
+              "cursor-pointer",
+              user?.follow.id
+                ? ""
+                : "bg-btn-secondary text-foreground hover:bg-btn-secondary/60",
+            )}
+            onClick={handleFollow}
+          >
+            Follow
+          </Button>
+        </div>
         <div className="my-3">
           <p className="text-foreground">{user?.bio ?? "No bio yet."}</p>
         </div>
         <Line />
         <div className="flex w-full gap-8 flex-wrap justify-center mt-5">
           {user?.posts?.map((post) => (
-            <Card className="w-1/4 gap-2 pb-0 overflow-hidden justify-between" key={post.id}>
+            <Card
+              className="w-1/4 gap-2 pb-0 overflow-hidden justify-between"
+              key={post.id}
+            >
               <CardHeader>
                 <CardTitle>{post.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription className="self-start line-clamp-3">{post.description}</CardDescription>
+                <CardDescription className="self-start line-clamp-3">
+                  {post.description}
+                </CardDescription>
               </CardContent>
               <CardFooter className="bg-card-footer/60 border-t border-card-border">
                 <div className="py-2 w-full">

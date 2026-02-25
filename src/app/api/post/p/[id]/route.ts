@@ -58,8 +58,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        ok: true,
-        post: { ...post, signedUrl: signedUrls[1] || null, media, role, user: { ...post.user, profile_url: signedUrls[0] } },
+        ok: true, 
+        post: { ...post, signedUrl: signedUrls[1] || null, media, role, user: { ...post.user, profile_url: post.user.profile_url ? signedUrls[0] : "/user.jpg" } },
       },
       { status: 200 },
     );

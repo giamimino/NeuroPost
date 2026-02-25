@@ -13,10 +13,15 @@ import { Post } from "@/types/neon";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function Home() {
   const [posts, setPosts] = useState<
-    (Post & { tags: TagType[]; like_id: string | null })[]
+    (Post & {
+      tags: TagType[];
+      like_id: string | null;
+      mediaUrl: string | null;
+    })[]
   >([]);
   const [took, setTook] = useState<number>(0);
   const tickingRef = useRef(false);
@@ -29,7 +34,7 @@ export default function Home() {
     const now = new Date().getTime();
 
     tickingRef.current = true;
-    const url = `/api/post/foryou?limit=10&col=created_at&dir=DESC&cursor=${latestPost.current || ""}`;
+    const url = `/api/post/foryou?limit=20&col=created_at&dir=DESC&withMedia=true&cursor=${latestPost.current || ""}`;
     apiFetch(url)
       .then((res) => res?.json())
       .then((data) => {
@@ -83,10 +88,21 @@ export default function Home() {
             <div className="w-full flex justify-center">
               <div className="font-plusJakartaSans text-center flex flex-col items-center border border-card-border p-5 rounded-lg">
                 <Title title={post.title} />
-                <p className="text-muted-foreground max-w-3/5">
+                <p className="text-muted-foreground max-w-3/5 line-clamp-4">
                   {post.description}
                 </p>
-                <div className="flex gap-1.5 flex-wrap w-1/2 justify-center mt-5">
+                <div>
+                  {post.mediaUrl && (
+                    <Image
+                      src={post.mediaUrl}
+                      width={1080}
+                      height={720}
+                      alt={post.title}
+                      className="object-cover rounded-md mt-2 w-full"
+                    />
+                  )}
+                </div>
+                <div className="flex gap-1.5 flex-wrap justify-center mt-5">
                   {post.tags.map((tag) => {
                     if (tag.id === null || tag.tag === null) return null;
                     return (

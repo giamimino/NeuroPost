@@ -47,6 +47,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
   const { postId } = use(params);
@@ -184,7 +185,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                     {post?.title ?? "[title]"}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pb-5">
                   <CardDescription>{post?.description}</CardDescription>
                   <div className="flex items-center mt-2 gap-2.5">
                     {typeof post?.user.profile_url === "string" ? (
@@ -193,16 +194,10 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                         width={40}
                         height={40}
                         alt="user-profile"
-                        className="w-10 h-10 object-cover rounded-full"
+                        className="w-8 h-8 object-cover rounded-full"
                       />
                     ) : (
-                      <Image
-                        src={"/user.jpg"}
-                        width={40}
-                        height={40}
-                        alt="user-profile"
-                        className="w-10 h-10 object-cover rounded-full"
-                      />
+                      <Skeleton className="h-8 w-8 rounded-full" />
                     )}
                     <button
                       className="text-foreground cursor-pointer hover:underline"
