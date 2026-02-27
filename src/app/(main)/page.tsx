@@ -9,11 +9,12 @@ import Title from "@/components/ui/title";
 import { apiFetch } from "@/lib/apiFetch";
 import { HandleLikeArgs } from "@/types/arguments";
 import { TagType } from "@/types/global";
-import { Post } from "@/types/neon";
+import { Post, UserJoin } from "@/types/neon";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { CardDescription } from "@/components/ui/card";
 
 export default function Home() {
   const [posts, setPosts] = useState<
@@ -21,6 +22,8 @@ export default function Home() {
       tags: TagType[];
       like_id: string | null;
       mediaUrl: string | null;
+      user: UserJoin;
+      likes: string
     })[]
   >([]);
   const [took, setTook] = useState<number>(0);
@@ -34,7 +37,7 @@ export default function Home() {
     const now = new Date().getTime();
 
     tickingRef.current = true;
-    const url = `/api/post/foryou?limit=20&col=created_at&dir=DESC&withMedia=true&cursor=${latestPost.current || ""}`;
+    const url = `/api/post/foryou?limit=20&col=created_at&dir=DESC&withMedia=true&user=true&cursor=${latestPost.current || ""}`;
     apiFetch(url)
       .then((res) => res?.json())
       .then((data) => {
@@ -86,11 +89,25 @@ export default function Home() {
             key={`a_${post.author_id}_pd_${post.id}_postwrapper-${post.created_at}`}
           >
             <div className="w-full flex justify-center">
-              <div className="font-plusJakartaSans text-center flex flex-col items-center border border-card-border p-5 rounded-lg">
-                <Title title={post.title} />
-                <p className="text-muted-foreground max-w-3/5 line-clamp-4">
-                  {post.description}
-                </p>
+              <div className="font-plusJakartaSans text-start flex flex-col items-start border border-card-border p-5 rounded-lg">
+                <div className="flex flex-col self-start">
+                  <Title title={post.title} />
+                  <p className="text-muted-foreground max-w-3/5 line-clamp-4">
+                    {post.description}
+                  </p>
+                </div>
+                <div className="flex gap-2.5">
+                  <Image
+                    src={post.user.profile_url ?? "/user.jpg"}
+                    width={48}
+                    height={48}
+                    alt={`${post.user.name}-user-profile`}
+                    className="object-cover rounded-full mt-2 w-9 h-9"
+                  />
+                  <CardDescription className="self-end mb-1 cursor-pointer" onClick={() => router.push(`/u/${post.user.username}`)}>
+                    {post.user.name}
+                  </CardDescription>
+                </div>
                 <div>
                   {post.mediaUrl && (
                     <Image
@@ -116,17 +133,18 @@ export default function Home() {
                   })}
                 </div>
                 <PostActions
+                  likes={Number(post.likes)}
                   onChange={(args: HandleLikeArgs, data) => {
                     if (args.action === "delete" && data.ok) {
                       setPosts((prev) =>
                         prev.map((p) =>
-                          p.id === post.id ? { ...p, like_id: null } : p,
+                          p.id === post.id ? { ...p, like_id: null, likes: String(Number(p.likes) - 1) } : p,
                         ),
                       );
                     } else if (args.action === "post" && data.ok) {
                       setPosts((prev) =>
                         prev.map((p) =>
-                          p.id === post.id ? { ...p, like_id: data.like } : p,
+                          p.id === post.id ? { ...p, like_id: data.like, likes: String(Number(p.likes) + 1) } : p,
                         ),
                       );
                     }

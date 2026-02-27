@@ -7,6 +7,7 @@ export interface Post {
 }
 
 export interface UserJoin {
+  id: string
   name: string;
   username: string;
   profile_url: string | null;
