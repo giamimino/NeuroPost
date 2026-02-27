@@ -7,31 +7,11 @@ on:
       - "src/app/**"
       - ".github/workflows/**"
 
-  pull_request:
-    paths:
-      - "client/**"
-      - "server/**"
-      - ".github/workflows/**"
-
 concurrency:
   cancel-in-progress: true
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            - "package.json"
-            - ".github/workflows/**"
-
   ci:
     runs-on: ubuntu-latest
     timeout-minutes: 30
