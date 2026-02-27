@@ -13,13 +13,13 @@ if (!global.redisClient) {
 
   client.on("error", (err) => console.error("Redis Client Error", err));
 
-  global.redisClient = client
+  global.redisClient = client;
 } else {
-  client = global.redisClient
+  client = global.redisClient;
 }
 
-if(!client.isOpen) {
-  await client.connect()
+if (!client.isOpen) {
+  await client.connect();
 }
 
 export default client;

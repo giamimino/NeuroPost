@@ -22,21 +22,30 @@ export async function POST(req: Request) {
 
     const hashPassword = await bcrypt.hash(password, 12);
 
-    const rawUserSql = `INSERT INTO users (email, password, name, username) values ($1, $2, $3, $4) RETURNING id;`; 
-    const user = await sql.query(rawUserSql, [email, hashPassword, username, username]) as any
+    const rawUserSql = `INSERT INTO users (email, password, name, username) values ($1, $2, $3, $4) RETURNING id;`;
+    const user = (await sql.query(rawUserSql, [
+      email,
+      hashPassword,
+      username,
+      username,
+    ])) as any;
 
     const accessToken = createAccessToken(user[0].id);
     const refreshToken = createRefreshToken(user[0].id);
 
     const refreshTokenSql = `INSERT INTO refresh_tokens (token, user_id, expires_at) values (${refreshToken}, ${user[0].id}, NOW() + INTERVAL '7 days')`;
-    await sql.query(refreshTokenSql)
+    await sql.query(refreshTokenSql);
 
-    const res = NextResponse.json({ success: true })
+    const res = NextResponse.json({ success: true });
 
-    res.cookies.set(process.env.ACCESS_COOKIE_NAME!, accessToken, { httpOnly: true })
-    res.cookies.set(process.env.REFRESH_COOKIE_NAME!, refreshToken, { httpOnly: true })
+    res.cookies.set(process.env.ACCESS_COOKIE_NAME!, accessToken, {
+      httpOnly: true,
+    });
+    res.cookies.set(process.env.REFRESH_COOKIE_NAME!, refreshToken, {
+      httpOnly: true,
+    });
 
-    return res
+    return res;
   } catch (err) {
     console.error(err);
     return errorResponse("Something went wrong.");

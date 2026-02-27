@@ -9,10 +9,10 @@ import React, { useEffect, useState } from "react";
 const TagsPage = () => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
-    const controller = new AbortController() 
+    const controller = new AbortController();
     const { signal } = controller;
 
     const url = `/api/tags?limit=66&dir=DESC`;
@@ -41,7 +41,11 @@ const TagsPage = () => {
           {tags.map((tag) => (
             <Card key={tag.id} className="text-center w-50">
               <div className="px-6">
-              <TagItem tag={`#${tag.tag}`} variant="none" onClick={() => router.push(`/tags/${tag.tag}`)} />
+                <TagItem
+                  tag={`#${tag.tag}`}
+                  variant="none"
+                  onClick={() => router.push(`/tags/${tag.tag}`)}
+                />
               </div>
             </Card>
           ))}

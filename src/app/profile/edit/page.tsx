@@ -29,7 +29,7 @@ const ProfileEditPage = () => {
   const [bio, setBio] = useState("");
   const [changed, setChanged] = useState(false);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
   const fields = [
     {
       label: "Username",
@@ -93,7 +93,7 @@ const ProfileEditPage = () => {
   };
 
   useEffect(() => {
-    setLoading(true)
+    setLoading(true);
     apiFetch("/api/user")
       .then((res) => res?.json())
       .then((data) => {
@@ -105,7 +105,8 @@ const ProfileEditPage = () => {
           setName(u.name);
           setBio(u.bio || "");
         }
-      }).finally(() => setLoading(false))
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {

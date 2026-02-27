@@ -10,13 +10,23 @@ let cache: NormalizedIndex[] | null = null;
 export async function GET() {
   try {
     if (cache)
-      return NextResponse.json({ ok: true, cached: true, indexes: cache, ramCache: true });
+      return NextResponse.json({
+        ok: true,
+        cached: true,
+        indexes: cache,
+        ramCache: true,
+      });
     const cached = await client.get("search:index");
 
     if (cached) {
       cache = JSON.parse(cached);
       return NextResponse.json(
-        { ok: true, cached: true, indexes: JSON.parse(cached), ramCache: false },
+        {
+          ok: true,
+          cached: true,
+          indexes: JSON.parse(cached),
+          ramCache: false,
+        },
         { status: 200 },
       );
     }
@@ -26,7 +36,7 @@ export async function GET() {
     await client.set("search:index", JSON.stringify(index), {
       expiration: { type: "EX", value: 60 * 20 },
     });
-    cache = index
+    cache = index;
 
     return NextResponse.json(
       { ok: true, indexes: index, cached: false, ramCache: false },

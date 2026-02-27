@@ -9,7 +9,11 @@ export async function POST(req: Request) {
   try {
     const { postId }: { postId: number } = await req.json();
 
-    if (!postId) return NextResponse.json({ ok: false, error: ERRORS.INVALID_REQUEST_ERROR }, { status: 400 });
+    if (!postId)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.INVALID_REQUEST_ERROR },
+        { status: 400 },
+      );
     const cookieStore = await cookies();
     const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
       ?.value as string;
@@ -24,9 +28,12 @@ export async function POST(req: Request) {
     }
 
     const rawSQL = `INSERT INTO likes (user_id, post_id) VALUES ($1, $2) RETURNING id as like_id`;
-    const likes = await sql.query(rawSQL, [payload.userId, postId]) as any;
+    const likes = (await sql.query(rawSQL, [payload.userId, postId])) as any;
 
-    return NextResponse.json({ ok: true, like: likes[0].like_id }, { status: 200 });
+    return NextResponse.json(
+      { ok: true, like: likes[0].like_id },
+      { status: 200 },
+    );
   } catch (err) {
     console.error(err);
     return NextResponse.json({ ok: false }, { status: 500 });

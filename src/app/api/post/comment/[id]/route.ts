@@ -48,8 +48,11 @@ export async function DELETE(
         { ok: false, error: ERRORS.NOT_ALLOWED },
         { status: 403 },
       );
-    
-    await sql.query(`DELETE FROM comments WHERE id = $1 AND user_id = $2`, [id, payload.userId])
+
+    await sql.query(`DELETE FROM comments WHERE id = $1 AND user_id = $2`, [
+      id,
+      payload.userId,
+    ]);
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {

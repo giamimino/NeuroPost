@@ -14,7 +14,8 @@
     "test:ts": "ts-node test.ts",
     "g:posts": "node generatePosts.js",
     "g:tags": "ts-node generateTags.ts",
-    "prettier:check": "prettier --check 'src/**/*.{ts,tsx,js,jsx}'"
+    "prettier:check": "prettier --check 'src/**/*.{ts,tsx,js,jsx}'",
+    "prettier:fix": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\""
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.990.0",

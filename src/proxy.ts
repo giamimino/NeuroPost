@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export default async function middleware(req: NextRequest) {
   const start = Date.now();
-  const cookieStore = await cookies()
+  const cookieStore = await cookies();
   const token = cookieStore.get(process.env.REFRESH_COOKIE_NAME!)?.value;
   const pathname = req.nextUrl.pathname;
 

@@ -7,8 +7,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const { searchParams } = new URL(req.url)
-    const { limit } = Object.fromEntries(searchParams.entries())
+    const { searchParams } = new URL(req.url);
+    const { limit } = Object.fromEntries(searchParams.entries());
 
     const rawSql = `SELECT id, title, description, created_at FROM posts WHERE author_id = $1 LIMIT $2`;
     const posts = await sql.query(rawSql, [id, Number(limit) || 18]);

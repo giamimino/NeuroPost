@@ -20,17 +20,19 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const SearchUsersPage = () => {
-  const [users, setUsers] = useState<{name: string, username: string, id: string, bio: string | null}[]>([]);
+  const [users, setUsers] = useState<
+    { name: string; username: string; id: string; bio: string | null }[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const debouncedSearch = useDebounce(searchValue);
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     if (!debouncedSearch) return;
     (async () => {
       try {
-        setLoading(true)
+        setLoading(true);
         const res = await fetch("/api/search/u", {
           ...ApiConfig.post,
           body: JSON.stringify({ query: debouncedSearch }),
@@ -38,15 +40,15 @@ const SearchUsersPage = () => {
         if (!res.ok) return;
 
         const data = await res.json();
-        setUsers(data.users)
+        setUsers(data.users);
       } catch (error) {
         console.error(error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     })();
   }, [debouncedSearch]);
-  
+
   return (
     <div className="w-full pt-32">
       <div className="w-full flex justify-center">
@@ -75,7 +77,11 @@ const SearchUsersPage = () => {
             </CardContent>
             <CardFooter className="">
               <div className="py-2 w-full">
-                <Button variant={"outline"} className="w-full cursor-pointer" onClick={() => router.push(`/u/${user.username}`)}>
+                <Button
+                  variant={"outline"}
+                  className="w-full cursor-pointer"
+                  onClick={() => router.push(`/u/${user.username}`)}
+                >
                   View
                 </Button>
               </div>
@@ -86,12 +92,13 @@ const SearchUsersPage = () => {
       <div className="w-full flex justify-center flex-wrap gap-8 text-white mt-5 px-20">
         {loading && (
           <>
-          {Array.from({ length: 4 }).fill("").map((_, index) => (
-            <div key={index} className="w-2/7">
-              <SkeletonPost />
-
-            </div>
-          ))}
+            {Array.from({ length: 4 })
+              .fill("")
+              .map((_, index) => (
+                <div key={index} className="w-2/7">
+                  <SkeletonPost />
+                </div>
+              ))}
           </>
         )}
       </div>

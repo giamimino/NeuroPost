@@ -24,7 +24,7 @@ export function MediaValidator(
   } else if (type === "image" && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
     return IMAGE_TYPE_ERROR;
   }
-  
+
   if (type === "video" && file.size > MAX_POST_IMAGE_SIZE) {
     return MAX_VIDEO_SIZE_ERROR;
   } else if (type === "image" && file.size > MAX_POST_IMAGE_SIZE) {

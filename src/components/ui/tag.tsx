@@ -19,7 +19,9 @@ function TagItem({
       )}
       onClick={onClick}
     >
-      <CardDescription className="cursor-pointer hover:text-black dark:hover:text-amber-50/90">{tag}</CardDescription>
+      <CardDescription className="cursor-pointer hover:text-black dark:hover:text-amber-50/90">
+        {tag}
+      </CardDescription>
     </div>
   );
 }

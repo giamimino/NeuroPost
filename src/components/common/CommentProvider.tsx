@@ -34,7 +34,7 @@ const CommentProvider = () => {
   >([]);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const { addAlert } = useAlertStore();
-  const router = useRouter()
+  const router = useRouter();
 
   const addComment = async () => {
     if (!comment) return;
@@ -114,17 +114,17 @@ const CommentProvider = () => {
             transition={{ type: "spring", stiffness: 120, damping: 20 }}
           >
             <Card className="fixed top-20 w-1/3 pb-3 h-[80vh] gap-0">
-                <div className="flex justify-between items-center px-6">
-                  <CardTitle>Comments</CardTitle>
-                  <Button
-                    variant={"outline"}
-                    size={"md"}
-                    className="cursor-pointer"
-                    onClick={onClose}
-                  >
-                    <XIcon />
-                  </Button>
-                </div>
+              <div className="flex justify-between items-center px-6">
+                <CardTitle>Comments</CardTitle>
+                <Button
+                  variant={"outline"}
+                  size={"md"}
+                  className="cursor-pointer"
+                  onClick={onClose}
+                >
+                  <XIcon />
+                </Button>
+              </div>
               <CardContent className="overflow-auto">
                 {loading ? (
                   <SkeletonComments />
@@ -231,10 +231,19 @@ const CommentProvider = () => {
                               className="w-8 h-8 object-cover rounded-full self-start"
                               alt={c.user.name}
                             />
-                          ) : <Skeleton className="w-8 h-8 rounded-full" />}
+                          ) : (
+                            <Skeleton className="w-8 h-8 rounded-full" />
+                          )}
                           <div>
                             <div className="flex gap-2">
-                              <CardTitle className="cursor-pointer" onClick={() => router.push(`/u/${c.user.username}`)}>{c.user.name}</CardTitle>
+                              <CardTitle
+                                className="cursor-pointer"
+                                onClick={() =>
+                                  router.push(`/u/${c.user.username}`)
+                                }
+                              >
+                                {c.user.name}
+                              </CardTitle>
                               <CardDescription>
                                 {timeAgo(new Date(c.created_at))}
                               </CardDescription>

@@ -246,13 +246,16 @@ export async function DELETE(req: Request) {
       `SELECT p.author_id, p.id, json_agg(json_build_object('media_id', m.id, 'fileurl', m.fileurl)) as media
       FROM posts p LEFT JOIN media m ON m.post_id = p.id  WHERE p.id = $1 GROUP BY p.id`,
       [postId],
-    )
+    );
     const post = posts[0];
 
     if (!post) return NextResponse.json({ ok: false }, { status: 404 });
 
     if (post.author_id !== payload.userId)
-      return NextResponse.json({ ok: false, error: ERRORS.NOT_ALLOWED }, { status: 403 });
+      return NextResponse.json(
+        { ok: false, error: ERRORS.NOT_ALLOWED },
+        { status: 403 },
+      );
 
     await sql.query(`DELETE FROM posts WHERE author_id = $1 and id = $2`, [
       payload.userId,
@@ -260,10 +263,9 @@ export async function DELETE(req: Request) {
     ]);
 
     if (mediaId && post.media[0].fileurl) {
-      const media = post.media[0]
+      const media = post.media[0];
 
       console.log(media);
-      
 
       if (!media) return NextResponse.json({ ok: false }, { status: 404 });
 

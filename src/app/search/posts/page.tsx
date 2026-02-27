@@ -24,31 +24,31 @@ const SearchPostsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchValue, setSearchValue] = useState("");
   const debouncedSearch = useDebounce(searchValue);
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     if (posts.length !== 0) return;
     const controller = new AbortController();
-    const signal = controller.signal
+    const signal = controller.signal;
     const url = `/api/post?limit=4&col=created_at&dir=DESC`;
 
     (async () => {
       try {
-        const res = await fetch(url, {...ApiConfig.get, signal})
-        const data = await res?.json()
-        if(data.ok) {
-          setPosts(() => data.posts)
+        const res = await fetch(url, { ...ApiConfig.get, signal });
+        const data = await res?.json();
+        if (data.ok) {
+          setPosts(() => data.posts);
         }
-        setLoading(false)
+        setLoading(false);
       } catch (error: any) {
-        if(error.name === "AbortError") {
+        if (error.name === "AbortError") {
           console.log("Fetch Aborted");
         } else {
           console.error(error);
         }
       }
-    })()
-    
+    })();
+
     return () => controller.abort();
   }, []);
 
@@ -75,7 +75,7 @@ const SearchPostsPage = () => {
       setPosts(result.posts);
     })();
   }, [debouncedSearch]);
-  
+
   return (
     <div className="w-full pt-32">
       <div className="w-full flex justify-center">
@@ -104,7 +104,11 @@ const SearchPostsPage = () => {
             </CardContent>
             <CardFooter>
               <div className="py-2 w-full">
-                <Button variant={"outline"} className="w-full cursor-pointer" onClick={() => router.push(`/post/${post.id}`)}>
+                <Button
+                  variant={"outline"}
+                  className="w-full cursor-pointer"
+                  onClick={() => router.push(`/post/${post.id}`)}
+                >
                   View
                 </Button>
               </div>
@@ -115,12 +119,13 @@ const SearchPostsPage = () => {
       <div className="w-full flex justify-center flex-wrap gap-8 text-white mt-5 px-20">
         {loading && (
           <>
-          {Array.from({ length: 4 }).fill("").map((_, index) => (
-            <div key={index} className="w-2/7">
-              <SkeletonPost />
-
-            </div>
-          ))}
+            {Array.from({ length: 4 })
+              .fill("")
+              .map((_, index) => (
+                <div key={index} className="w-2/7">
+                  <SkeletonPost />
+                </div>
+              ))}
           </>
         )}
       </div>

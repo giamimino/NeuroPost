@@ -27,7 +27,7 @@ const TagPage = ({ params }: { params: Promise<{ tag: string }> }) => {
   };
 
   useEffect(() => {
-    setLoading(true)
+    setLoading(true);
     const url = `/api/post?tag=${tag}`;
     fetch(url)
       .then((res) => res.json())
@@ -43,7 +43,13 @@ const TagPage = ({ params }: { params: Promise<{ tag: string }> }) => {
         <div>
           <CardTitle className="text-xl">All #{tag} posts</CardTitle>
         </div>
-          {loading && <SkeletonPosts length={5} className="grid sm:grid-cols-2 lg:grid-cols-3 px-10" postClassName="w-auto" />}
+        {loading && (
+          <SkeletonPosts
+            length={5}
+            className="grid sm:grid-cols-2 lg:grid-cols-3 px-10"
+            postClassName="w-auto"
+          />
+        )}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full px-10 ">
           {posts.map((post) => (
             <Card

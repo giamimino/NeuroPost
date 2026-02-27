@@ -29,7 +29,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     bio: string | null;
     posts?: Post[];
     follow: UserFollowJoinType;
-    stats: UserStatsType
+    stats: UserStatsType;
   } | null>(null);
   const router = useRouter();
 
@@ -90,7 +90,6 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   }, [user]);
 
   console.log(user);
-  
 
   return (
     <div className="pt-32">
@@ -127,16 +126,15 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
               )}
             </div>
             <div className="flex gap-5">
-              {user?.stats && Object.entries(user.stats).map(([key, value]) => (
-                <div key={`${key}`} className="flex gap-1.5">
-                  <CardTitle>
-                    {value}
-                  </CardTitle>
-                  <CardDescription className="cursor-pointer">
-                    {`${key.charAt(0).toUpperCase()}${key.slice(1, key.length)}`}
-                  </CardDescription>
-                </div>
-              ))}
+              {user?.stats &&
+                Object.entries(user.stats).map(([key, value]) => (
+                  <div key={`${key}`} className="flex gap-1.5">
+                    <CardTitle>{value}</CardTitle>
+                    <CardDescription className="cursor-pointer">
+                      {`${key.charAt(0).toUpperCase()}${key.slice(1, key.length)}`}
+                    </CardDescription>
+                  </div>
+                ))}
             </div>
             <div className="my-3">
               <p className="text-foreground">{user?.bio ?? "No bio yet."}</p>

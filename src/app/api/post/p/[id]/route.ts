@@ -33,7 +33,6 @@ export async function GET(
     );
     const post = posts[0];
     console.log(post);
-    
 
     let role: "creator" | "guest";
     if (post.author_id === payload?.userId) {
@@ -54,14 +53,23 @@ export async function GET(
           Bucket: "neuropost",
           Key: key,
         });
-        return getSignedUrl(s3, command, { expiresIn: 60 * 5 })
+        return getSignedUrl(s3, command, { expiresIn: 60 * 5 });
       }),
     );
 
     return NextResponse.json(
       {
-        ok: true, 
-        post: { ...post, signedUrl: signedUrls[1] || null, media, role, user: { ...post.user, profile_url: post.user.profile_url ? signedUrls[0] : "/user.jpg" } },
+        ok: true,
+        post: {
+          ...post,
+          signedUrl: signedUrls[1] || null,
+          media,
+          role,
+          user: {
+            ...post.user,
+            profile_url: post.user.profile_url ? signedUrls[0] : "/user.jpg",
+          },
+        },
       },
       { status: 200 },
     );

@@ -180,7 +180,9 @@ const ProfileNavigation = () => {
             >
               <p
                 className={
-                  pathname === page.url ? "text-current font-bold" : "text-current/90"
+                  pathname === page.url
+                    ? "text-current font-bold"
+                    : "text-current/90"
                 }
               >
                 {page.label}

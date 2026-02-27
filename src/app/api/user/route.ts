@@ -25,7 +25,7 @@ export async function PUT(req: Request) {
       name: string;
       bio: string;
     };
-    const { username, name, bio} = body;
+    const { username, name, bio } = body;
     if (!username || !name || !bio)
       return NextResponse.json({ ok: false }, { status: 422 });
 

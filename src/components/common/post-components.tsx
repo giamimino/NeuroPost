@@ -60,7 +60,7 @@ const PostActions = ({
   likeId: string | null;
   onChange: (args: HandleLikeArgs, data: any) => void;
 }) => {
-  const { onOpen } = useCommentsStore()
+  const { onOpen } = useCommentsStore();
   return (
     <div className="flex gap-3 items-center mt-3">
       <button
@@ -73,8 +73,7 @@ const PostActions = ({
                 postId,
               };
           const data = await handleLike(args);
-          if(data.ok)
-            onChange(args, data);
+          if (data.ok) onChange(args, data);
         }}
       >
         <Heart

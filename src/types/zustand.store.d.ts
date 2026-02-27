@@ -16,5 +16,5 @@ export interface CommentsStoreType {
   comment: number | null;
   onClose: () => void;
   onOpen: (id: number) => void;
-  onHandle: (id?: number) => void
+  onHandle: (id?: number) => void;
 }

@@ -32,7 +32,11 @@ export async function GET(
     LEFT JOIN follows f ON f.follower_id = $2 AND f.follow_id = u.id where u.username = $1`;
     let user = await sql.query(rawSql, [username, payload.userId]);
 
-    if(!user) return NextResponse.json({ ok: false, error: ERRORS.USER_NOT_FOUND }, { status: 404})
+    if (!user)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.USER_NOT_FOUND },
+        { status: 404 },
+      );
 
     if (Boolean(stats) === true) {
       const stats = await sql.query(
@@ -45,8 +49,8 @@ export async function GET(
         WHERE p.author_id = $1) as likes;`,
         [user[0].id],
       );
-      
-      user = {...user[0], stats: stats[0]} as any
+
+      user = { ...user[0], stats: stats[0] } as any;
     }
 
     return NextResponse.json({ ok: true, user }, { status: 200 });
