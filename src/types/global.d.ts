@@ -14,3 +14,5 @@ export interface TagType {
   id: number,
   tag: string
 }
+
+export type UserStatsType = Record<string, number>

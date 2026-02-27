@@ -59,6 +59,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
         role: "creator" | "guest";
         user: UserJoin;
         likeid: string | null;
+        likes: string;
       })
     | null
   >(null);
@@ -348,6 +349,13 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
         <div>
           <Card className="p-3 w-full relative flex flex-col gap-2">
             <Button
+              size={"xs"}
+              className="rounded-sm cursor-pointer text-xs"
+              variant={"ghost"}
+            >
+              {post?.likes}
+            </Button>
+            <Button
               size={"icon-xs"}
               className={`rounded-sm cursor-pointer ${post?.likeid && "text-red-600"}`}
               variant={"outline"}
@@ -362,9 +370,25 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                           };
                       const data = await handleLike(args);
                       if (args.action === "delete" && data.ok) {
-                        setPost((p) => (p ? { ...p, likeid: null } : p));
+                        setPost((p) =>
+                          p
+                            ? {
+                                ...p,
+                                likeid: null,
+                                likes: String(Number(post.likes) - 1),
+                              }
+                            : p,
+                        );
                       } else if (args.action === "post" && data.ok) {
-                        setPost((p) => (p ? { ...p, likeid: data.like } : p));
+                        setPost((p) =>
+                          p
+                            ? {
+                                ...p,
+                                likeid: data.like,
+                                likes: String(Number(post.likes) + 1),
+                              }
+                            : p,
+                        );
                       } else if (data.error) {
                         addAlert({
                           ...data.error,

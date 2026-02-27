@@ -25,13 +25,15 @@ export async function GET(
     }
 
     const posts = await sql.query(
-      `SELECT p.*, json_build_object('name', u.name, 'username', u.username, 'profile_url', u.profile_url) as user, l.id as likeId 
+      `SELECT p.*, COUNT( l.id) AS likes, json_build_object('name', u.name, 'username', u.username, 'profile_url', u.profile_url) AS user, l.id AS likeId 
       FROM posts p JOIN users u ON p.author_id=u.id 
       LEFT JOIN likes l ON l.post_id = $1 
-      WHERE p.id = $1`,
+      WHERE p.id = $1 GROUP BY p.id, u.name, u.username, u.profile_url, l.id`,
       [Number(id)],
     );
     const post = posts[0];
+    console.log(post);
+    
 
     let role: "creator" | "guest";
     if (post.author_id === payload?.userId) {

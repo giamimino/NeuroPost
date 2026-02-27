@@ -44,10 +44,44 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    
-    return NextResponse.json({ ok: true }, { status: 200 })
+    const body = await req.json();
+    const { followId } = body;
+
+    if (!followId)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.INVALID_REQUEST_ERROR },
+        { status: 400 },
+      );
+
+    const cookieStore = await cookies();
+    const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
+      ?.value as string;
+    let payload;
+
+    try {
+      payload = jwt.verify(
+        access_token,
+        process.env.ACCESS_SECRET!,
+      ) as JWTUserPaylaod;
+    } catch (error) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+
+    const follows = await sql.query(`SELECT * FROM follows WHERE id = $1`, [
+      followId,
+    ]);
+
+    if (follows[0].follower_id !== payload.userId)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.NOT_ALLOWED },
+        { status: 404 },
+      );
+
+    await sql.query(`DELETE FROM follows WHERE id = $1`, [followId]);
+
+    return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ ok: false, message: "" }, { status: 500 })
+    return NextResponse.json({ ok: false }, { status: 500 });
   }
 }

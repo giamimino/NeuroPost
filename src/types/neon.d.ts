@@ -80,6 +80,6 @@ export interface FollowType {
 }
 
 export interface UserFollowJoinType {
-  id: string,
-  created_at: Date
+  id: string | null,
+  created_at: Date | null
 }
