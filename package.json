@@ -13,7 +13,8 @@
     "test": "node test.js",
     "test:ts": "ts-node test.ts",
     "g:posts": "node generatePosts.js",
-    "g:tags": "ts-node generateTags.ts"
+    "g:tags": "ts-node generateTags.ts",
+    "prettier:check": "prettier --check 'src/**/*.{ts,tsx,js,jsx}'"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.990.0",
@@ -31,6 +32,7 @@
     "lucide-react": "^0.563.0",
     "next": "16.1.4",
     "next-themes": "^0.4.6",
+    "prettier": "^3.8.1",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
