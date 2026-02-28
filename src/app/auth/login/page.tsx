@@ -14,8 +14,8 @@ const LoginPage = () => {
 
     const formData = new FormData(e.currentTarget);
 
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    const email = (formData.get("email") as string) || "";
+    const password = (formData.get("password") as string) || "";
 
     if (!email.trim() || !password.trim()) return;
 
@@ -26,7 +26,7 @@ const LoginPage = () => {
     });
     const data = await res?.json();
 
-    if (data.success) {
+    if (data?.success) {
       router.push("/profile");
     }
   };
