@@ -28,33 +28,33 @@ export async function GET(
         process.env.ACCESS_SECRET!,
       ) as JWTUserPaylaod;
     } catch (error) {
-        return NextResponse.json({ ok: false, dev: error }, { status: 401 });
+      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
     }
 
     const rawSql = `SELECT u.id, u.email, u.name, u.username, u.profile_url, u.bio, json_build_object('id', f.id, 'created_at', f.created_at) as follow FROM users u 
     LEFT JOIN follows f ON f.follower_id = $2 AND f.follow_id = u.id where u.username = $1`;
     const users = await sql.query(rawSql, [username, payload.userId]);
-    let user = users[0]
-    
+    let user = users[0];
+
     if (!user || user.length === 0)
       return NextResponse.json(
         { ok: false, error: ERRORS.USER_NOT_FOUND },
         { status: 404 },
       );
-    
-    let signedUrl
-    
-    if(user.profile_url) {
+
+    let signedUrl;
+
+    if (user.profile_url) {
       const command = new GetObjectCommand({
         Bucket: "neuropost",
-        Key: user.profile_url
-      })
+        Key: user.profile_url,
+      });
 
-      signedUrl = await getSignedUrl(s3, command, { expiresIn: 5 * 60})
+      signedUrl = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
     }
-    
-    user = {...user, profile_url: user.profile_url ? signedUrl : "/user.jpg"}
-    
+
+    user = { ...user, profile_url: user.profile_url ? signedUrl : "/user.jpg" };
+
     if (Boolean(stats) === true) {
       const stats = await sql.query(
         `

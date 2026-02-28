@@ -80,7 +80,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   };
 
   useEffect(() => {
-    if(!username || !addAlert) return
+    if (!username || !addAlert) return;
     const fetchData = async () => {
       setLoading(true);
       apiFetch(`/api/user/${username}?stats=true`)
@@ -99,8 +99,8 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
         })
         .catch((err) => console.error(err))
         .finally(() => setLoading(false));
-    }
-    fetchData()
+    };
+    fetchData();
   }, [addAlert, username]);
 
   useEffect(() => {

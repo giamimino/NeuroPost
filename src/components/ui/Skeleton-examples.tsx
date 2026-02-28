@@ -91,14 +91,16 @@ function SkeletonComments({
 
 function SkeletonProfile({ className }: { className?: string }) {
   return (
-    <div className={clsx("w-full flex pl-20 pb-5 gap-4", className)} >
+    <div className={clsx("w-full flex pl-20 pb-5 gap-4", className)}>
       <Skeleton className="w-20.5 h-20.5 rounded-full" />
       <div className="flex flex-col gap-2.5">
         <div>
           <Skeleton className="w-25 h-5" />
         </div>
         <div className="flex gap-2">
-          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="w-12 h-5" />)}
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="w-12 h-5" />
+          ))}
         </div>
         <div>
           <Skeleton className="w-65 h-20" />

@@ -123,7 +123,6 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
       }
     } catch (error) {
       console.error(error);
-      
     }
   };
 

@@ -49,8 +49,8 @@ const ProfilePage = () => {
           setUser({ id: data.user.payload.userId, ...data.user.user }),
         )
         .finally(() => setLoading(false));
-    }
-    fetchData()
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {

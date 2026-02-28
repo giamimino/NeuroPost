@@ -6,10 +6,7 @@ import { sql } from "@/lib/db";
 import { ERRORS } from "@/constants/error-handling";
 import { MediaValidator } from "@/utils/validator";
 import { s3 } from "@/lib/aws-sdk";
-import {
-  DeleteObjectCommand,
-  PutObjectCommand,
-} from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 
 interface TagInput {
   id?: number;

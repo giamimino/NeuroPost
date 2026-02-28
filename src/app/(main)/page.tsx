@@ -24,7 +24,7 @@ export default function Home() {
       like_id: string | null;
       mediaUrl: string | null;
       user: UserJoin;
-      likes: string
+      likes: string;
     })[]
   >([]);
   const [took, setTook] = useState<number>(0);
@@ -105,7 +105,10 @@ export default function Home() {
                     alt={`${post.user.name}-user-profile`}
                     className="object-cover rounded-full mt-2 w-9 h-9"
                   />
-                  <CardDescription className="self-end mb-1 cursor-pointer" onClick={() => router.push(`/u/${post.user.username}`)}>
+                  <CardDescription
+                    className="self-end mb-1 cursor-pointer"
+                    onClick={() => router.push(`/u/${post.user.username}`)}
+                  >
                     {post.user.name}
                   </CardDescription>
                 </div>
@@ -139,13 +142,25 @@ export default function Home() {
                     if (args.action === "delete" && data.ok) {
                       setPosts((prev) =>
                         prev.map((p) =>
-                          p.id === post.id ? { ...p, like_id: null, likes: String(Number(p.likes) - 1) } : p,
+                          p.id === post.id
+                            ? {
+                                ...p,
+                                like_id: null,
+                                likes: String(Number(p.likes) - 1),
+                              }
+                            : p,
                         ),
                       );
                     } else if (args.action === "post" && data.ok) {
                       setPosts((prev) =>
                         prev.map((p) =>
-                          p.id === post.id ? { ...p, like_id: data.like, likes: String(Number(p.likes) + 1) } : p,
+                          p.id === post.id
+                            ? {
+                                ...p,
+                                like_id: data.like,
+                                likes: String(Number(p.likes) + 1),
+                              }
+                            : p,
                         ),
                       );
                     }
@@ -154,7 +169,14 @@ export default function Home() {
                   postId={post.id}
                 />
                 <div>
-                  <Button variant={"link"} className="cursor-pointer p-0 text-muted-foreground hover:text-foreground" size={"sm"} onClick={() => router.push(`/post/${post.id}`)}>view post</Button>
+                  <Button
+                    variant={"link"}
+                    className="cursor-pointer p-0 text-muted-foreground hover:text-foreground"
+                    size={"sm"}
+                    onClick={() => router.push(`/post/${post.id}`)}
+                  >
+                    view post
+                  </Button>
                 </div>
               </div>
             </div>

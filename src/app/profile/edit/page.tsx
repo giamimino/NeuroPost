@@ -91,7 +91,7 @@ const ProfileEditPage = () => {
   useEffect(() => {
     const fetchData = () => {
       setLoading(true);
-      
+
       apiFetch("/api/user")
         .then((res) => res?.json())
         .then((data) => {
@@ -118,7 +118,7 @@ const ProfileEditPage = () => {
     (async () => {
       const isChanged =
         name !== user.name || username !== user.username || bio !== user.bio;
-  
+
       setChanged(isChanged);
     })();
   }, [name, username, bio, user, changed]);

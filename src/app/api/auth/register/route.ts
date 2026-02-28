@@ -23,12 +23,12 @@ export async function POST(req: Request) {
     const hashPassword = await bcrypt.hash(password, 12);
 
     const rawUserSql = `INSERT INTO users (email, password, name, username) values ($1, $2, $3, $4) RETURNING id;`;
-    const user = (await sql.query(rawUserSql, [
+    const user = await sql.query(rawUserSql, [
       email,
       hashPassword,
       username,
       username,
-    ]));
+    ]);
 
     const accessToken = createAccessToken(user[0].id);
     const refreshToken = createRefreshToken(user[0].id);

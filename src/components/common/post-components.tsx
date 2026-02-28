@@ -54,20 +54,18 @@ const PostActions = ({
   postId,
   likeId,
   onChange,
-  likes
+  likes,
 }: {
   postId: number;
   likeId: string | null;
   onChange: (args: HandleLikeArgs, data: any) => void;
-  likes: number
+  likes: number;
 }) => {
   const { onOpen } = useCommentsStore();
   return (
     <div className="flex gap-3 items-center mt-3">
       <div className="flex justify-center items-center gap-1">
-        <CardDescription>
-          {likes}
-        </CardDescription>
+        <CardDescription>{likes}</CardDescription>
         <button
           className={`cursor-pointer w-fit`}
           onClick={async () => {

@@ -23,7 +23,7 @@ export const ScrollContextProvider = ({ children }: Children) => {
 
     (() => {
       setLenis(scroller);
-    })()
+    })();
 
     return () => {
       cancelAnimationFrame(rf);

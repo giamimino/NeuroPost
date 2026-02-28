@@ -26,7 +26,7 @@ const TagPage = ({ params }: { params: Promise<{ tag: string }> }) => {
   };
 
   useEffect(() => {
-    if(!tag) return
+    if (!tag) return;
     const fetchData = async () => {
       setLoading(true);
       const url = `/api/post?tag=${tag}`;
@@ -37,9 +37,9 @@ const TagPage = ({ params }: { params: Promise<{ tag: string }> }) => {
         })
         .catch((err) => console.error(err))
         .finally(() => setLoading(false));
-    }
-    
-    fetchData()
+    };
+
+    fetchData();
   }, [tag]);
   return (
     <div className="pt-20">

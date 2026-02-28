@@ -76,7 +76,6 @@ const CommentProvider = () => {
       }
     } catch (error) {
       console.error(error);
-      
     }
   };
   useEffect(() => {
@@ -101,9 +100,9 @@ const CommentProvider = () => {
             duration: 2 * 2000,
           });
         });
-    }
+    };
 
-    fethData()
+    fethData();
   }, [comment, addAlert]);
 
   return (

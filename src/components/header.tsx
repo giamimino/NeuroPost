@@ -40,13 +40,13 @@ const Header = () => {
         },
       },
     ],
-    [router]
+    [router],
   ) as {
-      url: string;
-      label: string;
-      type: "action" | "router";
-      onClick?: () => void;
-    }[];
+    url: string;
+    label: string;
+    type: "action" | "router";
+    onClick?: () => void;
+  }[];
 
   useEffect(() => {
     const onScroll = () => {

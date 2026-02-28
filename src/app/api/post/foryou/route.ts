@@ -67,7 +67,7 @@ export async function GET(req: Request) {
       user: UserJoin;
       media: { fileurl: string | null; type: string | null; id: string | null };
     })[];
-    
+
     if (Boolean(withMedia) === true) {
       const keys = posts.map((p) => p.media.fileurl || "");
 

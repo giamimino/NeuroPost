@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     }
 
     const rawSQL = `INSERT INTO likes (user_id, post_id) VALUES ($1, $2) RETURNING id as like_id`;
-    const likes = (await sql.query(rawSQL, [payload.userId, postId]));
+    const likes = await sql.query(rawSQL, [payload.userId, postId]);
 
     return NextResponse.json(
       { ok: true, like: likes[0].like_id },

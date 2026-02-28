@@ -76,7 +76,7 @@ const ProfileUpload = ({
       } else if (image == (profile_url || "/user.jpg") && changed) {
         setChanged(false);
       }
-    })()
+    })();
   }, [image]);
 
   return (

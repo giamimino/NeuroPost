@@ -16,7 +16,7 @@ export function MediaValidator(
   file: File,
 ): { title: string; description: string } | null {
   const type = file.type.split("/")[0];
-  
+
   if (type === "video" && !ALLOWED_VIDEO_TYPES.includes(file.type)) {
     return VIDEO_TYPE_ERROR;
   } else if (type === "image" && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
