@@ -4,33 +4,25 @@ import bcrypt from "bcrypt";
 import { createAccessToken, createRefreshToken } from "@/lib/jwt";
 import { ERRORS } from "@/constants/error-handling";
 
-function errorResponse(message: string) {
-  return NextResponse.json({
-    success: false,
-    message,
-  });
-}
-
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
-    const selectUsersSql = `SELECT * FROM users WHERE email = '${email}'`;
-    const users = await sql.query(selectUsersSql);
-
-    if (users.length === 0) {
+    const selectUsersSql = `SELECT * FROM users WHERE email = $1`;
+    const users = await sql.query(selectUsersSql, [email]);
+    const user = users[0];
+    
+    if (!user) {
       return NextResponse.json(
         { error: ERRORS.TOKEN_INVALID },
         { status: 401 },
       );
     }
-
-    const user = users[0];
-
+    
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
       return NextResponse.json(
-        { error: ERRORS.TOKEN_INVALID },
+        { ok: false, error: ERRORS.TOKEN_INVALID },
         { status: 401 },
       );
     }
@@ -45,7 +37,7 @@ export async function POST(req: Request) {
 
     await sql.query(refreshTokenSql, [refreshToken, user.id]);
 
-    const res = NextResponse.json({ success: true });
+    const res = NextResponse.json({ success: true }, { status: 200 });
 
     res.cookies.set(process.env.ACCESS_COOKIE_NAME!, accessToken, {
       httpOnly: true,
@@ -65,6 +57,6 @@ export async function POST(req: Request) {
     return res;
   } catch (err) {
     console.log(err);
-    return errorResponse("Something went wrong.");
+    return NextResponse.json({ ok: false }, { status: 500 })
   }
 }

@@ -20,7 +20,7 @@ const LoginPage = () => {
     if (!email.trim() || !password.trim()) return;
 
     const url = "/api/auth/login";
-    const res = await apiFetch(url, {
+    const res = await fetch(url, {
       ...ApiConfig.post,
       body: JSON.stringify({ email, password }),
     });
