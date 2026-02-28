@@ -21,7 +21,7 @@ export async function GET(
     try {
       payload = await auth({ userId: true });
     } catch (error) {
-      return NextResponse.json({ ok: false }, { status: 401 });
+      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
     }
 
     const posts = await sql.query(

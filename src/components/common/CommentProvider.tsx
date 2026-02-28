@@ -16,12 +16,11 @@ import { CommentType, CommentUserType } from "@/types/neon";
 import { apiFetch } from "@/lib/apiFetch";
 import ToggleController from "./ToggleController";
 import { Input } from "../ui/input";
-import Line from "../ui/Line";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { Skeleton } from "../ui/skeleton";
-import { SkeletonComment, SkeletonComments } from "../ui/Skeleton-examples";
+import { SkeletonComments } from "../ui/Skeleton-examples";
 import { timeAgo } from "@/utils/functions/timeAgo";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -75,31 +74,37 @@ const CommentProvider = () => {
           duration: 3 * 1000,
         });
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+      
+    }
   };
   useEffect(() => {
-    if (!comment) return;
-    setLoading(true);
-    const url = `/api/post/comment?postId=${Number(comment)}&limit=20&withProfile=true`;
-    apiFetch(url)
-      .then((res) => res?.json())
-      .then((data) => {
-        if (data.ok) {
-          setComments(data.comments);
-        }
-      })
-      .finally(() => setLoading(false))
-      .catch((error) => {
-        console.error(error);
-        addAlert({
-          id: crypto.randomUUID(),
-          type: "error",
-          ...ERRORS.GENERIC_ERROR,
-          duration: 2 * 2000,
+    if (!comment || !addAlert) return;
+    const fethData = async () => {
+      setLoading(true);
+      const url = `/api/post/comment?postId=${Number(comment)}&limit=20&withProfile=true`;
+      apiFetch(url)
+        .then((res) => res?.json())
+        .then((data) => {
+          if (data.ok) {
+            setComments(data.comments);
+          }
+        })
+        .finally(() => setLoading(false))
+        .catch((error) => {
+          console.error(error);
+          addAlert({
+            id: crypto.randomUUID(),
+            type: "error",
+            ...ERRORS.GENERIC_ERROR,
+            duration: 2 * 2000,
+          });
         });
-      });
-  }, [comment]);
-  console.log(comments);
+    }
+
+    fethData()
+  }, [comment, addAlert]);
 
   return (
     <>

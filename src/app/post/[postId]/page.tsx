@@ -11,10 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SkeletonCard } from "@/components/ui/Skeleton-examples";
-import { Spinner } from "@/components/ui/spinner";
-import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
-import { auth } from "@/lib/auth";
 import {
   CommentType,
   CommentUserType,
@@ -26,7 +23,6 @@ import {
   Ellipsis,
   ExternalLink,
   Heart,
-  MessageCircleMore,
   Send,
   Settings,
   XIcon,
@@ -41,12 +37,6 @@ import { useAlertStore } from "@/store/zustand/alertStore";
 import { ERRORS } from "@/constants/error-handling";
 import { handleLike } from "@/utils/functions/LikeActions";
 import { HandleLikeArgs } from "@/types/arguments";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
@@ -131,7 +121,10 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
           duration: 3 * 1000,
         });
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+      
+    }
   };
 
   useEffect(() => {
@@ -149,7 +142,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
         setLoading(false);
       })
       .catch((err) => console.error(err));
-  }, []);
+  }, [postId]);
 
   useEffect(() => {
     if (!post) return;
@@ -210,7 +203,10 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                 </CardContent>
                 {post?.signedUrl && post.media?.type === "image" && (
                   <CardFooter className="px-0 mt-5">
-                    <img
+                    <Image
+                      width={1080}
+                      height={720}
+                      alt="post-media"
                       src={post.signedUrl}
                       className="w-full object-cover max-h-150 rounded-xl"
                     />

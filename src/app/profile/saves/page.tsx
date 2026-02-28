@@ -15,7 +15,7 @@ import { CommentType, Post } from "@/types/neon";
 import clsx from "clsx";
 import { Heart, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const ActivitySections = [
   { label: "Likes", icon: <Heart width={15} /> },

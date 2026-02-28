@@ -19,12 +19,12 @@ export async function GET(req: Request) {
         process.env.ACCESS_SECRET!,
       ) as JWTUserPaylaod;
     } catch (error) {
-      return NextResponse.json({ ok: false }, { status: 401 });
+      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
     }
 
     const posts = await sql.query(
-      `SELECT p.* FROM likes l JOIN posts p ON p.id = l.post_id WHERE l.user_id = $1`,
-      [payload.userId],
+      `SELECT p.* FROM likes l JOIN posts p ON p.id = l.post_id WHERE l.user_id = $1 LIMIT $2`,
+      [payload.userId, Number(limit) || 20],
     );
 
     return NextResponse.json({ ok: true, likes: posts }, { status: 200 });

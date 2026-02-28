@@ -3,8 +3,6 @@ import Line from "../ui/Line";
 import { useEffect, useRef, useState } from "react";
 import { HandleLikeArgs } from "@/types/arguments";
 import { Heart, MessageCircleMore } from "lucide-react";
-import { ApiConfig } from "@/configs/api-configs";
-import { apiFetch } from "@/lib/apiFetch";
 import { handleLike } from "@/utils/functions/LikeActions";
 import { useCommentsStore } from "@/store/zustand/commentsStore";
 import { CardDescription } from "../ui/card";

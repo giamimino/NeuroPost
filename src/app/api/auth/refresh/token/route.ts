@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { createAccessToken } from "@/lib/jwt";
+import { JWTUserPaylaod } from "@/types/global";
 
 function errorResponse(message: string) {
   return NextResponse.json({
@@ -11,7 +12,7 @@ function errorResponse(message: string) {
   });
 }
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get(
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
     const payload = jwt.verify(
       rows[0].token,
       process.env.REFRESH_SECRET!,
-    ) as any;
+    ) as JWTUserPaylaod;
 
     const newAccessToken = createAccessToken(payload.userId);
 

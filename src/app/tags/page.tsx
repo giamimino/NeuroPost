@@ -1,5 +1,5 @@
 "use client";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import { TagItem } from "@/components/ui/tag";
 import { ApiConfig } from "@/configs/api-configs";
 import { Tag } from "@/types/neon";
@@ -38,17 +38,23 @@ const TagsPage = () => {
           <CardTitle className="text-xl">Explore tags</CardTitle>
         </div>
         <div className="flex flex-wrap justify-center gap-5 w-full px-10">
-          {tags.map((tag) => (
-            <Card key={tag.id} className="text-center w-50">
-              <div className="px-6">
-                <TagItem
-                  tag={`#${tag.tag}`}
-                  variant="none"
-                  onClick={() => router.push(`/tags/${tag.tag}`)}
-                />
-              </div>
-            </Card>
-          ))}
+          {loading ? (
+            <div>
+              <CardTitle>loading...</CardTitle>
+            </div>
+          ) : (
+            tags.map((tag) => (
+              <Card key={tag.id} className="text-center w-50">
+                <div className="px-6">
+                  <TagItem
+                    tag={`#${tag.tag}`}
+                    variant="none"
+                    onClick={() => router.push(`/tags/${tag.tag}`)}
+                  />
+                </div>
+              </Card>
+            ))
+          )}
         </div>
       </div>
     </div>

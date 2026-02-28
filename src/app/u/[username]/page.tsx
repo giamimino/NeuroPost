@@ -80,35 +80,41 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   };
 
   useEffect(() => {
-    setLoading(true)
-    apiFetch(`/api/user/${username}?stats=true`)
-      .then((res) => res?.json())
-      .then((data) => {
-        if (data.ok) {
-          setUser(data.user);
-        } else if (data.error) {
-          addAlert({
-            ...data.error,
-            id: crypto.randomUUID(),
-            type: "error",
-            duration: 2.5 * 1000,
-          });
-        }
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false))
-  }, []);
+    if(!username || !addAlert) return
+    const fetchData = async () => {
+      setLoading(true);
+      apiFetch(`/api/user/${username}?stats=true`)
+        .then((res) => res?.json())
+        .then((data) => {
+          if (data.ok) {
+            setUser(data.user);
+          } else if (data.error) {
+            addAlert({
+              ...data.error,
+              id: crypto.randomUUID(),
+              type: "error",
+              duration: 2.5 * 1000,
+            });
+          }
+        })
+        .catch((err) => console.error(err))
+        .finally(() => setLoading(false));
+    }
+    fetchData()
+  }, [addAlert, username]);
 
   useEffect(() => {
     if (!user || user.posts) return;
 
-    apiFetch(`/api/post/u/${user.id}`)
-      .then((res) => res?.json())
-      .then((data) => {
-        if (data.ok) {
-          setUser((prev: any) => ({ ...(prev ?? {}), posts: data.posts }));
-        }
-      });
+    (() => {
+      apiFetch(`/api/post/u/${user.id}`)
+        .then((res) => res?.json())
+        .then((data) => {
+          if (data.ok) {
+            setUser((prev: any) => ({ ...(prev ?? {}), posts: data.posts }));
+          }
+        });
+    })();
   }, [user]);
 
   return (

@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       hashPassword,
       username,
       username,
-    ])) as any;
+    ]));
 
     const accessToken = createAccessToken(user[0].id);
     const refreshToken = createRefreshToken(user[0].id);

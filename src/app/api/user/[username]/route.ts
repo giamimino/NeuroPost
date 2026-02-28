@@ -1,7 +1,7 @@
 import { sql } from "@/lib/db";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import jwt, { sign } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { JWTUserPaylaod } from "@/types/global";
 import { ERRORS } from "@/constants/error-handling";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
@@ -28,7 +28,7 @@ export async function GET(
         process.env.ACCESS_SECRET!,
       ) as JWTUserPaylaod;
     } catch (error) {
-      return NextResponse.json({ ok: false }, { status: 401 });
+        return NextResponse.json({ ok: false, dev: error }, { status: 401 });
     }
 
     const rawSql = `SELECT u.id, u.email, u.name, u.username, u.profile_url, u.bio, json_build_object('id', f.id, 'created_at', f.created_at) as follow FROM users u 
@@ -67,7 +67,7 @@ export async function GET(
         [user.id],
       );
 
-      user = { ...user, stats: stats[0] } as any;
+      user = { ...user, stats: stats[0] };
     }
 
     return NextResponse.json({ ok: true, user }, { status: 200 });

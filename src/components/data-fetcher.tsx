@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 type FetchConfig = RequestInit & {
   enabled?: boolean;
@@ -53,7 +53,7 @@ const DataFetcher = <T,>({
     return () => {
       controller.abort();
     };
-  }, [url, config?.enabled, targetKey]);
+  }, [url, config, targetKey]);
 
   if (loading) return loadingUI ?? <div>loading...</div>;
   if (error)

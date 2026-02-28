@@ -11,7 +11,7 @@ const Title = ({
 }) => {
   return (
     <h1
-      className={`text-white font-bold `}
+      className={`text-foreground font-bold `}
       style={{ font: `var(${font})`, fontSize: `var(${text || "--text-2xl"})` }}
     >
       {title}

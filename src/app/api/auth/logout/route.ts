@@ -24,7 +24,7 @@ export async function POST() {
       ) as JWTUserPaylaod;
     } catch (error) {
       return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_INVALID },
+        { ok: false, error: ERRORS.TOKEN_INVALID, dev: error },
         { status: 401 },
       );
     }

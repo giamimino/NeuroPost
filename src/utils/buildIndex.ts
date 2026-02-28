@@ -2,7 +2,7 @@ import { Index } from "@/types/neon";
 import { NormalizedIndex } from "@/types/search";
 
 function BuildIndex(index: Index[]) {
-  let result = [];
+  const result = [];
 
   for (const idx of index) {
     result.push(idx.index);

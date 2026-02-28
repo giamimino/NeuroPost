@@ -10,11 +10,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SkeletonPost } from "@/components/ui/Skeleton-examples";
-import { Spinner } from "@/components/ui/spinner";
 import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import useDebounce from "@/hook/useDebounce";
-import { apiFetch } from "@/lib/apiFetch";
 import { Post } from "@/types/neon";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -50,7 +48,7 @@ const SearchPostsPage = () => {
     })();
 
     return () => controller.abort();
-  }, []);
+  }, [posts.length]);
 
   useEffect(() => {
     if (!debouncedSearch) return;
@@ -74,7 +72,7 @@ const SearchPostsPage = () => {
 
       setPosts(result.posts);
     })();
-  }, [debouncedSearch]);
+  }, [debouncedSearch, posts.length]);
 
   return (
     <div className="w-full pt-32">

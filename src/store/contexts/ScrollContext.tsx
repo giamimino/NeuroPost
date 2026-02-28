@@ -21,7 +21,9 @@ export const ScrollContextProvider = ({ children }: Children) => {
 
     const rf = requestAnimationFrame(raf);
 
-    setLenis(scroller);
+    (() => {
+      setLenis(scroller);
+    })()
 
     return () => {
       cancelAnimationFrame(rf);

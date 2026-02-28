@@ -11,7 +11,6 @@ export async function auth({
   userId?: boolean;
   bio?: boolean;
 }) {
-  const start = new Date();
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)?.value;
 
@@ -31,8 +30,6 @@ export async function auth({
 
   const rawSql = `SELECT email, name, username, profile_url ${bio ? ", bio" : ""} FROM users id WHERE id = $1`;
   const user = await sql.query(rawSql, [payload.userId]);
-
-  const end = new Date();
 
   return { payload, user: user[0] };
 }

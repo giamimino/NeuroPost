@@ -29,7 +29,7 @@ export async function DELETE(
         process.env.ACCESS_SECRET!,
       ) as JWTUserPaylaod;
     } catch (error) {
-      return NextResponse.json({ ok: false }, { status: 401 });
+      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
     }
 
     const comments = await sql.query(`SELECT * FROM comments WHERE id = $1`, [

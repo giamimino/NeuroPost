@@ -1,5 +1,4 @@
 "use client";
-import DefaultInput from "@/components/common/DefaultInput";
 import DefaultTextarea from "@/components/common/DefaultTextarea";
 import DataFetcher from "@/components/data-fetcher";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,

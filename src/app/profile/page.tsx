@@ -13,7 +13,6 @@ import Line from "@/components/ui/Line";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   SkeletonArticle,
-  SkeletonPost,
   SkeletonPosts,
 } from "@/components/ui/Skeleton-examples";
 import Title from "@/components/ui/title";
@@ -42,13 +41,16 @@ const ProfilePage = () => {
   };
 
   useEffect(() => {
-    setLoading(true);
-    apiFetch("/api/user")
-      .then((res) => res?.json())
-      .then((data) =>
-        setUser({ id: data.user.payload.userId, ...data.user.user }),
-      )
-      .finally(() => setLoading(false));
+    const fetchData = async () => {
+      setLoading(true);
+      apiFetch("/api/user")
+        .then((res) => res?.json())
+        .then((data) =>
+          setUser({ id: data.user.payload.userId, ...data.user.user }),
+        )
+        .finally(() => setLoading(false));
+    }
+    fetchData()
   }, []);
 
   useEffect(() => {

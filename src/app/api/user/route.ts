@@ -13,8 +13,8 @@ export async function GET() {
       return NextResponse.json({ ok: false }, { status: 401 });
 
     return NextResponse.json({ user, ok: true }, { status: 200 });
-  } catch (err) {
-    return NextResponse.json({ ok: false }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ ok: false, dev: error }, { status: 500 });
   }
 }
 
@@ -40,7 +40,7 @@ export async function PUT(req: Request) {
         process.env.ACCESS_SECRET!,
       ) as JWTUserPaylaod;
     } catch (error) {
-      return NextResponse.json({ ok: false }, { status: 401 });
+      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
     }
 
     const user = await sql.query(
@@ -50,6 +50,6 @@ export async function PUT(req: Request) {
 
     return NextResponse.json({ ok: true, user: user[0] }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ ok: false }, { status: 500 });
+    return NextResponse.json({ ok: false, dev: error }, { status: 500 });
   }
 }

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import React, { DetailedHTMLProps, TextareaHTMLAttributes } from "react";
+import React from "react";
 
 const DefaultTextarea = ({
   className,

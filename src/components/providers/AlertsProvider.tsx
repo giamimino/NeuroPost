@@ -17,7 +17,7 @@ const AlertsProvider = () => {
     );
 
     return () => clearTimeout(timer);
-  }, [currentAlert]);
+  }, [currentAlert, removeAlert]);
 
   return (
     <div className="fixed top-5 left-5 z-99">

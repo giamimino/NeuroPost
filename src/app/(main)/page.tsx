@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const [posts, setPosts] = useState<
@@ -152,6 +153,9 @@ export default function Home() {
                   likeId={post.like_id}
                   postId={post.id}
                 />
+                <div>
+                  <Button variant={"link"} className="cursor-pointer p-0 text-muted-foreground hover:text-foreground" size={"sm"} onClick={() => router.push(`/post/${post.id}`)}>view post</Button>
+                </div>
               </div>
             </div>
           </PostWrapper>

@@ -24,7 +24,9 @@ const ProfileUpload = ({
   const [changed, setChanged] = useState(false);
 
   useEffect(() => {
-    setImage(signed_url || "/user.jpg");
+    (async () => {
+      setImage(signed_url || "/user.jpg");
+    })();
   }, [signed_url]);
 
   const uploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,11 +70,13 @@ const ProfileUpload = ({
   };
 
   useEffect(() => {
-    if (image !== profile_url && !changed) {
-      setChanged(true);
-    } else if (image == (profile_url || "/user.jpg") && changed) {
-      setChanged(false);
-    }
+    (async () => {
+      if (image !== profile_url && !changed) {
+        setChanged(true);
+      } else if (image == (profile_url || "/user.jpg") && changed) {
+        setChanged(false);
+      }
+    })()
   }, [image]);
 
   return (

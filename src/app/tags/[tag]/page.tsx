@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import { SkeletonPosts } from "@/components/ui/Skeleton-examples";
 import { TagItem } from "@/components/ui/tag";
-import { ApiConfig } from "@/configs/api-configs";
 import { TagType } from "@/types/global";
 import { Post } from "@/types/neon";
 import { useRouter } from "next/navigation";
@@ -27,16 +26,21 @@ const TagPage = ({ params }: { params: Promise<{ tag: string }> }) => {
   };
 
   useEffect(() => {
-    setLoading(true);
-    const url = `/api/post?tag=${tag}`;
-    fetch(url)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.ok) setPosts(data.posts);
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
+    if(!tag) return
+    const fetchData = async () => {
+      setLoading(true);
+      const url = `/api/post?tag=${tag}`;
+      fetch(url)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.ok) setPosts(data.posts);
+        })
+        .catch((err) => console.error(err))
+        .finally(() => setLoading(false));
+    }
+    
+    fetchData()
+  }, [tag]);
   return (
     <div className="pt-20">
       <div className="flex items-center w-full flex-col gap-5 mt-7.5">

@@ -14,39 +14,39 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Card, CardHeader, CardTitle } from "./ui/card";
-import clsx from "clsx";
 
 const Header = () => {
   const [show, setShow] = useState(true);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
   const router = useRouter();
-  const pages = useRef<
-    {
+  const pages = useMemo(
+    () => [
+      { label: "Home", url: "/", type: "router" },
+      { label: "Profile", url: "/profile", type: "router" },
+      { label: "Upload", url: "/profile/p/create", type: "router" },
+      {
+        label: "Logout",
+        url: "/auth/login",
+        type: "action",
+        onClick: async () => {
+          const url = "/api/auth/logout";
+          const res = await apiFetch(url, ApiConfig.post);
+          const data = await res?.json();
+          if (data.ok) {
+            router.push("/");
+          }
+          console.log(data);
+        },
+      },
+    ],
+    [router]
+  ) as {
       url: string;
       label: string;
       type: "action" | "router";
       onClick?: () => void;
-    }[]
-  >([
-    { label: "Home", url: "/", type: "router" },
-    { label: "Profile", url: "/profile", type: "router" },
-    { label: "Upload", url: "/profile/p/create", type: "router" },
-    {
-      label: "Logout",
-      url: "/auth/login",
-      type: "action",
-      onClick: async () => {
-        const url = "/api/auth/logout";
-        const res = await apiFetch(url, ApiConfig.post);
-        const data = await res?.json();
-        if (data.ok) {
-          router.push("/");
-        }
-        console.log(data);
-      },
-    },
-  ]);
+    }[];
 
   useEffect(() => {
     const onScroll = () => {
@@ -89,7 +89,7 @@ const Header = () => {
         className={`flex gap-4 items-center px-4 py-2.5 dark:bg-card
        rounded-full border-input ring ring-ring/80`}
       >
-        {pages.current.map((page) => (
+        {pages.map((page) => (
           <div
             onClick={
               page.type === "router"

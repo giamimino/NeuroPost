@@ -24,11 +24,11 @@ export async function POST(req: Request) {
         process.env.ACCESS_SECRET!,
       ) as JWTUserPaylaod;
     } catch (error) {
-      return NextResponse.json({ ok: false }, { status: 401 });
+      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
     }
 
     const rawSQL = `INSERT INTO likes (user_id, post_id) VALUES ($1, $2) RETURNING id as like_id`;
-    const likes = (await sql.query(rawSQL, [payload.userId, postId])) as any;
+    const likes = (await sql.query(rawSQL, [payload.userId, postId]));
 
     return NextResponse.json(
       { ok: true, like: likes[0].like_id },

@@ -1,4 +1,3 @@
-import { a } from "framer-motion/client";
 import {
   MAX_POST_IMAGE_SIZE,
   MAX_POST_VIDEO_SIZE,

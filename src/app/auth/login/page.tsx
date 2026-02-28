@@ -3,7 +3,6 @@ import BlurWrapper from "@/components/BlurWrapper";
 import DefaultInput from "@/components/common/DefaultInput";
 import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
-import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import React from "react";
 

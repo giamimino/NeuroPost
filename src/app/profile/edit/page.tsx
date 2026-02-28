@@ -1,5 +1,4 @@
 "use client";
-import DefaultInput from "@/components/common/DefaultInput";
 import DefaultTextarea from "@/components/common/DefaultTextarea";
 import ProfileUpload from "@/components/common/Profile-upload";
 import { Button } from "@/components/ui/button";
@@ -17,10 +16,7 @@ import { ApiConfig } from "@/configs/api-configs";
 import { UsernameRefference } from "@/constants/refference";
 import { apiFetch } from "@/lib/apiFetch";
 import { User } from "@/types/neon";
-import { ImageValidator } from "@/utils/imageValidator";
-import { PenLine } from "lucide-react";
-import Image from "next/image";
-import React, { Ref, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const ProfileEditPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -93,38 +89,39 @@ const ProfileEditPage = () => {
   };
 
   useEffect(() => {
-    setLoading(true);
-    apiFetch("/api/user")
-      .then((res) => res?.json())
-      .then((data) => {
-        if (data.ok) {
-          const u = { id: data.user.payload.userId, ...data.user.user } as User;
-          setUser(u);
+    const fetchData = () => {
+      setLoading(true);
+      
+      apiFetch("/api/user")
+        .then((res) => res?.json())
+        .then((data) => {
+          if (data.ok) {
+            const u = {
+              id: data.user.payload.userId,
+              ...data.user.user,
+            } as User;
+            setUser(u);
 
-          setUsername(u.username);
-          setName(u.name);
-          setBio(u.bio || "");
-        }
-      })
-      .finally(() => setLoading(false));
+            setUsername(u.username);
+            setName(u.name);
+            setBio(u.bio || "");
+          }
+        })
+        .finally(() => setLoading(false));
+    };
+
+    fetchData();
   }, []);
 
   useEffect(() => {
     if (!user) return;
-    if (
-      (name !== user.name || username !== user.username || bio !== user.bio) &&
-      !changed
-    ) {
-      setChanged(true);
-    } else if (
-      name === user.name &&
-      username === user.username &&
-      bio === user.bio &&
-      changed
-    ) {
-      setChanged(false);
-    }
-  }, [name, username, bio, user]);
+    (async () => {
+      const isChanged =
+        name !== user.name || username !== user.username || bio !== user.bio;
+  
+      setChanged(isChanged);
+    })();
+  }, [name, username, bio, user, changed]);
 
   useEffect(() => {
     if (!user?.profile_url) return;
