@@ -6,7 +6,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { ApiConfig } from "@/configs/api-configs";
 import { Button } from "./ui/button";
 import { ArrowBigLeftDash, Search } from "lucide-react";
-import { ThemeToggle } from "./theme-provider";
+import { ThemeToggle } from "./providers/theme-provider";
 import {
   DropdownMenu,
   DropdownMenuContent,
