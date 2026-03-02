@@ -8,17 +8,23 @@ export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
+    if (!String(email).trim() || !String(password).trim())
+      return NextResponse.json(
+        { ok: false, error: ERRORS.REQUIRED_FIELDS },
+        { status: 422 },
+      );
+
     const selectUsersSql = `SELECT * FROM users WHERE email = $1`;
     const users = await sql.query(selectUsersSql, [email]);
     const user = users[0];
-    
+
     if (!user) {
       return NextResponse.json(
         { error: ERRORS.TOKEN_INVALID },
         { status: 401 },
       );
     }
-    
+
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
       return NextResponse.json(
@@ -57,6 +63,6 @@ export async function POST(req: Request) {
     return res;
   } catch (err) {
     console.log(err);
-    return NextResponse.json({ ok: false }, { status: 500 })
+    return NextResponse.json({ ok: false }, { status: 500 });
   }
 }

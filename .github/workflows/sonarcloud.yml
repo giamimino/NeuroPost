@@ -1,0 +1,29 @@
+name: SonarCloud
+
+on:
+  push: 
+    branches:
+      - main
+  pull_request:
+
+jobs: 
+  sonarcloud: 
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: action/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install deps
+        run: npm i
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with: 
+          projectKey: giamimino_NeuroPost
+          organization: giamimino
+          token: ${{ secrets.SONAR_TOKEN }}

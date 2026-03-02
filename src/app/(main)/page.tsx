@@ -137,7 +137,7 @@ export default function Home() {
                   })}
                 </div>
                 <PostActions
-                  likes={Number(post.likes)}
+                  likes={post.likes}
                   onChange={(args: HandleLikeArgs, data) => {
                     if (args.action === "delete" && data.ok) {
                       setPosts((prev) =>

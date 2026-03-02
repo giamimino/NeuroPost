@@ -44,3 +44,4 @@ next-env.d.ts
 # personal things
 
 dublicateDates.js
+.env*.local

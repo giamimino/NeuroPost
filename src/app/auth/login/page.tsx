@@ -2,7 +2,6 @@
 import BlurWrapper from "@/components/BlurWrapper";
 import DefaultInput from "@/components/common/DefaultInput";
 import { ApiConfig } from "@/configs/api-configs";
-import { apiFetch } from "@/lib/apiFetch";
 import { useRouter } from "next/navigation";
 import React from "react";
 
@@ -30,6 +29,7 @@ const LoginPage = () => {
       router.push("/profile");
     }
   };
+  
   return (
     <div>
       <div className="w-full h-screen flex justify-center items-center">

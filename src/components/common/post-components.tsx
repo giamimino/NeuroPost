@@ -59,7 +59,7 @@ const PostActions = ({
   postId: number;
   likeId: string | null;
   onChange: (args: HandleLikeArgs, data: any) => void;
-  likes: number;
+  likes: string;
 }) => {
   const { onOpen } = useCommentsStore();
   return (
