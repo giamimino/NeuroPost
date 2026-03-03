@@ -1,4 +1,4 @@
-name: SonarCloud
+name: Node.js CI
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  sonarcloud:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,15 +18,5 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install deps
-        run: npm i
-
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.projectKey=giamimino_NeuroPost
-            -Dsonar.organization=giamimino
-            -Dsonar.host.url=https://sonarcloud.io
+      - name: Install dependencies
+        run: npm install
