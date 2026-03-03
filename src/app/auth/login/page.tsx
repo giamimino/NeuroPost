@@ -29,7 +29,7 @@ const LoginPage = () => {
       router.push("/profile");
     }
   };
-  
+
   return (
     <div>
       <div className="w-full h-screen flex justify-center items-center">
