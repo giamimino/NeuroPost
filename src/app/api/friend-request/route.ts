@@ -59,7 +59,7 @@ export async function POST(req: Request) {
           { ok: false, error: ERRORS.GENERIC_ERROR },
           { status: 520 },
         );
-      
+
       const title = NOTIFICATIONS_TEXT.FRIEND_REQUEST.title;
       const description = `${checkReceiver[0].username} ${NOTIFICATIONS_TEXT.FRIEND_REQUEST.description}`;
       const body = {
@@ -72,14 +72,14 @@ export async function POST(req: Request) {
 
       await sql.query(
         "INSERT INTO notifications (user_id, type, title, body) VALUES ($1, $2, $3, $4)",
-        [receiverId, type, title, body]
-      );
-    } else {
-      await sql.query(
-        "INSERT INTO friend_requests (requester_id, receiver_id) VALUES ($1, $2) RETURNING *",
-        [payload.userId, receiverId],
+        [receiverId, type, title, body],
       );
     }
+    
+    await sql.query(
+      "INSERT INTO friend_requests (requester_id, receiver_id) VALUES ($1, $2) RETURNING *",
+      [payload.userId, receiverId],
+    );
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {

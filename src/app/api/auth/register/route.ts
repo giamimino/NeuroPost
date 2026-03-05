@@ -30,8 +30,8 @@ export async function POST(req: Request) {
       username,
     ]);
 
-    const accessToken = createAccessToken(user[0].id);
-    const refreshToken = createRefreshToken(user[0].id);
+    const accessToken = createAccessToken(user[0].id, user[0].username);
+    const refreshToken = createRefreshToken(user[0].id, user[0].username);
 
     const refreshTokenSql = `INSERT INTO refresh_tokens (token, user_id, expires_at) values (${refreshToken}, ${user[0].id}, NOW() + INTERVAL '7 days')`;
     await sql.query(refreshTokenSql);
