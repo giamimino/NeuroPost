@@ -86,3 +86,15 @@ export interface UserFollowJoinType {
   id: string | null;
   created_at: Date | null;
 }
+
+export type NotificationEnumType = "FRIEND_REQUEST" | "SYSTEM" | "NEW_MESSAGE" | "NEW_FOLLOWER" | "NEW_POST"
+
+export interface NotificationType {
+  id: string,
+  user_id: string,
+  type: NotificationEnumType,
+  title: string,
+  body: JSON,
+  isRead: boolean,
+  created_at: Date
+}

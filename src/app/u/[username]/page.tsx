@@ -60,7 +60,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                 follow: {
                   id: data.follow.id,
                   created_at: new Date(data.follow.created_at),
-                },
+                }
               }
             : prev,
         );
@@ -138,7 +138,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                   @{user?.username ?? "[username]"}
                 </p>
               </div>
-              <div>
+              <div className="flex gap-2">
                 {user?.follow && (
                   <Button
                     variant={user?.follow.id ? "outline" : "default"}
@@ -151,6 +151,14 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                     onClick={handleFollow}
                   >
                     {user.follow.id ? "Following" : "Follow"}
+                  </Button>
+                )}
+                {user?.follow.id && (
+                  <Button
+                    variant={"secondary"}
+                    className="cursor-pointer"
+                  >
+                    {"Add Friend"}
                   </Button>
                 )}
               </div>
