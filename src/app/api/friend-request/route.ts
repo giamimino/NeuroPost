@@ -53,7 +53,7 @@ export async function POST(req: Request) {
         { status: 401 },
       );
     }
-    let friend_requests
+    let friend_requests;
     if (Boolean(withNotif) == true) {
       friend_requests = await sql.query(
         "INSERT INTO friend_request (requester_id, receiver_id) VALUES ($1, $2) RETURNING *",
@@ -81,12 +81,11 @@ export async function POST(req: Request) {
         [receiverId, type, title, body],
       );
     } else {
-       friend_requests = await sql.query(
+      friend_requests = await sql.query(
         "INSERT INTO friend_request (requester_id, receiver_id) VALUES ($1, $2) RETURNING *",
         [payload.userId, receiverId],
       );
     }
-
 
     return NextResponse.json(
       { ok: true, friend_request: friend_requests[0] },

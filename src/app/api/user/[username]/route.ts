@@ -75,11 +75,13 @@ export async function GET(
         `SELECT * FROM friend_request WHERE receiver_id = $1 AND requester_id = $2 LIMIT 1`,
         [user.id, payload.userId],
       );
-      const request = friendStatus[0]
+      const request = friendStatus[0];
 
       user = {
         ...user,
-        friend_status: request ? { id: request.id, status: request.status } : undefined,
+        friend_status: request
+          ? { id: request.id, status: request.status }
+          : undefined,
       };
     }
 

@@ -2,21 +2,24 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-type CardVariant = 'default' | 'secondary';
+type CardVariant = "default" | "secondary";
 const cardClasses: Record<CardVariant, string> = {
-  default: 'bg-card text-card-foreground shadow-sm',
-  secondary: 'bg-card-secondary text-white',
+  default: "bg-card text-card-foreground shadow-sm",
+  secondary: "bg-card-secondary text-white",
 };
 
-
-function Card({ className, variant = "default", ...props }: React.ComponentProps<"div"> & { variant?: CardVariant}) {
+function Card({
+  className,
+  variant = "default",
+  ...props
+}: React.ComponentProps<"div"> & { variant?: CardVariant }) {
   return (
     <div
       data-slot="card"
       className={cn(
         "flex flex-col gap-6 rounded-xl border py-6",
         className,
-        cardClasses[variant]
+        cardClasses[variant],
       )}
       {...props}
     />

@@ -108,7 +108,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
 
     if (data.ok) {
       console.log(data);
-      
+
       setUser((prev) =>
         prev
           ? {
@@ -126,8 +126,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
       addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
     }
   };
-    console.log(user);
-    
+  console.log(user);
 
   const handleCancelFriendRequest = async () => {
     if (!user || !user.friend_status) return;

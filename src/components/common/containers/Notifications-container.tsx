@@ -1,4 +1,12 @@
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -200,8 +208,8 @@ const testNotifications: {
 const NotificationsContainer = () => {
   const [select, setSelect] = useState({ id: "friend_request" });
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
-  const [show, setShow] = useState(6)
-  const scrollableContainer = useRef<HTMLDivElement>(null)
+  const [show, setShow] = useState(6);
+  const scrollableContainer = useRef<HTMLDivElement>(null);
 
   const RenderNotificationHint = () => {
     const key = select.id as keyof typeof notifications_hints;
@@ -209,27 +217,30 @@ const NotificationsContainer = () => {
   };
 
   const filteredNotifications = useMemo(() => {
-    return testNotifications.filter((n) => n.type === select.id.toUpperCase()).sort((a, b) => b.body.sentAt.getTime() - a.body.sentAt.getTime());
+    return testNotifications
+      .filter((n) => n.type === select.id.toUpperCase())
+      .sort((a, b) => b.body.sentAt.getTime() - a.body.sentAt.getTime());
   }, [select, notifications]);
 
   useEffect(() => {
     const onScroll = () => {
-      const window = scrollableContainer.current
-      if(!window) return
-      const scrollTop = window.scrollTop
+      const window = scrollableContainer.current;
+      if (!window) return;
+      const scrollTop = window.scrollTop;
       const scrollHeight = window.scrollHeight;
       const scrollClient = window.clientHeight;
       const target = 0.85;
 
       if (scrollTop + scrollClient >= scrollHeight * target) {
-        setShow(prev => prev += 3)
+        setShow((prev) => (prev += 3));
       }
-    }
+    };
 
-    scrollableContainer.current?.addEventListener("scroll", onScroll)
+    scrollableContainer.current?.addEventListener("scroll", onScroll);
 
-    return () => scrollableContainer.current?.removeEventListener("scroll", onScroll)
-  }, [])
+    return () =>
+      scrollableContainer.current?.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <motion.div
@@ -253,26 +264,31 @@ const NotificationsContainer = () => {
             ))}
           </div>
         </CardAction>
-        <div ref={scrollableContainer} className="px-3 pb-3 flex-1 overflow-y-scroll relative">
+        <div
+          ref={scrollableContainer}
+          className="px-3 pb-3 flex-1 overflow-y-scroll relative"
+        >
           <div className="flex flex-col gap-3">
-            {filteredNotifications.length !== 0 ? filteredNotifications.slice(0, show).map(notif => (
-              <Card key={notif.id} variant="secondary" className="py-3 rounded-lg gap-2 relative cursor-pointer select-none hover:brightness-115">
-                <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                  <Dot width={48} height={48} />
-                </div>
-                <CardContent className="px-3">
-                  <CardTitle className="text-[16px]">
-                    {notif.title}
-                  </CardTitle>
-                  <CardDescription>
-                    {notif.body.description}
-                  </CardDescription>
-                </CardContent>
-                <CardFooter className="px-3 mt-0">
-                  {timeAgo(notif.body.sentAt)}
-                </CardFooter>
-              </Card>
-            )) : (
+            {filteredNotifications.length !== 0 ? (
+              filteredNotifications.slice(0, show).map((notif) => (
+                <Card
+                  key={notif.id}
+                  variant="secondary"
+                  className="py-3 rounded-lg gap-2 relative cursor-pointer select-none hover:brightness-115"
+                >
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <Dot width={48} height={48} />
+                  </div>
+                  <CardContent className="px-3">
+                    <CardTitle className="text-[16px]">{notif.title}</CardTitle>
+                    <CardDescription>{notif.body.description}</CardDescription>
+                  </CardContent>
+                  <CardFooter className="px-3 mt-0">
+                    {timeAgo(notif.body.sentAt)}
+                  </CardFooter>
+                </Card>
+              ))
+            ) : (
               <p className="text-center">{RenderNotificationHint()}</p>
             )}
           </div>
