@@ -30,7 +30,7 @@ export async function POST() {
       process.env.REFRESH_SECRET!,
     ) as JWTUserPaylaod;
 
-    const newAccessToken = createAccessToken(payload.userId);
+    const newAccessToken = createAccessToken(payload.userId, payload.username);
 
     const res = NextResponse.json({ ok: true, rows }, { status: 200 });
     res.cookies.set(process.env.ACCESS_COOKIE_NAME!, newAccessToken, {

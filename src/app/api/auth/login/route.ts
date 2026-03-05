@@ -33,8 +33,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const accessToken = createAccessToken(user.id);
-    const refreshToken = createRefreshToken(user.id);
+    const accessToken = createAccessToken(user.id, user.username);
+    const refreshToken = createRefreshToken(user.id, user.username);
 
     const refreshTokenSql = `
       INSERT INTO refresh_tokens (token, user_id, expires_at)
