@@ -8,7 +8,7 @@ export interface JWTUserPaylaod {
   exp: number;
   iat: number;
   userId: string;
-  username: string
+  username: string;
 }
 
 export interface TagType {

@@ -75,7 +75,7 @@ export async function POST(req: Request) {
         [receiverId, type, title, body],
       );
     }
-    
+
     await sql.query(
       "INSERT INTO friend_requests (requester_id, receiver_id) VALUES ($1, $2) RETURNING *",
       [payload.userId, receiverId],

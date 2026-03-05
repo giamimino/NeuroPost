@@ -6,10 +6,13 @@ import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
 import { NOTIFICATIONS_TEXT } from "@/constants/notifications";
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> },) {
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
-    const requestId = (await params).id
-    
+    const requestId = (await params).id;
+
     const body = await req.json();
     const { action } = body;
 
@@ -65,7 +68,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       );
 
     if (Boolean(withNotif) === true) {
-      const key = action === "accept" ? "FRIEND_REQUEST_ACCEPTED" : "FRIEND_REQUEST_DECLINED"
+      const key =
+        action === "accept"
+          ? "FRIEND_REQUEST_ACCEPTED"
+          : "FRIEND_REQUEST_DECLINED";
       const title = NOTIFICATIONS_TEXT[key].title;
       const description = `${payload.username} ${NOTIFICATIONS_TEXT[key].description} `;
       const body = {
@@ -80,7 +86,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       );
     }
 
-    if(action === "accept") {
+    if (action === "accept") {
       // add as friend query goes there
     }
 
