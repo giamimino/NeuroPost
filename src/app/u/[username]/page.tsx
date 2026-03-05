@@ -30,6 +30,10 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     username: string;
     bio: string | null;
     profile_url: string;
+    friend_status?: {
+      id: string;
+      status: "pending" | "acceped" | "rejected";
+    };
     posts?: Post[];
     follow: UserFollowJoinType;
     stats: UserStatsType;
@@ -60,13 +64,26 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                 follow: {
                   id: data.follow.id,
                   created_at: new Date(data.follow.created_at),
-                }
+                },
+                stats: {
+                  ...prev.stats,
+                  followers: Number(prev.stats.followers) + 1,
+                },
               }
             : prev,
         );
       } else if (method === "delete") {
         setUser((prev) =>
-          prev ? { ...prev, follow: { id: null, created_at: null } } : prev,
+          prev
+            ? {
+                ...prev,
+                follow: { id: null, created_at: null },
+                stats: {
+                  ...prev.stats,
+                  followers: Number(prev.stats.followers) - 1,
+                },
+              }
+            : prev,
         );
       }
     } else if (data.error) {
@@ -79,11 +96,70 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     }
   };
 
+  const handleFriendRequest = async () => {
+    if (!user) return;
+
+    const url = `/api/friend-request?withNotif=true`;
+    const res = await apiFetch(url, {
+      ...ApiConfig.post,
+      body: JSON.stringify({ receiverId: user.id }),
+    });
+    const data = await res?.json();
+
+    if (data.ok) {
+      console.log(data);
+      
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              friend_status: {
+                id: data.friend_request.id,
+                status: data.friend_request.status,
+              },
+            }
+          : prev,
+      );
+    }
+
+    if (!data.ok && data.error) {
+      addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
+    }
+  };
+    console.log(user);
+    
+
+  const handleCancelFriendRequest = async () => {
+    if (!user || !user.friend_status) return;
+
+    const url = `/api/friend-request?withNotif=true`;
+    const res = await apiFetch(url, {
+      ...ApiConfig.delete,
+      body: JSON.stringify({ requestId: user.friend_status.id }),
+    });
+    const data = await res?.json();
+
+    if (data.ok) {
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              friend_status: undefined,
+            }
+          : prev,
+      );
+    }
+
+    if (!data.ok && data.error) {
+      addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
+    }
+  };
+
   useEffect(() => {
     if (!username || !addAlert) return;
     const fetchData = async () => {
       setLoading(true);
-      apiFetch(`/api/user/${username}?stats=true`)
+      apiFetch(`/api/user/${username}?stats=true&friend_status=true`)
         .then((res) => res?.json())
         .then((data) => {
           if (data.ok) {
@@ -156,9 +232,16 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                 {user?.follow.id && (
                   <Button
                     variant={"secondary"}
-                    className="cursor-pointer"
+                    onClick={
+                      user.friend_status?.status !== "pending"
+                        ? handleFriendRequest
+                        : handleCancelFriendRequest
+                    }
+                    className="cursor-pointer text-[14px]"
                   >
-                    {"Add Friend"}
+                    {user.friend_status?.status === "pending"
+                      ? "Cancel request"
+                      : "Add Friend"}
                   </Button>
                 )}
               </div>

@@ -35,7 +35,10 @@ export async function POST(req: Request) {
       process.env.ACCESS_COOKIE_NAME!,
     )?.value;
     if (!access_token)
-      return NextResponse.json({ ok: false, error: ERRORS.TOKEN_MISSING });
+      return NextResponse.json(
+        { ok: false, error: ERRORS.TOKEN_MISSING },
+        { status: 401 },
+      );
     let payload;
 
     try {
@@ -45,12 +48,15 @@ export async function POST(req: Request) {
       ) as JWTUserPaylaod;
     } catch (error) {
       console.error(error);
-      return NextResponse.json({ ok: false, error: ERRORS.TOKEN_INVALID });
+      return NextResponse.json(
+        { ok: false, error: ERRORS.TOKEN_INVALID },
+        { status: 401 },
+      );
     }
-
+    let friend_requests
     if (Boolean(withNotif) == true) {
-      const friend_requests = await sql.query(
-        "INSERT INTO friend_requests (requester_id, receiver_id) VALUES ($1, $2) RETURNING *",
+      friend_requests = await sql.query(
+        "INSERT INTO friend_request (requester_id, receiver_id) VALUES ($1, $2) RETURNING *",
         [payload.userId, receiverId],
       );
       const friend_request = friend_requests[0];
@@ -74,12 +80,78 @@ export async function POST(req: Request) {
         "INSERT INTO notifications (user_id, type, title, body) VALUES ($1, $2, $3, $4)",
         [receiverId, type, title, body],
       );
+    } else {
+       friend_requests = await sql.query(
+        "INSERT INTO friend_request (requester_id, receiver_id) VALUES ($1, $2) RETURNING *",
+        [payload.userId, receiverId],
+      );
     }
 
-    await sql.query(
-      "INSERT INTO friend_requests (requester_id, receiver_id) VALUES ($1, $2) RETURNING *",
-      [payload.userId, receiverId],
+
+    return NextResponse.json(
+      { ok: true, friend_request: friend_requests[0] },
+      { status: 200 },
     );
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ ok: false, message: "" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const body = await req.json();
+    const { requestId } = body;
+
+    if (!requestId)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.GENERIC_ERROR },
+        { status: 400 },
+      );
+
+    const cookieStore = await cookies();
+    const access_token = cookieStore.get(
+      process.env.ACCESS_COOKIE_NAME!,
+    )?.value;
+
+    if (!access_token)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.TOKEN_MISSING },
+        { status: 401 },
+      );
+
+    let payload;
+    try {
+      payload = jwt.verify(
+        access_token,
+        process.env.ACCESS_SECRET!,
+      ) as JWTUserPaylaod;
+    } catch (error) {
+      return NextResponse.json(
+        { ok: false, error: ERRORS.TOKEN_INVALID },
+        { status: 401 },
+      );
+    }
+
+    const friend_requests = await sql.query(
+      `SELECT * FROM friend_request WHERE id = $1`,
+      [requestId],
+    );
+    const friend_request = friend_requests[0];
+
+    if (!friend_request)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.GENERIC_ERROR },
+        { status: 404 },
+      );
+
+    if (friend_request.requester_id !== payload.userId)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.NOT_ALLOWED },
+        { status: 403 },
+      );
+
+    await sql.query(`DELETE FROM friend_request WHERE id = $1`, [requestId]);
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {

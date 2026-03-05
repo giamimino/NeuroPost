@@ -15,7 +15,7 @@ export async function GET(
   try {
     const { username } = await params;
     const { searchParams } = new URL(req.url);
-    const { stats } = Object.fromEntries(searchParams.entries());
+    const { stats, friend_status } = Object.fromEntries(searchParams.entries());
 
     const cookieStore = await cookies();
     const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
@@ -68,6 +68,19 @@ export async function GET(
       );
 
       user = { ...user, stats: stats[0] };
+    }
+
+    if (Boolean(friend_status) === true) {
+      const friendStatus = await sql.query(
+        `SELECT * FROM friend_request WHERE receiver_id = $1 AND requester_id = $2 LIMIT 1`,
+        [user.id, payload.userId],
+      );
+      const request = friendStatus[0]
+
+      user = {
+        ...user,
+        friend_status: request ? { id: request.id, status: request.status } : undefined,
+      };
     }
 
     return NextResponse.json({ ok: true, user }, { status: 200 });
