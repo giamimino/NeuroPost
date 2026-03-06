@@ -99,7 +99,10 @@ export interface NotificationType {
   user_id: string;
   type: NotificationEnumType;
   title: string;
-  body: JSON;
+  body: {
+    sentAt: Date,
+    description?: string
+  };
   isRead: boolean;
   created_at: Date;
 }

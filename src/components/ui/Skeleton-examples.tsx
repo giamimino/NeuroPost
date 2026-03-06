@@ -110,6 +110,31 @@ function SkeletonProfile({ className }: { className?: string }) {
   );
 }
 
+function SkeletonNotification({ className }: { className?: string }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <Skeleton className="w-1/3 h-6" />
+      <Skeleton className="w-full h-8" />
+    </div>
+  );
+}
+
+function SkeletonNotifications({
+  className,
+  length,
+}: {
+  className?: string;
+  length: number;
+}) {
+  return (
+    <div className="flex flex-col gap-5">
+      {Array.from({ length }).map((_, i) => (
+        <SkeletonNotification key={i} />
+      ))}
+    </div>
+  );
+}
+
 export {
   SkeletonCard,
   SkeletonPost,
@@ -118,4 +143,6 @@ export {
   SkeletonComment,
   SkeletonComments,
   SkeletonProfile,
+  SkeletonNotification,
+  SkeletonNotifications
 };

@@ -129,14 +129,14 @@ const CommentProvider = () => {
                   <XIcon />
                 </Button>
               </div>
-              <CardContent className="overflow-auto">
+              <CardContent className="overflow-auto" data-lenis-prevent>
                 {loading ? (
                   <SkeletonComments />
                 ) : (
                   comments.map((c) => (
                     <Card
                       key={`${c.id}-${c.post_id}`}
-                      className="rounded-none border-t-0 border-l-0 border-r-0 p-3 relative"
+                      className={`rounded-none border-t-0 border-l-0 border-r-0 ${c.role === "creator" ? "p-0" : "p-3"} relative`}
                     >
                       {c.role === "creator" && (
                         <ToggleController
@@ -148,8 +148,7 @@ const CommentProvider = () => {
                               exit={{ opacity: 0, y: 10 }}
                               className="absolute right-15 top-1/2 -translate-y-1/2"
                             >
-                              <Card className="p-3">
-                                <CardContent className="p-0">
+                              <Card className="p-0">
                                   <ToggleController
                                     animatePresence
                                     whatToShow={({ handleShow }) => (
@@ -161,7 +160,7 @@ const CommentProvider = () => {
                                         }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10 }}
-                                        className="absolute -top-4 -translate-y-1/2 right-0 z-10 w-5/2"
+                                        className="absolute -top-4 -translate-y-1/2 right-0 z-10 min-w-100 w-full"
                                       >
                                         <Card className="">
                                           <CardHeader>
@@ -208,7 +207,6 @@ const CommentProvider = () => {
                                       </Button>
                                     )}
                                   </ToggleController>
-                                </CardContent>
                               </Card>
                             </motion.div>
                           )}
@@ -226,7 +224,7 @@ const CommentProvider = () => {
                         </ToggleController>
                       )}
                       <CardContent className="flex flex-col gap-3 px-0">
-                        <div className="flex gap-2.5">
+                        <div className="flex gap-2.5 py-2">
                           {c.user.profile_url ? (
                             <Image
                               src={c.user.profile_url}

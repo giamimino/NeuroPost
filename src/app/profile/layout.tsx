@@ -9,7 +9,7 @@ import React from "react";
 const ProfileLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex w-full">
-      <div className="absolute top-17 z-20 right-5">
+      <div className="absolute top-17 z-99 right-5">
         <ToggleController
           className="gap-2.5"
           animatePresence

@@ -1,8 +1,8 @@
-export type notification_type =
+export type NotificationEnumType =
   | "FRIEND_REQUEST"
   | "SYSTEM"
   | "NEW_MESSAGE"
   | "NEW_FOLLOWER"
   | "NEW_POST";
 
-export type friend_request_status_type = "accepted" | "rejected" | "pending";
+export type FriendRequestStatusType = "accepted" | "rejected" | "pending";
