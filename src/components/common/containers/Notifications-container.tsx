@@ -38,7 +38,7 @@ const notificationCategories: NotificationCategory[] = [
 const NotificationsContainer = () => {
   const [select, setSelect] = useState({ id: "friend_request" });
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
   const scrollableContainer = useRef<HTMLDivElement>(null);
 
   const RenderNotificationHint = () => {
@@ -47,7 +47,7 @@ const NotificationsContainer = () => {
   };
 
   useEffect(() => {
-    setLoading(true)
+    setLoading(true);
     const url = `/api/notifications?type=${select.id}&limit=20`;
     apiFetch(url)
       .then((res) => res?.json())
@@ -56,7 +56,8 @@ const NotificationsContainer = () => {
           console.log("data", data);
           setNotifications(data.notifications);
         }
-      }).finally(() => setLoading(false))
+      })
+      .finally(() => setLoading(false));
   }, [select]);
 
   return (
@@ -87,7 +88,9 @@ const NotificationsContainer = () => {
           className="px-3 pb-3 flex-1 overflow-y-auto relative"
         >
           <div className="flex flex-col gap-3">
-            {loading ? <SkeletonNotifications length={5} /> : notifications.length !== 0 ? (
+            {loading ? (
+              <SkeletonNotifications length={5} />
+            ) : notifications.length !== 0 ? (
               notifications.map((notif) => (
                 <Card
                   key={notif.id}

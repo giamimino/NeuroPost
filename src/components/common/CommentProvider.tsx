@@ -149,64 +149,64 @@ const CommentProvider = () => {
                               className="absolute right-15 top-1/2 -translate-y-1/2"
                             >
                               <Card className="p-0">
-                                  <ToggleController
-                                    animatePresence
-                                    whatToShow={({ handleShow }) => (
-                                      <motion.div
-                                        initial={{
-                                          opacity: 0,
-                                          y: 50,
-                                          scale: 0.75,
-                                        }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 10 }}
-                                        className="absolute -top-4 -translate-y-1/2 right-0 z-10 min-w-100 w-full"
-                                      >
-                                        <Card className="">
-                                          <CardHeader>
-                                            <CardDescription>
-                                              Are you sure you want to delete
-                                              this comment?
-                                            </CardDescription>
-                                          </CardHeader>
-                                          <CardContent className="flex gap-2.5">
-                                            <Button
-                                              variant={"outline"}
-                                              className="cursor-pointer"
-                                              onClick={() =>
-                                                handleDeleteComment({
-                                                  commentId: c.id,
-                                                })
-                                              }
-                                            >
-                                              Yes
-                                            </Button>
-                                            <Button
-                                              variant={"ghost"}
-                                              className="cursor-pointer"
-                                              onClick={
-                                                handleShow
-                                                  ? () => handleShow(false)
-                                                  : undefined
-                                              }
-                                            >
-                                              cancel
-                                            </Button>
-                                          </CardContent>
-                                        </Card>
-                                      </motion.div>
-                                    )}
-                                  >
-                                    {({ setShow }) => (
-                                      <Button
-                                        onClick={() => setShow(true)}
-                                        className="hover:text-red-600 cursor-pointer"
-                                        variant={"outline"}
-                                      >
-                                        Delete
-                                      </Button>
-                                    )}
-                                  </ToggleController>
+                                <ToggleController
+                                  animatePresence
+                                  whatToShow={({ handleShow }) => (
+                                    <motion.div
+                                      initial={{
+                                        opacity: 0,
+                                        y: 50,
+                                        scale: 0.75,
+                                      }}
+                                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                                      exit={{ opacity: 0, y: 10 }}
+                                      className="absolute -top-4 -translate-y-1/2 right-0 z-10 min-w-100 w-full"
+                                    >
+                                      <Card className="">
+                                        <CardHeader>
+                                          <CardDescription>
+                                            Are you sure you want to delete this
+                                            comment?
+                                          </CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="flex gap-2.5">
+                                          <Button
+                                            variant={"outline"}
+                                            className="cursor-pointer"
+                                            onClick={() =>
+                                              handleDeleteComment({
+                                                commentId: c.id,
+                                              })
+                                            }
+                                          >
+                                            Yes
+                                          </Button>
+                                          <Button
+                                            variant={"ghost"}
+                                            className="cursor-pointer"
+                                            onClick={
+                                              handleShow
+                                                ? () => handleShow(false)
+                                                : undefined
+                                            }
+                                          >
+                                            cancel
+                                          </Button>
+                                        </CardContent>
+                                      </Card>
+                                    </motion.div>
+                                  )}
+                                >
+                                  {({ setShow }) => (
+                                    <Button
+                                      onClick={() => setShow(true)}
+                                      className="hover:text-red-600 cursor-pointer"
+                                      variant={"outline"}
+                                    >
+                                      Delete
+                                    </Button>
+                                  )}
+                                </ToggleController>
                               </Card>
                             </motion.div>
                           )}

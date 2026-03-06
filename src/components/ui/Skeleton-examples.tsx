@@ -144,5 +144,5 @@ export {
   SkeletonComments,
   SkeletonProfile,
   SkeletonNotification,
-  SkeletonNotifications
+  SkeletonNotifications,
 };

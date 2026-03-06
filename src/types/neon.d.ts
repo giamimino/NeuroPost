@@ -100,8 +100,8 @@ export interface NotificationType {
   type: NotificationEnumType;
   title: string;
   body: {
-    sentAt: Date,
-    description?: string
+    sentAt: Date;
+    description?: string;
   };
   isRead: boolean;
   created_at: Date;

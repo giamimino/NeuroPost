@@ -35,11 +35,11 @@ export default function Page() {
   return (
     <div className="pt-20">
       {/* <Button onClick={handleSend}>50 message</Button> */}
-        <div data-lenis-prevent className="max-w-100 max-h-100 overflow-y-auto">
-          <CardContent>
-            <div className="h-screen bg-green-600"></div>
-          </CardContent>
-        </div>
+      <div data-lenis-prevent className="max-w-100 max-h-100 overflow-y-auto">
+        <CardContent>
+          <div className="h-screen bg-green-600"></div>
+        </CardContent>
+      </div>
     </div>
   );
 }

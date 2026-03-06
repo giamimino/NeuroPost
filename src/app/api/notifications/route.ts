@@ -50,7 +50,7 @@ export async function GET(req: Request) {
         { status: 401 },
       );
     }
-    
+
     const notifications = await sql.query(
       `SELECT * FROM notifications WHERE user_id = $1 AND type = $2 LIMIT $3`,
       [payload.userId, type.toUpperCase(), Number(limit) || 20],
