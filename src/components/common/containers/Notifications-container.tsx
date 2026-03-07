@@ -12,10 +12,18 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NotificationType } from "@/types/neon";
 import { timeAgo } from "@/utils/functions/timeAgo";
-import { Dot } from "lucide-react";
+import { Circle, Dot } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonNotifications } from "@/components/ui/Skeleton-examples";
+import { useAlertStore } from "@/store/zustand/alertStore";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { ERRORS } from "@/constants/error-handling";
+import { ApiConfig } from "@/configs/api-configs";
 
 type NotificationCategory = {
   id: string;
@@ -40,24 +48,58 @@ const NotificationsContainer = () => {
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
   const [loading, setLoading] = useState(false);
   const scrollableContainer = useRef<HTMLDivElement>(null);
+  const { addAlert } = useAlertStore();
 
   const RenderNotificationHint = () => {
     const key = select.id as keyof typeof notifications_hints;
     return notifications_hints[key].hint;
   };
 
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      const url = `/api/notifications/read`;
+      const res = await apiFetch(url, {
+        ...ApiConfig.post,
+        body: JSON.stringify({ notificationId: id }),
+      });
+      const data = await res?.json();
+
+      if (data.ok) {
+        setNotifications((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, isread: true } : p)),
+        );
+      } else if (!data.ok && data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+          duration: 3 * 1000,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+    }
+  };
+
   useEffect(() => {
-    setLoading(true);
-    const url = `/api/notifications?type=${select.id}&limit=20`;
-    apiFetch(url)
-      .then((res) => res?.json())
-      .then((data) => {
-        if (data.ok) {
-          console.log("data", data);
-          setNotifications(data.notifications);
-        }
-      })
-      .finally(() => setLoading(false));
+    (async () => {
+      setLoading(true);
+      const url = `/api/notifications?type=${select.id}&limit=20`;
+      const res = await apiFetch(url);
+      const data = await res?.json();
+      if (data.ok) {
+        console.log("data", data);
+        setNotifications(data.notifications);
+      } else if (!data.ok && data.error) {
+        addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
+      }
+      setLoading(false);
+    })();
   }, [select]);
 
   return (
@@ -94,12 +136,23 @@ const NotificationsContainer = () => {
               notifications.map((notif) => (
                 <Card
                   key={notif.id}
-                  variant="secondary"
-                  className="py-3 rounded-lg gap-2 relative cursor-pointer select-none hover:brightness-115"
+                  variant={notif.isread ? "default" : "secondary"}
+                  className="py-3 rounded-lg gap-2 relative select-none hover:brightness-115"
                 >
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    <Dot width={48} height={48} />
-                  </div>
+                  {!notif.isread && (
+                    <HoverCard openDelay={10} closeDelay={100}>
+                      <HoverCardTrigger
+                        asChild
+                        className="absolute right-5 cursor-pointer top-1/2 -translate-y-1/2"
+                        onClick={() => handleMarkAsRead(notif.id)}
+                      >
+                        <Circle width={10} height={10} fill="#fff" />
+                      </HoverCardTrigger>
+                      <HoverCardContent className="z-99 text-center max-w-50 mt-2">
+                        Mark as Read
+                      </HoverCardContent>
+                    </HoverCard>
+                  )}
                   <CardContent className="px-3">
                     <CardTitle className="text-[16px]">{notif.title}</CardTitle>
                     <CardDescription>{notif.body.description}</CardDescription>

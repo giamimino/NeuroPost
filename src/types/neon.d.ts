@@ -103,6 +103,6 @@ export interface NotificationType {
     sentAt: Date;
     description?: string;
   };
-  isRead: boolean;
+  isread: boolean;
   created_at: Date;
 }
