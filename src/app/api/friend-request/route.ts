@@ -5,6 +5,9 @@ import jwt from "jsonwebtoken";
 import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
 import { NOTIFICATIONS_TEXT } from "@/constants/notifications";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { s3 } from "@/lib/aws-sdk";
 
 export async function POST(req: Request) {
   try {
@@ -153,6 +156,75 @@ export async function DELETE(req: Request) {
     await sql.query(`DELETE FROM friend_request WHERE id = $1`, [requestId]);
 
     return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ ok: false, message: "" }, { status: 500 });
+  }
+}
+
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const { limit } = Object.fromEntries(searchParams.entries());
+
+    const cookieStore = await cookies();
+    const access_token = cookieStore.get(
+      process.env.ACCESS_COOKIE_NAME!,
+    )?.value;
+
+    if (!access_token)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.TOKEN_INVALID },
+        { status: 401 },
+      );
+
+    let payload;
+
+    try {
+      payload = jwt.verify(
+        access_token,
+        process.env.ACCESS_SECRET!,
+      ) as JWTUserPaylaod;
+    } catch (error) {
+      return NextResponse.json(
+        { ok: false, error: ERRORS.TOKEN_MISSING },
+        { status: 401 },
+      );
+    }
+
+    const friend_requests = await sql.query(
+      `SELECT fr.id, fr.status, fr.created_at,  
+      json_build_object('profile_url', u.profile_url, 'name', u.name, 'username', u.username) AS user
+      FROM friend_request fr
+      JOIN users u ON u.id = $1
+      WHERE fr.requester_id = $1 JOIN LIMIT $2`,
+      [payload.userId, Number(limit) || 20],
+    );
+
+    const keys = friend_requests.map((fr) => fr.user.profile_url || "");
+    const signedUrls = await Promise.all(
+      keys.map((key) => {
+        const command = new GetObjectCommand({
+          Bucket: "neuropost",
+          Key: key,
+        });
+
+        return getSignedUrl(s3, command, { expiresIn: 5 * 60 });
+      }),
+    );
+
+    const signedFriend_requests = friend_requests.map((fr, i) => ({
+      ...fr,
+      user: {
+        ...fr.user,
+        profile_url: fr.user.profile_url ? signedUrls[i] : "/user.jpg",
+      },
+    }));
+
+    return NextResponse.json(
+      { ok: true, friend_requests: signedFriend_requests },
+      { status: 200 },
+    );
   } catch (err) {
     console.error(err);
     return NextResponse.json({ ok: false, message: "" }, { status: 500 });

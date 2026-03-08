@@ -153,16 +153,14 @@ const ProfileNavigation = () => {
       | "destructive"
       | "outline"
       | "secondary";
-  }[] = useMemo(
-    () => [
-      { url: "/profile/p/create", label: "Upload", variant: "default" },
-      { url: "/profile", label: "Profile", variant: "ghost" },
-      { url: "/profile/saves", label: "Saves", variant: "ghost" },
-      { url: "/profile/edit", label: "Edit", variant: "ghost" },
-      { url: "/profile/settings", label: "Settings", variant: "ghost" },
-    ],
-    [],
-  );
+  }[] = [
+    { url: "p/create", label: "Upload", variant: "default" },
+    { url: "", label: "Profile", variant: "ghost" },
+    { url: "saves", label: "Saves", variant: "ghost" },
+    { url: "edit", label: "Edit", variant: "ghost" },
+    { url: "friends", label: "Friends", variant: "ghost" },
+    { url: "settings", label: "Settings", variant: "ghost" },
+  ];
 
   return (
     <Card>
@@ -176,7 +174,7 @@ const ProfileNavigation = () => {
               variant={page.variant}
               key={`${page.label}`}
               className={"w-full rounded-none cursor-pointer"}
-              onClick={() => router.push(page.url)}
+              onClick={() => router.push(`/profile/${page.url}`)}
             >
               <p
                 className={

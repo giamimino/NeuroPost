@@ -49,7 +49,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
         role: "creator" | "guest";
         user: UserJoin;
         likeid: string | null;
-        likes: string;
+        likes: number;
       })
     | null
   >(null);
@@ -164,8 +164,8 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
     );
   return (
     <div className="pt-25 flex flex-col gap-5">
-      <div className="w-full flex justify-center gap-1.5">
-        <div className="w-1/2 flex flex-col gap-5">
+      <div className="w-full flex justify-center gap-1.5 px-5">
+        <div className="w-1/2 max-sm:w-full flex flex-col gap-5">
           <div className="flex items-center justify-center w-full">
             {loading ? (
               <div className="w-full">
@@ -370,7 +370,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                             ? {
                                 ...p,
                                 likeid: null,
-                                likes: String(Number(post.likes) - 1),
+                                likes: post.likes - 1,
                               }
                             : p,
                         );
@@ -380,7 +380,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                             ? {
                                 ...p,
                                 likeid: data.like,
-                                likes: String(Number(post.likes) + 1),
+                                likes: post.likes + 1,
                               }
                             : p,
                         );

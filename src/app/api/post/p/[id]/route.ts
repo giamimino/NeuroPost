@@ -25,15 +25,16 @@ export async function GET(
     }
 
     const posts = await sql.query(
-      `SELECT p.*, COUNT( l.id) AS likes, json_build_object('name', u.name, 'username', u.username, 'profile_url', u.profile_url) AS user, l.id AS likeId 
+      `SELECT p.*, json_build_object('name', u.name, 'username', u.username, 'profile_url', u.profile_url) AS user, l.id AS likeId 
       FROM posts p JOIN users u ON p.author_id=u.id 
-      LEFT JOIN likes l ON l.post_id = $1 
+      LEFT JOIN likes l ON l.post_id = $1 AND l.user_id = $2
       WHERE p.id = $1 GROUP BY p.id, u.name, u.username, u.profile_url, l.id`,
-      [Number(id)],
+      [Number(id), payload?.userId],
     );
     const post = posts[0];
-    console.log(post);
 
+    const likes = await sql.query(`SELECT COUNT(*) FROM likes WHERE post_id = $1`, [Number(id)])
+    
     let role: "creator" | "guest";
     if (post.author_id === payload?.userId) {
       role = "creator";
@@ -56,7 +57,8 @@ export async function GET(
         return getSignedUrl(s3, command, { expiresIn: 60 * 5 });
       }),
     );
-
+    console.log(likes[0].count);
+    
     return NextResponse.json(
       {
         ok: true,
@@ -65,6 +67,7 @@ export async function GET(
           signedUrl: signedUrls[1] || null,
           media,
           role,
+          likes: Number(likes[0].count),
           user: {
             ...post.user,
             profile_url: post.user.profile_url ? signedUrls[0] : "/user.jpg",
