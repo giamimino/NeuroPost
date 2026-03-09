@@ -294,4 +294,14 @@ export const ERRORS = {
     title: "Something went wrong",
     description: "Your comment could not be sent. Please try again.",
   },
+
+  YOURSELF_FOLLOW_ERROR: {
+    title: "Follow error",
+    description: "You cannot follow yourself.",
+  },
+
+  YOURSELF_FRIEND_REQUEST_ERROR: {
+    title: "Friend request error",
+    description: "You cannot request friendship for yourself.",
+  },
 } as const;

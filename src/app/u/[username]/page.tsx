@@ -160,6 +160,8 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
       apiFetch(`/api/user/${username}?stats=true&friend_status=true`)
         .then((res) => res?.json())
         .then((data) => {
+          console.log(data);
+
           if (data.ok) {
             setUser(data.user);
           } else if (data.error) {

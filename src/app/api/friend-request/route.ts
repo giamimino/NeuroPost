@@ -56,6 +56,13 @@ export async function POST(req: Request) {
         { status: 401 },
       );
     }
+
+    if (payload.userId === receiverId)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.YOURSELF_FRIEND_REQUEST_ERROR },
+        { status: 400 },
+      );
+
     let friend_requests;
     if (Boolean(withNotif) == true) {
       friend_requests = await sql.query(
@@ -196,10 +203,12 @@ export async function GET(req: Request) {
       `SELECT fr.id, fr.status, fr.created_at,  
       json_build_object('profile_url', u.profile_url, 'name', u.name, 'username', u.username) AS user
       FROM friend_request fr
-      JOIN users u ON u.id = $1
-      WHERE fr.requester_id = $1 JOIN LIMIT $2`,
+      JOIN users u ON u.id = fr.requester_id
+      WHERE fr.receiver_id = $1 LIMIT $2`,
       [payload.userId, Number(limit) || 20],
     );
+
+    console.log(friend_requests);
 
     const keys = friend_requests.map((fr) => fr.user.profile_url || "");
     const signedUrls = await Promise.all(

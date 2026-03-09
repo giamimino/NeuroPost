@@ -25,4 +25,8 @@ export const ApiConfig = {
   purForm: {
     method: "PUT",
   },
+  patch: {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  },
 };

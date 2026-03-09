@@ -33,8 +33,11 @@ export async function GET(
     );
     const post = posts[0];
 
-    const likes = await sql.query(`SELECT COUNT(*) FROM likes WHERE post_id = $1`, [Number(id)])
-    
+    const likes = await sql.query(
+      `SELECT COUNT(*) FROM likes WHERE post_id = $1`,
+      [Number(id)],
+    );
+
     let role: "creator" | "guest";
     if (post.author_id === payload?.userId) {
       role = "creator";
@@ -58,7 +61,7 @@ export async function GET(
       }),
     );
     console.log(likes[0].count);
-    
+
     return NextResponse.json(
       {
         ok: true,

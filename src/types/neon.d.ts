@@ -1,3 +1,5 @@
+import { FriendRequestStatusType } from "./enums";
+
 export interface Post {
   id: number;
   created_at: Date;
@@ -105,4 +107,17 @@ export interface NotificationType {
   };
   isread: boolean;
   created_at: Date;
+}
+
+export interface FriendRequestUserJoinType {
+  profile_url: string;
+  name: string;
+  username: string;
+}
+
+export interface FriendRequestType {
+  id: string;
+  status: FriendRequestStatusType;
+  created_at: Date;
+  user: FriendRequestUserJoinType;
 }

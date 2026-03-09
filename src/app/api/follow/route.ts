@@ -30,6 +30,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, dev: error }, { status: 401 });
     }
 
+    if (payload.userId === followId)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.YOURSELF_FOLLOW_ERROR },
+        { status: 400 },
+      );
+
     const follow = await sql.query(
       `INSERT INTO follows (follow_id, follower_id) VALUES ($1, $2) RETURNING *`,
       [followId, payload.userId],

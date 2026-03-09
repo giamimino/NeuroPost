@@ -112,7 +112,7 @@ function SkeletonProfile({ className }: { className?: string }) {
 
 function SkeletonNotification({ className }: { className?: string }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className={clsx("flex flex-col gap-2", className)}>
       <Skeleton className="w-1/3 h-6" />
       <Skeleton className="w-full h-8" />
     </div>
@@ -127,12 +127,34 @@ function SkeletonNotifications({
   length: number;
 }) {
   return (
-    <div className="flex flex-col gap-5">
+    <div className={clsx("flex flex-col gap-5", className)}>
       {Array.from({ length }).map((_, i) => (
         <SkeletonNotification key={i} />
       ))}
     </div>
   );
+}
+
+function SkeletonFriendRequest() {
+  return (
+    <div className="w-full flex flex-col gap-3">
+      <Skeleton className="w-full h-40" />
+      <Skeleton className="w-3/4 h-4" />
+      <Skeleton className="w-1/4 h-4" />
+    </div>
+  );
+}
+
+function SkeletonFriendRequests({
+  length = 6,
+  className,
+}: {
+  length?: number;
+  className?: string;
+}) {
+  return Array.from({ length }).map((_, i) => (
+    <SkeletonFriendRequest key={i} />
+  ));
 }
 
 export {
@@ -145,4 +167,6 @@ export {
   SkeletonProfile,
   SkeletonNotification,
   SkeletonNotifications,
+  SkeletonFriendRequest,
+  SkeletonFriendRequests,
 };
