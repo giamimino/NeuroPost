@@ -6,7 +6,7 @@ import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
 import { NOTIFICATIONS_TEXT } from "@/constants/notifications";
 
-export async function PATCH(
+export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -15,6 +15,8 @@ export async function PATCH(
 
     const body = await req.json();
     const { action } = body;
+
+    console.log(requestId, action);
 
     if (!requestId || !["accept", "reject"].includes(action))
       return NextResponse.json(
@@ -50,7 +52,7 @@ export async function PATCH(
     }
 
     const friend_requests = await sql.query(
-      `SELECT * FROM friend_request WHERE id = $1`,
+      `SELECT requester_id, receiver_id FROM friend_request WHERE id = $1`,
       [requestId],
     );
     const friend_request = friend_requests[0];
@@ -87,10 +89,24 @@ export async function PATCH(
     }
 
     if (action === "accept") {
-      // add as friend query goes there
+      await sql.query(
+        `
+          WITH deleted AS (
+            DELETE FROM friend_request
+            WHERE id = $1
+            RETURNING requester_id
+          )
+          INSERT INTO friends (user_id, friend_id)
+          SELECT 
+              LEAST($2::text, requester_id::text)::uuid,
+              GREATEST($2::text, requester_id::text)::uuid
+          FROM deleted;
+        `,
+        [requestId, payload.userId],
+      );
+    } else {
+      await sql.query(`DELETE FROM friend_request WHERE id = $1`, [requestId]);
     }
-
-    await sql.query(`DELETE FROM friend_request WHERE id = $1`, [requestId]);
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {

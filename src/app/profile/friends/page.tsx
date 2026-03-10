@@ -21,7 +21,7 @@ import { timeAgo } from "@/utils/functions/timeAgo";
 import { UserRoundPlus, UsersRound } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const pages = [
   {
@@ -39,23 +39,29 @@ const pages = [
 const FriendsPage = () => {
   const [section, setSection] = useState("friend_requests");
   const [friendRequests, setFriendRequests] = useState<FriendRequestType[]>([]);
-  const { addAlert } = useAlertStore();
   const [loading, setLoading] = useState(false);
+  const [friends, setFriends] = useState([]);
+  const { addAlert } = useAlertStore();
   const router = useRouter();
+  const tickingRef = useRef(false);
 
   const handleRequestResponse = async (
     action: "accept" | "reject",
     requestId: string,
   ) => {
     try {
+      if (tickingRef.current) return;
+      tickingRef.current = true;
       const url = `/api/friend-request/${requestId}`;
       const res = await fetch(url, {
-        ...ApiConfig.patch,
+        ...ApiConfig.post,
         body: JSON.stringify({ action }),
       });
       const data = await res.json();
 
-      if (data.ok && data.error) {
+      if (data.ok) {
+        setFriendRequests((prev) => prev.filter((p) => p.id !== requestId));
+      } else if (data.error) {
         addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
       }
     } catch (error) {
@@ -65,6 +71,8 @@ const FriendsPage = () => {
         type: "error",
         ...ERRORS.GENERIC_ERROR,
       });
+    } finally {
+      tickingRef.current = false;
     }
   };
 
@@ -81,14 +89,16 @@ const FriendsPage = () => {
                 setState: setFriendRequests,
               }
             : {
-                url: "",
+                url: "/api/friends?limit=20",
                 request: ApiConfig.get,
-                target: "",
-                setState: setFriendRequests,
+                target: "friends",
+                setState: setFriends,
               };
 
         const res = await apiFetch(config.url, config.request);
         const data = await res?.json();
+        console.log(data);
+
         if (data.ok) {
           config.setState(data[config.target]);
         } else if (!data.ok && data.error) {
@@ -124,13 +134,7 @@ const FriendsPage = () => {
                     className={`w-full rounded-none cursor-pointer justify-start`}
                     onClick={() => setSection(page.id)}
                   >
-                    <Button
-                      size={"icon-xs"}
-                      className="rounded-sm"
-                      variant={"secondary"}
-                    >
-                      {page.icon}
-                    </Button>
+                    <div>{page.icon}</div>
                     <p
                       className={
                         page.id === section

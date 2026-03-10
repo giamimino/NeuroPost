@@ -71,18 +71,31 @@ export async function GET(
     }
 
     if (Boolean(friend_status) === true) {
-      const friendStatus = await sql.query(
-        `SELECT * FROM friend_request WHERE receiver_id = $1 AND requester_id = $2 LIMIT 1`,
-        [user.id, payload.userId],
+      const friend_receive_Status = await sql.query(
+        `SELECT id FROM friend_request WHERE receiver_id = $1 AND requester_id = $2 LIMIT 1`,
+        [payload.userId, user.id],
       );
-      const request = friendStatus[0];
+      const receive = friend_receive_Status[0];
 
-      user = {
-        ...user,
-        friend_status: request
-          ? { id: request.id, status: request.status }
-          : undefined,
-      };
+      if (receive) {
+        user = {
+          ...user,
+          friend_receive: { ...receive },
+        };
+      } else {
+        const friendStatus = await sql.query(
+          `SELECT id, status FROM friend_request WHERE receiver_id = $1 AND requester_id = $2 LIMIT 1`,
+          [user.id, payload.userId],
+        );
+        const request = friendStatus[0];
+
+        user = {
+          ...user,
+          friend_status: request
+            ? { id: request.id, status: request.status }
+            : undefined,
+        };
+      }
     }
 
     return NextResponse.json({ ok: true, user }, { status: 200 });

@@ -208,8 +208,6 @@ export async function GET(req: Request) {
       [payload.userId, Number(limit) || 20],
     );
 
-    console.log(friend_requests);
-
     const keys = friend_requests.map((fr) => fr.user.profile_url || "");
     const signedUrls = await Promise.all(
       keys.map((key) => {

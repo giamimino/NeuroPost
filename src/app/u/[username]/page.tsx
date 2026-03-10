@@ -12,6 +12,7 @@ import Line from "@/components/ui/Line";
 import { SkeletonProfile } from "@/components/ui/Skeleton-examples";
 import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
+import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { UserStatsType } from "@/types/global";
@@ -19,7 +20,7 @@ import { Post, UserFollowJoinType } from "@/types/neon";
 import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { use, useEffect, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 
 const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   const { username } = use(params);
@@ -34,6 +35,9 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
       id: string;
       status: "pending" | "acceped" | "rejected";
     };
+    friend_receive?: {
+      id: string;
+    };
     posts?: Post[];
     follow: UserFollowJoinType;
     stats: UserStatsType;
@@ -41,6 +45,40 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { addAlert } = useAlertStore();
+  const tickingRef = useRef(false);
+
+  const handleRequestResponse = async (
+    action: "accept" | "reject",
+    requestId: string,
+  ) => {
+    try {
+      if (tickingRef.current || !user) return;
+      tickingRef.current = true;
+      const url = `/api/friend-request/${requestId}`;
+      const res = await fetch(url, {
+        ...ApiConfig.post,
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        setUser((prev) =>
+          prev ? { ...user, friend_receive: undefined } : prev,
+        );
+      } else if (data.error) {
+        addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
+      }
+    } catch (error) {
+      console.error(error);
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+    } finally {
+      tickingRef.current = false;
+    }
+  };
 
   const handleFollow = async () => {
     if (!user) return;
@@ -160,8 +198,6 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
       apiFetch(`/api/user/${username}?stats=true&friend_status=true`)
         .then((res) => res?.json())
         .then((data) => {
-          console.log(data);
-
           if (data.ok) {
             setUser(data.user);
           } else if (data.error) {
@@ -229,20 +265,41 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                     {user.follow.id ? "Following" : "Follow"}
                   </Button>
                 )}
-                {user?.follow.id && (
-                  <Button
-                    variant={"secondary"}
-                    onClick={
-                      user.friend_status?.status !== "pending"
-                        ? handleFriendRequest
-                        : handleCancelFriendRequest
-                    }
-                    className="cursor-pointer text-[14px]"
-                  >
-                    {user.friend_status?.status === "pending"
-                      ? "Cancel request"
-                      : "Add Friend"}
-                  </Button>
+                {(user?.follow.id || user?.friend_status?.status) &&
+                  !user.friend_receive && (
+                    <Button
+                      variant={"secondary"}
+                      onClick={
+                        user.friend_status?.status !== "pending"
+                          ? handleFriendRequest
+                          : handleCancelFriendRequest
+                      }
+                      className="cursor-pointer text-[14px]"
+                    >
+                      {user.friend_status?.status === "pending"
+                        ? "Cancel request"
+                        : "Add Friend"}
+                    </Button>
+                  )}
+                {user && user.friend_receive?.id && (
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() =>
+                        handleRequestResponse("accept", user.friend_receive!.id)
+                      }
+                      className="bg-blue-600 cursor-pointer hover:bg-blue-700 text-foreground w-fit"
+                    >
+                      Confirm
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        handleRequestResponse("reject", user.friend_receive!.id)
+                      }
+                      className="bg-red-600/40 border border-red-600 cursor-pointer hover:bg-red-700/70 text-foreground w-fit"
+                    >
+                      delete
+                    </Button>
+                  </div>
                 )}
               </div>
               <div className="flex gap-5">
