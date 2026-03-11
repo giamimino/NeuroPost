@@ -19,6 +19,7 @@ import {
   ALLOWED_VIDEO_TYPES,
 } from "@/constants/validators";
 import { apiFetch } from "@/lib/apiFetch";
+import { useAlertStore } from "@/store/zustand/alertStore";
 import { Tag } from "@/types/neon";
 import { MediaValidator } from "@/utils/validator";
 import { Plus } from "lucide-react";
@@ -32,6 +33,7 @@ const PostUploadPage = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
+  const { addAlert } = useAlertStore();
 
   const handleUploadPost = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,13 +54,22 @@ const PostUploadPage = () => {
       })
         .then((res) => res?.json())
         .then((data) => {
-          console.log(data);
+          if (data.error) {
+            addAlert({
+              id: crypto.randomUUID(),
+              type: "error",
+              ...data.error,
+            });
+          }
         })
         .finally(() => form.reset());
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
+      e.currentTarget.reset();
+      setMedia(null);
+      setTags([]);
     }
   };
 

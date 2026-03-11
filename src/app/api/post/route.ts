@@ -77,7 +77,7 @@ export async function POST(req: Request) {
 
     if (!title.trim() || !description.trim()) {
       return NextResponse.json(
-        { ok: false, message: "Invalid input" },
+        { ok: false, error: ERRORS.REQUIRED_FIELDS },
         { status: 422 },
       );
     }

@@ -124,17 +124,18 @@ export default function Home() {
                   )}
                 </div>
                 <div className="flex gap-1.5 flex-wrap justify-center mt-5">
-                  {post.tags.map((tag) => {
-                    if (tag.id === null || tag.tag === null) return null;
-                    return (
-                      <TagItem
-                        tag={`#${tag.tag}`}
-                        key={`${tag.id}-${tag.tag}-${post.id}`}
-                        variant="none"
-                        onClick={() => router.push(`/tags/${tag.tag}`)}
-                      />
-                    );
-                  })}
+                  {Array.isArray(post.tags) &&
+                    post.tags.map((tag, i) => {
+                      if (tag.id === null || tag.tag === null) return null;
+                      return (
+                        <TagItem
+                          tag={`#${tag.tag}`}
+                          key={`${tag.id}-${i}-${post.id}`}
+                          variant="none"
+                          onClick={() => router.push(`/tags/${tag.tag}`)}
+                        />
+                      );
+                    })}
                 </div>
                 <PostActions
                   likes={post.likes}

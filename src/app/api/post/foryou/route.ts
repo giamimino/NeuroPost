@@ -42,19 +42,64 @@ export async function GET(req: Request) {
     }
 
     const rawSql = `
-      SELECT p.*, json_agg(json_build_object('id', t.id, 'tag', t.tag)) as tags, l.id as like_id, 
-      json_build_object('id', m.id, 'fileurl', m.fileurl, 'type', m.type) as media,
-      json_build_object('id', u.id, 'name', u.name, 'username', u.username, 'profile_url', u.profile_url) as user,
-      COUNT(tl.id) as likes FROM posts p
-      LEFT JOIN post_tag pt ON p.id = pt.post_id
-      LEFT JOIN tags t ON t.id = pt.tag_id
-      LEFT JOIN likes l ON l.user_id = $3 AND l.post_id = p.id
-      LEFT JOIN media m ON m.post_id = p.id
-      LEFT JOIN users u ON u.id = p.author_id
-      LEFT JOIN likes tl ON tl.post_id = p.id
+      SELECT 
+        p.*,
+
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'id', t.id,
+            'tag', t.tag
+          )
+        ) FILTER (WHERE t.id IS NOT NULL) AS tags,
+
+        l.id AS like_id,
+
+        json_build_object(
+          'id', m.id,
+          'fileurl', m.fileurl,
+          'type', m.type
+        ) AS media,
+
+        json_build_object(
+          'id', u.id,
+          'name', u.name,
+          'username', u.username,
+          'profile_url', u.profile_url
+        ) AS user,
+
+        COUNT(DISTINCT tl.id) AS likes
+
+      FROM posts p
+
+      LEFT JOIN post_tag pt 
+        ON p.id = pt.post_id
+
+      LEFT JOIN tags t 
+        ON t.id = pt.tag_id
+
+      LEFT JOIN likes l 
+        ON l.user_id = $3 AND l.post_id = p.id
+
+      LEFT JOIN media m 
+        ON m.post_id = p.id
+
+      LEFT JOIN users u 
+        ON u.id = p.author_id
+
+      LEFT JOIN likes tl 
+        ON tl.post_id = p.id
+
       WHERE p.created_at < $2
-      GROUP BY p.id, l.id, m.id, u.id
-      ORDER BY p.${col} ${dir} LIMIT $1
+
+      GROUP BY 
+        p.id,
+        l.id,
+        m.id,
+        u.id
+
+      ORDER BY p.${col} ${dir}
+
+      LIMIT $1
     `;
 
     let posts = (await sql.query(rawSql, [

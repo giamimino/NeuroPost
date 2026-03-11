@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { JWTUserPaylaod } from "@/types/global";
 import { s3 } from "@/lib/aws-sdk";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { ImageValidator } from "@/utils/imageValidator";
 import { sql } from "@/lib/db";
 
@@ -30,6 +30,19 @@ export async function POST(req: Request) {
     } catch (error) {
       return NextResponse.json({ ok: false, dev: error }, { status: 401 });
     }
+
+    const users = await sql.query(
+      `SELECT profile_url FROM users WHERE id = $1 LIMIT 1`,
+      [payload.userId],
+    );
+    const ruser = users[0];
+
+    await s3.send(
+      new DeleteObjectCommand({
+        Bucket: "neuropost",
+        Key: ruser.profile_url,
+      }),
+    );
 
     const extension = file.name.split(".").pop();
     const filename = `${crypto.randomUUID()}.${extension}`;

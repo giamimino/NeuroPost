@@ -32,8 +32,8 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     bio: string | null;
     profile_url: string;
     friend_status?: {
-      id: string;
-      status: "pending" | "acceped" | "rejected";
+      id?: string;
+      status: "pending" | "accepted" | "rejected" | "unknown";
     };
     friend_receive?: {
       id: string;
@@ -46,6 +46,8 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   const router = useRouter();
   const { addAlert } = useAlertStore();
   const tickingRef = useRef(false);
+
+  console.log(user);
 
   const handleRequestResponse = async (
     action: "accept" | "reject",
@@ -63,7 +65,13 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
 
       if (data.ok) {
         setUser((prev) =>
-          prev ? { ...user, friend_receive: undefined } : prev,
+          prev
+            ? {
+                ...user,
+                friend_receive: undefined,
+                friend_status: { status: "unknown" },
+              }
+            : prev,
         );
       } else if (data.error) {
         addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
@@ -135,7 +143,12 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   };
 
   const handleFriendRequest = async () => {
-    if (!user) return;
+    if (
+      !user ||
+      user.friend_status?.status === "pending" ||
+      user.friend_status?.status === "unknown"
+    )
+      return;
 
     const url = `/api/friend-request?withNotif=true`;
     const res = await apiFetch(url, {
@@ -166,7 +179,14 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   };
 
   const handleCancelFriendRequest = async () => {
-    if (!user || !user.friend_status) return;
+    if (
+      !user ||
+      !user.friend_status ||
+      !user.friend_status.id ||
+      user.friend_status.status === "unknown" ||
+      user.friend_status.status === "accepted"
+    )
+      return;
 
     const url = `/api/friend-request?withNotif=true`;
     const res = await apiFetch(url, {
@@ -234,10 +254,10 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
       <div className="flex flex-col items-start gap-1 px-10">
         {loading ? (
           <SkeletonProfile />
-        ) : (
+        ) : user ? (
           <div className="flex pl-20 gap-4">
             <Image
-              src={user!.profile_url}
+              src={user.profile_url}
               width={82}
               height={82}
               alt="user-profile"
@@ -266,7 +286,9 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                   </Button>
                 )}
                 {(user?.follow.id || user?.friend_status?.status) &&
-                  !user.friend_receive && (
+                  !user.friend_receive &&
+                  user.friend_status?.status !== "unknown" &&
+                  user.friend_status?.status !== "accepted" && (
                     <Button
                       variant={"secondary"}
                       onClick={
@@ -301,6 +323,11 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                     </Button>
                   </div>
                 )}
+                {user.friend_status?.status === "accepted" && (
+                  <CardDescription className="my-auto">
+                    Already friends
+                  </CardDescription>
+                )}
               </div>
               <div className="flex gap-5">
                 {user?.stats &&
@@ -317,6 +344,10 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                 <p className="text-foreground">{user?.bio ?? "No bio yet."}</p>
               </div>
             </div>
+          </div>
+        ) : (
+          <div>
+            <CardTitle>{ERRORS.USER_NOT_FOUND.title}</CardTitle>
           </div>
         )}
         <Line />
