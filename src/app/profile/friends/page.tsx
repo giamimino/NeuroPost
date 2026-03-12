@@ -9,6 +9,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   SkeletonFriendRequest,
   SkeletonFriendRequests,
 } from "@/components/ui/Skeleton-examples";
@@ -16,9 +23,17 @@ import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
-import { FriendRequestType } from "@/types/neon";
+import { FriendRequestType, FriendType } from "@/types/neon";
 import { timeAgo } from "@/utils/functions/timeAgo";
-import { UserRoundPlus, UsersRound } from "lucide-react";
+import {
+  EllipsisVertical,
+  MessageCircle,
+  MessageCircleMore,
+  MessageCircleOff,
+  UserRoundPlus,
+  UserRoundX,
+  UsersRound,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -40,10 +55,35 @@ const FriendsPage = () => {
   const [section, setSection] = useState("friend_requests");
   const [friendRequests, setFriendRequests] = useState<FriendRequestType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [friends, setFriends] = useState([]);
+  const [friends, setFriends] = useState<FriendType[]>([]);
   const { addAlert } = useAlertStore();
   const router = useRouter();
   const tickingRef = useRef(false);
+
+  const handleDeleteFriend = async (friendId: string) => {
+    try {
+      const controller = new AbortController();
+      const res = await apiFetch("/api/friends/friend", {
+        ...ApiConfig.delete,
+        signal: controller.signal,
+        body: JSON.stringify({ friendId }),
+      });
+      const data = await res?.json();
+
+      if (data.ok) {
+        setFriends((prev) => prev.filter((p) => p.id !== friendId));
+      } else if (data.error) {
+        addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
+      }
+    } catch (error) {
+      console.error(error);
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+    }
+  };
 
   const handleRequestResponse = async (
     action: "accept" | "reject",
@@ -85,22 +125,21 @@ const FriendsPage = () => {
             ? {
                 url: "/api/friend-request?limit=20",
                 request: ApiConfig.get,
-                target: "friend_requests",
-                setState: setFriendRequests,
               }
             : {
                 url: "/api/friends?limit=20",
                 request: ApiConfig.get,
-                target: "friends",
-                setState: setFriends,
               };
 
         const res = await apiFetch(config.url, config.request);
         const data = await res?.json();
-        console.log(data);
 
         if (data.ok) {
-          config.setState(data[config.target]);
+          if (section === "friend_requests") {
+            setFriendRequests(data.friend_requests);
+          } else if (section == "all_friends") {
+            setFriends(data.friends);
+          }
         } else if (!data.ok && data.error) {
           addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
         }
@@ -153,7 +192,7 @@ const FriendsPage = () => {
         <div className="grid grid-cols-4 w-full gap-5 px-5">
           {loading ? (
             <SkeletonFriendRequests length={8} />
-          ) : (
+          ) : section === "friend_requests" ? (
             friendRequests.map((fr) => (
               <Card key={fr.id} className="p-0 gap-0">
                 <CardContent className="px-0 flex flex-col">
@@ -191,6 +230,117 @@ const FriendsPage = () => {
                     delete
                   </Button>
                 </CardAction>
+              </Card>
+            ))
+          ) : (
+            friends.map((f) => (
+              <Card key={f.id} className="p-0 gap-0">
+                <CardContent className="px-0 flex flex-col">
+                  <Image
+                    src={f.user.profile_url}
+                    width={320}
+                    height={320}
+                    alt={f.user.name}
+                    className="object-cover w-full aspect-7/5 rounded-t-xl"
+                  />
+                  <div className="p-3 flex justify-between items-center">
+                    <div>
+                      <CardTitle
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/u/${f.user.username}`)}
+                      >
+                        {f.user.name}
+                      </CardTitle>
+                      <CardDescription>
+                        {timeAgo(new Date(f.created_at))}
+                      </CardDescription>
+                    </div>
+                    <div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant={"ghost"}
+                            size={"sm"}
+                            className="cursor-pointer"
+                          >
+                            <EllipsisVertical />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuLabel>
+                            <Button
+                              variant={"destructive"}
+                              className="cursor-pointer w-full"
+                            >
+                              <div>
+                                <MessageCircleMore />
+                              </div>
+                              message
+                            </Button>
+                          </DropdownMenuLabel>
+                          <DropdownMenuLabel>
+                            <Button
+                              variant={"outline"}
+                              className="cursor-pointer w-full"
+                            >
+                              <div>
+                                <MessageCircleOff />
+                              </div>
+                              mute
+                            </Button>
+                          </DropdownMenuLabel>
+
+                          <DropdownMenuLabel>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant={"outline"}
+                                  className="cursor-pointer w-full"
+                                >
+                                  <div>
+                                    <UserRoundX />
+                                  </div>
+                                  unfriend
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <div className="p-3 flex flex-col gap-3">
+                                  <div>
+                                    <CardDescription>
+                                      {`Are you sure you want to unfriend ${f.user.username}?`}
+                                    </CardDescription>
+                                  </div>
+                                  <div className="flex gap-3">
+                                    <DropdownMenuItem asChild>
+                                      <Button
+                                        variant={"outline"}
+                                        size={"md"}
+                                        className="cursor-pointer px-3"
+                                        onClick={() => handleDeleteFriend(f.id)}
+                                      >
+                                        Yes
+                                      </Button>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                      <Button
+                                        variant={"ghost"}
+                                        size={"md"}
+                                        className="cursor-pointer px-3"
+                                      >
+                                        cancel
+                                      </Button>
+                                    </DropdownMenuItem>
+                                  </div>
+                                </div>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </DropdownMenuLabel>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardAction className="flex flex-col w-full gap-3 px-3 pb-3"></CardAction>
               </Card>
             ))
           )}

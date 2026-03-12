@@ -304,4 +304,9 @@ export const ERRORS = {
     title: "Friend request error",
     description: "You cannot request friendship for yourself.",
   },
+
+  FRIEND_NOT_FOUND_ERROR: {
+    title: "Friend not found",
+    description: "This user may have unfriended you or is unavailable."
+  }
 } as const;
