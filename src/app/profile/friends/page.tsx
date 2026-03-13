@@ -23,7 +23,12 @@ import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
-import { FriendRequestType, FriendType } from "@/types/neon";
+import { FriendStatusEnumType } from "@/types/enums";
+import {
+  FriendRequestType,
+  FriendType,
+  FriendWithSettingsType,
+} from "@/types/neon";
 import { timeAgo } from "@/utils/functions/timeAgo";
 import {
   EllipsisVertical,
@@ -55,10 +60,53 @@ const FriendsPage = () => {
   const [section, setSection] = useState("friend_requests");
   const [friendRequests, setFriendRequests] = useState<FriendRequestType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [friends, setFriends] = useState<FriendType[]>([]);
+  const [friends, setFriends] = useState<FriendWithSettingsType[]>([]);
   const { addAlert } = useAlertStore();
   const router = useRouter();
   const tickingRef = useRef(false);
+
+  const handleChangeStatus = async (
+    friendshipId: string,
+    action: "mute" | "unmute",
+  ) => {
+    try {
+      const friend = friends.find((f) => f.id === friendshipId);
+      if (!friend) return;
+
+      const url = `/api/friends/friend/status?muteStatus=${action === "mute" ? true : false}`;
+      const res = await fetch(url, {
+        ...ApiConfig.post,
+        body: JSON.stringify({ friendshipId }),
+      });
+      const data = await res.json();
+      console.log(data);
+
+      if (data.ok) {
+        if (action === "mute") {
+          setFriends((prev) =>
+            prev.map((p) =>
+              p.id === friendshipId ? { ...p, settings: data.settings } : p,
+            ),
+          );
+        } else {
+          setFriends((prev) =>
+            prev.map((p) =>
+              p.id === friendshipId
+                ? { ...p, settings: { id: null, muted: null } }
+                : p,
+            ),
+          );
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+    }
+  };
 
   const handleDeleteFriend = async (friendId: string) => {
     try {
@@ -134,6 +182,8 @@ const FriendsPage = () => {
         const res = await apiFetch(config.url, config.request);
         const data = await res?.json();
 
+        console.log(data);
+
         if (data.ok) {
           if (section === "friend_requests") {
             setFriendRequests(data.friend_requests);
@@ -157,9 +207,9 @@ const FriendsPage = () => {
   }, [section]);
 
   return (
-    <div className="w-full pt-25 pl-5">
-      <div className="flex">
-        <div className="max-w-50 w-full">
+    <div className="w-full pt-25 px-5">
+      <div className="flex max-md:flex-col max-md:gap-5">
+        <div className="max-w-50 max-md:max-w-none w-full">
           <Card className="py-4">
             <div className="px-4">
               <CardTitle>Friends</CardTitle>
@@ -189,7 +239,7 @@ const FriendsPage = () => {
             </div>
           </Card>
         </div>
-        <div className="grid grid-cols-4 w-full gap-5 px-5">
+        <div className="grid grid-cols-4 max-lg:grid-cols-2 max-md:grid-cols-1 w-full gap-5 px-5 max-md:px-0">
           {loading ? (
             <SkeletonFriendRequests length={8} />
           ) : section === "friend_requests" ? (
@@ -278,17 +328,37 @@ const FriendsPage = () => {
                               message
                             </Button>
                           </DropdownMenuLabel>
-                          <DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleChangeStatus(
+                                f.id,
+                                f.settings.id && f.settings.muted
+                                  ? "unmute"
+                                  : "mute",
+                              )
+                            }
+                          >
                             <Button
                               variant={"outline"}
                               className="cursor-pointer w-full"
                             >
-                              <div>
-                                <MessageCircleOff />
-                              </div>
-                              mute
+                              {f.settings.id && f.settings.muted ? (
+                                <>
+                                  <div>
+                                    <MessageCircleOff />
+                                  </div>
+                                  <p>unmute</p>
+                                </>
+                              ) : (
+                                <>
+                                  <div>
+                                    <MessageCircle />
+                                  </div>
+                                  <p>mute</p>
+                                </>
+                              )}
                             </Button>
-                          </DropdownMenuLabel>
+                          </DropdownMenuItem>
 
                           <DropdownMenuLabel>
                             <DropdownMenu>

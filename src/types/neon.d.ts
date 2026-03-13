@@ -130,3 +130,13 @@ export interface FriendType {
   created_at: Date;
   user: FriendRequestUserJoinType;
 }
+
+export interface FriendWithSettingsType {
+  id: string;
+  user_id: string;
+  friend_id: string;
+  status: FriendStatusEnumType;
+  created_at: Date;
+  settings: { id: string | null; muted: boolean | null };
+  user: FriendRequestUserJoinType;
+}

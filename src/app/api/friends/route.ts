@@ -39,12 +39,20 @@ export async function GET(req: Request) {
 
     const friends = await sql.query(
       `SELECT f.*, 
-      json_build_object('name', u.name, 'username', u.username, 'profile_url', u.profile_url) AS user FROM friends f
+      json_build_object('name', u.name, 'username', u.username, 'profile_url', u.profile_url) AS user,
+      json_build_object('id', fs.id, 'muted', fs.muted) AS settings 
+      FROM friends f
       JOIN users u 
         ON u.id = CASE
                     WHEN f.user_id = $1 THEN f.friend_id
                     ELSE f.user_id
                   END
+      LEFT JOIN friendship_settings fs 
+      ON fs.friendship_id = f.id AND 
+        fs.user_id = CASE
+                      WHEN f.user_id = $1 THEN f.user_id
+                      ELSE f.friend_id
+                     END
       WHERE f.user_id = $1 OR f.friend_id = $1 LIMIT $2`,
       [payload.userId, Number(limit) || 20],
     );

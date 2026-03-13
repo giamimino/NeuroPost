@@ -307,6 +307,6 @@ export const ERRORS = {
 
   FRIEND_NOT_FOUND_ERROR: {
     title: "Friend not found",
-    description: "This user may have unfriended you or is unavailable."
-  }
+    description: "This user may have unfriended you or is unavailable.",
+  },
 } as const;

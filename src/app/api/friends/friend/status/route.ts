@@ -9,12 +9,11 @@ import { sql } from "@/lib/db";
 export async function POST(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const { status } = Object.fromEntries(searchParams.entries());
+    const { muteStatus } = Object.fromEntries(searchParams.entries());
     const body = await req.json();
-    const { friendId } = body;
-    const statuses = ["blocked", "muted", "none"];
+    const { friendshipId } = body;
 
-    if (!friendId || !statuses.includes(status))
+    if (!friendshipId || !Boolean(muteStatus))
       return NextResponse.json(
         { ok: false, error: ERRORS.GENERIC_ERROR },
         { status: 400 },
@@ -44,33 +43,30 @@ export async function POST(req: Request) {
       );
     }
 
-    const friends = await sql.query(
-      `SELECT id, friend_id, user_id FROM friends WHERE id = $1`,
-      [friendId],
+    const friendSettings = await sql.query(
+      `SELECT id, friendship_id, muted FROM friendship_settings WHERE friendship_id = $1 AND user_id = $2`,
+      [friendshipId, payload.userId],
     );
-    const friend = friends[0];
+    const friend = friendSettings[0];
 
-    if (!friend)
-      return NextResponse.json(
-        { ok: false, error: ERRORS.FRIEND_NOT_FOUND_ERROR },
-        { status: 404 },
+    if (!friend) {
+      await sql.query(
+        `INSERT INTO friendship_settings (friendship_id, user_id, muted) VALUES ($1, $2, $3)`,
+        [friendshipId, payload.userId, muteStatus],
       );
 
-    if (
-      payload.userId !== friend.user_id &&
-      payload.userId !== friend.friend_id
-    )
-      return NextResponse.json(
-        { ok: false, error: ERRORS.NOT_ALLOWED },
-        { status: 403 },
-      );
+      return NextResponse.json({ ok: true }, { status: 200 });
+    }
 
-    await sql.query(`UPDATE friends SET status = $1 WHERE id = $2`, [
-      status,
-      friendId,
+    await sql.query(`UPDATE friendship_settings SET muted = $1 WHERE id = $2`, [
+      muteStatus,
+      friend.id,
     ]);
 
-    return NextResponse.json({ ok: true }, { status: 200 });
+    return NextResponse.json(
+      { ok: true, settings: { id: friend.id, muted: muteStatus } },
+      { status: 200 },
+    );
   } catch (err) {
     console.error(err);
     return NextResponse.json({ ok: false, message: "" }, { status: 500 });
