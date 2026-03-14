@@ -1,4 +1,6 @@
 "use client";
+import NotificationsContainer from "@/components/common/containers/Notifications-container";
+import ToggleController from "@/components/common/ToggleController";
 import DataFetcher from "@/components/data-fetcher";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +21,7 @@ import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
 import { Post } from "@/types/neon";
+import { Bell } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -70,6 +73,27 @@ const ProfilePage = () => {
 
   return (
     <div className="pt-32 bg-background">
+      <div className="absolute top-17 z-99 right-5">
+        <ToggleController
+          className="gap-2.5"
+          animatePresence
+          whatToShow={() => <NotificationsContainer />}
+        >
+          {({ setShow }) => (
+            <Button
+              variant={"none"}
+              onClick={() => setShow((prev) => !prev)}
+              className={`border bg-secondary 
+                shadow-xs hover:bg-accent hover:text-accent-foreground 
+                 dark:border-input dark:hover:brightness-115 
+                cursor-pointer rounded-sm w-fit self-end`}
+              size={"sm"}
+            >
+              <Bell />
+            </Button>
+          )}
+        </ToggleController>
+      </div>
       <div className="flex flex-col items-start gap-1">
         <div className="pl-5.5 w-1/2">
           {loading ? (

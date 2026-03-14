@@ -23,13 +23,14 @@ import {
   Ellipsis,
   ExternalLink,
   Heart,
+  MessageCircle,
   Send,
   Settings,
   XIcon,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { use, useEffect, useRef, useState } from "react";
+import React, { use, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "@/lib/apiFetch";
 import { Input } from "@/components/ui/input";
 import Line from "@/components/ui/Line";
@@ -38,6 +39,19 @@ import { ERRORS } from "@/constants/error-handling";
 import { handleLike } from "@/utils/functions/LikeActions";
 import { HandleLikeArgs } from "@/types/arguments";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import DefaultTextarea from "@/components/common/DefaultTextarea";
+import DataFetcher from "@/components/data-fetcher";
+import {
+  ALLOWED_IMAGE_TYPES,
+  ALLOWED_VIDEO_TYPES,
+} from "@/constants/validators";
+import { MediaValidator } from "@/utils/validator";
 
 const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
   const { postId } = use(params);
@@ -55,11 +69,40 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
   >(null);
   const [loading, setLoading] = useState(true);
   const [deleted, setDeleted] = useState(false);
-  const [comments, setComments] = useState<
-    (CommentType & { user: CommentUserType; role: "creator" | "guest" })[]
-  >([]);
+  const [editing, setEditing] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [media, setMedia] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editableValuesRef = useRef<HTMLFormElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const { addAlert } = useAlertStore();
+
+  const handleEditPost = async () => {
+    if (!editing || !editableValuesRef.current) return;
+
+    const formData = new FormData(editableValuesRef.current);
+    if (media) {
+      const error = MediaValidator(media);
+      if (error)
+        return addAlert({ id: crypto.randomUUID(), type: "error", ...error });
+      formData.append("media", media);
+    }
+
+    const res = await apiFetch("");
+  };
+
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const error = MediaValidator(file);
+    if (error) {
+      addAlert({ id: crypto.randomUUID(), type: "error", ...error });
+      return;
+    }
+
+    setMedia(file);
+  };
 
   const handleDelete = async () => {
     if (!post) return;
@@ -92,7 +135,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
     });
     const data = await res?.json();
     if (data.ok) {
-      setComments((prev) => [data.comment, ...prev]);
+      // setComments((prev) => [data.comment, ...prev]);
     } else {
       addAlert({
         id: crypto.randomUUID(),
@@ -112,7 +155,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
       const data = await res?.json();
 
       if (data.ok) {
-        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        // setComments((prev) => prev.filter((c) => c.id !== commentId));
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -126,6 +169,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
     }
   };
 
+  // get post
   useEffect(() => {
     if (!postId) return;
 
@@ -134,8 +178,6 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
       .then((res) => res?.json())
       .then((data) => {
         if (data.ok) {
-          console.log(data);
-
           setPost(data.post);
         }
         setLoading(false);
@@ -143,17 +185,12 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
       .catch((err) => console.error(err));
   }, [postId]);
 
-  useEffect(() => {
-    if (!post) return;
+  // get comments after success response from post fetch
 
-    const url = `/api/post/comment?postId=${post.id}&limit=20`;
-    apiFetch(url)
-      .then((res) => res?.json())
-      .then((data) => {
-        if (data.ok) {
-          setComments(data.comments);
-        }
-      });
+  const config = useMemo(() => {
+    if (!post) return null;
+
+    return { url: `/api/post/comment?postId=${post.id}&limit=20` };
   }, [post]);
 
   if (deleted)
@@ -173,13 +210,31 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
               </div>
             ) : (
               <Card className={`w-full gap-0 relative pb-0`}>
-                <CardHeader>
-                  <CardTitle className="text-2xl">
-                    {post?.title ?? "[title]"}
-                  </CardTitle>
-                </CardHeader>
+                <div className="px-6 flex flex-col">
+                  {!editing ? (
+                    <>
+                      <CardTitle className="text-2xl">{post?.title}</CardTitle>
+                      <CardDescription>{post?.description}</CardDescription>
+                    </>
+                  ) : (
+                    <form
+                      ref={editableValuesRef}
+                      className="flex flex-col gap-2.5"
+                    >
+                      <Input
+                        name="title"
+                        className="text-2xl font-medium"
+                        defaultValue={post?.title}
+                      />
+                      <DefaultTextarea
+                        name="description"
+                        defaultValue={post?.description ?? ""}
+                      />
+                    </form>
+                  )}
+                </div>
                 <CardContent className="pb-5">
-                  <CardDescription>{post?.description}</CardDescription>
+                  {/* author stuffs */}
                   <div className="flex items-center mt-2 gap-2.5">
                     {typeof post?.user.profile_url === "string" ? (
                       <Image
@@ -200,147 +255,218 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                     </button>
                   </div>
                 </CardContent>
-                {post?.signedUrl && post.media?.type === "image" && (
+                {post?.signedUrl &&
+                  post.media?.type === "image" &&
+                  !editing && (
+                    <CardFooter className="px-0 mt-5">
+                      <Image
+                        width={1080}
+                        height={720}
+                        alt="post-media"
+                        src={post.signedUrl}
+                        className="w-full object-cover max-h-150 rounded-xl"
+                      />
+                    </CardFooter>
+                  )}
+                {media && editing && (
                   <CardFooter className="px-0 mt-5">
                     <Image
                       width={1080}
                       height={720}
                       alt="post-media"
-                      src={post.signedUrl}
+                      src={URL.createObjectURL(media)}
                       className="w-full object-cover max-h-150 rounded-xl"
                     />
                   </CardFooter>
                 )}
+                {editing && (
+                  <div className="flex justify-between items-center">
+                    <div className="flex-1"></div>
+                    <div className="flex-1 text-center">
+                      <Button
+                        className="cursor-pointer"
+                        variant={"ghost"}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        upload
+                      </Button>
+                      <input
+                        type="file"
+                        hidden
+                        className="hidden"
+                        onChange={handleMediaChange}
+                        ref={fileInputRef}
+                        accept={`${ALLOWED_IMAGE_TYPES.join(",")}, ${ALLOWED_VIDEO_TYPES.join(",")}`}
+                      />
+                    </div>
+                    <div className="flex flex-1 gap-3 p-3 justify-end font-plusJakartaSans">
+                      <Button
+                        variant={"secondary"}
+                        onClick={() => setEditing(false)}
+                        className="cursor-pointer"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant={"destructive"}
+                        className={`cursor-pointer`}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </Card>
             )}
           </div>
-          <div className="w-full flex items-center justify-center">
-            <Card className="w-full">
-              <CardHeader>
-                <CardTitle>Comments</CardTitle>
-                <div className="flex gap-2.5 items-center">
-                  <Input
-                    ref={commentInputRef}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && commentInputRef.current?.value) {
-                        addComment();
-                      }
-                    }}
-                    placeholder="Add a comment..."
-                  />
-                  <Button
-                    variant={"outline"}
-                    className="cursor-pointer"
-                    onClick={addComment}
-                  >
-                    <Send />
-                  </Button>
-                </div>
-                <Line className="mt-5" />
-              </CardHeader>
-              <CardContent className="flex flex-col gap-2.5">
-                {comments.map((c) => (
-                  <Card
-                    key={`${c.id}-${c.post_id}`}
-                    className="rounded-none border-t-0 border-l-0 border-r-0 p-3 relative"
-                  >
-                    {c.role === "creator" && (
-                      <ToggleController
-                        animatePresence
-                        whatToShow={() => (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.5 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            className="absolute right-15 top-1/2 -translate-y-1/2"
-                          >
-                            <Card className="p-3">
-                              <CardContent className="p-0">
-                                <ToggleController
-                                  animatePresence
-                                  whatToShow={({ handleShow }) => (
-                                    <motion.div
-                                      initial={{
-                                        opacity: 0,
-                                        y: 50,
-                                        scale: 0.75,
-                                      }}
-                                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                                      exit={{ opacity: 0, y: 10 }}
-                                      className="absolute top-1/2 -translate-y-1/2 -right-3/1 z-10 w-5/2"
-                                    >
-                                      <Card className="">
-                                        <CardHeader>
-                                          <CardDescription>
-                                            Are you sure you want to delete this
-                                            comment?
-                                          </CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="flex gap-2.5">
-                                          <Button
-                                            variant={"outline"}
-                                            className="cursor-pointer"
-                                            onClick={() =>
-                                              handleDeleteComment({
-                                                commentId: c.id,
-                                              })
-                                            }
-                                          >
-                                            Yes
-                                          </Button>
-                                          <Button
-                                            variant={"ghost"}
-                                            className="cursor-pointer"
-                                            onClick={
-                                              handleShow
-                                                ? () => handleShow(false)
-                                                : undefined
-                                            }
-                                          >
-                                            cancel
-                                          </Button>
-                                        </CardContent>
-                                      </Card>
-                                    </motion.div>
-                                  )}
+          {/* comments */}
+          {showComments && config?.url && (
+            <div className="w-full flex items-center justify-center">
+              <Card className="w-full">
+                <CardHeader>
+                  <CardTitle>Comments</CardTitle>
+                  <div className="flex gap-2.5 items-center">
+                    <Input
+                      ref={commentInputRef}
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === "Enter" &&
+                          commentInputRef.current?.value
+                        ) {
+                          addComment();
+                        }
+                      }}
+                      placeholder="Add a comment..."
+                    />
+                    <Button
+                      variant={"outline"}
+                      className="cursor-pointer"
+                      onClick={addComment}
+                    >
+                      <Send />
+                    </Button>
+                  </div>
+                  <Line className="mt-5" />
+                </CardHeader>
+                <CardContent className="flex flex-col gap-2.5">
+                  <DataFetcher url={config?.url} targetKey="comments">
+                    {(
+                      data: (CommentType & {
+                        user: CommentUserType;
+                        role: "creator" | "guest";
+                      })[],
+                    ) =>
+                      data.map((c) => (
+                        <Card
+                          key={`${c.id}-${c.post_id}`}
+                          className="rounded-none border-t-0 border-l-0 border-r-0 p-3 relative"
+                        >
+                          {c.role === "creator" && (
+                            <ToggleController
+                              animatePresence
+                              whatToShow={() => (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10, scale: 0.5 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: 10 }}
+                                  className="absolute right-15 top-1/2 -translate-y-1/2"
                                 >
-                                  {({ setShow }) => (
-                                    <Button
-                                      onClick={() => setShow(true)}
-                                      className="hover:text-red-600 cursor-pointer"
-                                      variant={"outline"}
-                                    >
-                                      Delete
-                                    </Button>
-                                  )}
-                                </ToggleController>
-                              </CardContent>
-                            </Card>
-                          </motion.div>
-                        )}
-                      >
-                        {({ setShow }) => (
-                          <Button
-                            onClick={() => setShow((prev) => !prev)}
-                            className="w-fit cursor-pointer absolute top-1/2 -translate-y-1/2 right-5"
-                            variant={"ghost"}
-                            size={"sm"}
-                          >
-                            <Ellipsis />
-                          </Button>
-                        )}
-                      </ToggleController>
-                    )}
-                    <CardContent className="flex flex-col gap-3 px-0">
-                      <CardTitle>{c.user.name}</CardTitle>
-                      <CardDescription>{c.content}</CardDescription>
-                    </CardContent>
-                  </Card>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
+                                  <Card className="p-3">
+                                    <CardContent className="p-0">
+                                      <ToggleController
+                                        animatePresence
+                                        whatToShow={({ handleShow }) => (
+                                          <motion.div
+                                            initial={{
+                                              opacity: 0,
+                                              y: 50,
+                                              scale: 0.75,
+                                            }}
+                                            animate={{
+                                              opacity: 1,
+                                              y: 0,
+                                              scale: 1,
+                                            }}
+                                            exit={{ opacity: 0, y: 10 }}
+                                            className="absolute top-1/2 -translate-y-1/2 -right-3/1 z-10 w-5/2"
+                                          >
+                                            <Card className="">
+                                              <CardHeader>
+                                                <CardDescription>
+                                                  Are you sure you want to
+                                                  delete this comment?
+                                                </CardDescription>
+                                              </CardHeader>
+                                              <CardContent className="flex gap-2.5">
+                                                <Button
+                                                  variant={"outline"}
+                                                  className="cursor-pointer"
+                                                  onClick={() =>
+                                                    handleDeleteComment({
+                                                      commentId: c.id,
+                                                    })
+                                                  }
+                                                >
+                                                  Yes
+                                                </Button>
+                                                <Button
+                                                  variant={"ghost"}
+                                                  className="cursor-pointer"
+                                                  onClick={
+                                                    handleShow
+                                                      ? () => handleShow(false)
+                                                      : undefined
+                                                  }
+                                                >
+                                                  cancel
+                                                </Button>
+                                              </CardContent>
+                                            </Card>
+                                          </motion.div>
+                                        )}
+                                      >
+                                        {({ setShow }) => (
+                                          <Button
+                                            onClick={() => setShow(true)}
+                                            className="hover:text-red-600 cursor-pointer"
+                                            variant={"outline"}
+                                          >
+                                            Delete
+                                          </Button>
+                                        )}
+                                      </ToggleController>
+                                    </CardContent>
+                                  </Card>
+                                </motion.div>
+                              )}
+                            >
+                              {({ setShow }) => (
+                                <Button
+                                  onClick={() => setShow((prev) => !prev)}
+                                  className="w-fit cursor-pointer absolute top-1/2 -translate-y-1/2 right-5"
+                                  variant={"ghost"}
+                                  size={"sm"}
+                                >
+                                  <Ellipsis />
+                                </Button>
+                              )}
+                            </ToggleController>
+                          )}
+                          <CardContent className="flex flex-col gap-3 px-0">
+                            <CardTitle>{c.user.name}</CardTitle>
+                            <CardDescription>{c.content}</CardDescription>
+                          </CardContent>
+                        </Card>
+                      ))
+                    }
+                  </DataFetcher>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
+
+        {/* settings, likes, comments and etc  */}
         <div>
           <Card className="p-3 w-full relative flex flex-col gap-2">
             <Button
@@ -398,6 +524,14 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
             >
               <Heart {...(post?.likeid ? { fill: "#ff0000" } : {})} />
             </Button>
+            <Button
+              size={"icon-xs"}
+              className={`rounded-sm cursor-pointer`}
+              variant={"outline"}
+              onClick={() => setShowComments((prev) => !prev)}
+            >
+              <MessageCircle {...(showComments ? { fill: "#fff" } : {})} />
+            </Button>
             <ToggleController
               whatToShow={({ handleShow }) => (
                 <Card className="fixed top-1/2 left-1/2 -translate-1/2 min-w-40 py-4">
@@ -428,90 +562,68 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
               )}
             </ToggleController>
             {post?.role === "creator" && (
-              <ToggleController
-                animatePresence
-                whatToShow={() => (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.5 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute -bottom-[135%] right-0"
-                  >
-                    <Card className="py-3">
-                      <CardContent className="px-3 flex flex-col gap-2.5">
-                        <Button
-                          size={"md"}
-                          variant={"outline"}
-                          className="cursor-pointer w-full"
-                        >
-                          Edit
-                        </Button>
-                        <ToggleController
-                          animatePresence
-                          whatToShow={({ handleShow }) => (
-                            <motion.div
-                              initial={{ opacity: 0, y: 50, scale: 0.75 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: 10 }}
-                              className="absolute right-0"
-                            >
-                              <Card className="w-fit">
-                                <CardHeader>
-                                  <CardDescription>
-                                    Are you sure you want to delete this post?
-                                  </CardDescription>
-                                </CardHeader>
-                                <CardContent className="flex gap-2.5">
-                                  <Button
-                                    variant={"outline"}
-                                    className="cursor-pointer"
-                                    onClick={handleDelete}
-                                  >
-                                    Yes
-                                  </Button>
-                                  <Button
-                                    variant={"ghost"}
-                                    className="cursor-pointer"
-                                    onClick={
-                                      handleShow
-                                        ? () => handleShow(false)
-                                        : undefined
-                                    }
-                                  >
-                                    cancel
-                                  </Button>
-                                </CardContent>
-                              </Card>
-                            </motion.div>
-                          )}
-                        >
-                          {({ setShow }) => (
-                            <Button
-                              size={"md"}
-                              variant={"outline"}
-                              className="cursor-pointer w-full hover:text-red-600"
-                              onClick={() => setShow(true)}
-                            >
-                              Delete
-                            </Button>
-                          )}
-                        </ToggleController>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-              >
-                {({ setShow }) => (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button
-                    size={"xs"}
-                    className="w-fit cursor-pointer self-end rounded-sm"
+                    size={"icon-xs"}
+                    className={`rounded-sm cursor-pointer`}
                     variant={"outline"}
-                    onClick={() => setShow((prev) => !prev)}
                   >
                     <Settings />
                   </Button>
-                )}
-              </ToggleController>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <div className="p-1 flex flex-col gap-2">
+                    <DropdownMenuItem className="p-0">
+                      <Button
+                        size={"md"}
+                        variant={"outline"}
+                        className="cursor-pointer w-full"
+                        onClick={() => setEditing(true)}
+                      >
+                        Edit
+                      </Button>
+                    </DropdownMenuItem>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size={"md"}
+                          variant={"outline"}
+                          className="cursor-pointer w-full hover:text-red-600"
+                        >
+                          Delete
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <div className="flex flex-col gap-2.5 p-2.5">
+                          <CardDescription>
+                            Are you sure you want to delete this post?
+                          </CardDescription>
+                          <div className="flex gap-2.5">
+                            <DropdownMenuItem className="p-0">
+                              <Button
+                                variant={"outline"}
+                                className="cursor-pointer"
+                                onClick={handleDelete}
+                              >
+                                Yes
+                              </Button>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="p-0">
+                              <Button
+                                variant={"ghost"}
+                                className="cursor-pointer"
+                              >
+                                cancel
+                              </Button>
+                            </DropdownMenuItem>
+                          </div>
+                        </div>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </Card>
         </div>

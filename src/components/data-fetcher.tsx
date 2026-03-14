@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from "@/lib/apiFetch";
 import React, { useEffect, useState } from "react";
 
 type FetchConfig = RequestInit & {
@@ -35,8 +36,11 @@ const DataFetcher = <T,>({
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(url, { ...config, signal: controller.signal });
-        if (!res.ok) throw new Error("Fetch Error");
+        const res = await apiFetch(url, {
+          ...config,
+          signal: controller.signal,
+        });
+        if (!res?.ok) throw new Error("Fetch Error");
         const json = await res.json();
         setData(targetKey ? json[targetKey] : json);
       } catch (error) {

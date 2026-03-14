@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/Skeleton-examples";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
+import { months, monthsShort } from "@/constants/months";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { FriendStatusEnumType } from "@/types/enums";
@@ -207,7 +208,7 @@ const FriendsPage = () => {
   }, [section]);
 
   return (
-    <div className="w-full pt-25 px-5">
+    <div className="w-full pt-20 px-5">
       <div className="flex max-md:flex-col max-md:gap-5">
         <div className="max-w-50 max-md:max-w-none w-full">
           <Card className="py-4">
@@ -302,7 +303,7 @@ const FriendsPage = () => {
                         {f.user.name}
                       </CardTitle>
                       <CardDescription>
-                        {timeAgo(new Date(f.created_at))}
+                        {`since ${new Date(f.created_at).getDate()} ${monthsShort[new Date(f.created_at).getMonth()]} ${new Date(f.created_at).getFullYear()}`}
                       </CardDescription>
                     </div>
                     <div>
