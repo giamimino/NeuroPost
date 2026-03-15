@@ -1,9 +1,7 @@
 import { ERRORS } from "@/constants/error-handling";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
+import { getAuthUser } from "@/lib/auth";
 
 export async function DELETE(
   req: Request,
@@ -18,19 +16,13 @@ export async function DELETE(
         { status: 400 },
       );
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
-      ?.value as string;
-    let payload;
-
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
-    }
+    const auth = await getAuthUser();
+    if (auth.error)
+      return NextResponse.json(
+        { ok: false, error: auth.error },
+        { status: 401 },
+      );
+    const payload = auth.user;
 
     const comments = await sql.query(`SELECT * FROM comments WHERE id = $1`, [
       id,

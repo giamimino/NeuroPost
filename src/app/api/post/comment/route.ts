@@ -1,13 +1,11 @@
 import { ERRORS } from "@/constants/error-handling";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
 import { CommentType, CommentUserType } from "@/types/neon";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3 } from "@/lib/aws-sdk";
+import { getAuthUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -20,22 +18,13 @@ export async function POST(req: Request) {
         { status: 400 },
       );
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
-      ?.value as string;
-    let payload;
-
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
+    const auth = await getAuthUser();
+    if (auth.error)
       return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_INVALID, dev: error },
+        { ok: false, error: auth.error },
         { status: 401 },
       );
-    }
+    const payload = auth.user;
 
     const comment = await sql.query(
       `WITH new_comment AS (INSERT INTO comments (content, post_id, user_id) VALUES ($1, $2, $3) RETURNING *) 
@@ -85,19 +74,13 @@ export async function GET(req: Request) {
         { status: 400 },
       );
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
-      ?.value as string;
-    let payload;
-
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
-    }
+    const auth = await getAuthUser();
+    if (auth.error)
+      return NextResponse.json(
+        { ok: false, error: auth.error },
+        { status: 401 },
+      );
+    const payload = auth.user;
 
     const comments = (await sql.query(
       `SELECT c.*, json_build_object('id', u.id, 'name', u.name, 'username', u.username, 'profile_url', u.profile_url) as user FROM comments c 

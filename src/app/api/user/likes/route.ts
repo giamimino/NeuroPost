@@ -1,26 +1,18 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
+import { getAuthUser } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const { limit } = Object.fromEntries(searchParams.entries());
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
-      ?.value as string;
-
-    let payload;
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
-    }
+    const auth = await getAuthUser();
+    if (auth.error)
+      return NextResponse.json(
+        { ok: false, error: auth.error },
+        { status: 401 },
+      );
+    const payload = auth.user;
 
     const posts = await sql.query(
       `SELECT p.* FROM likes l JOIN posts p ON p.id = l.post_id WHERE l.user_id = $1 LIMIT $2`,

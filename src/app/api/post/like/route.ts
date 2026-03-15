@@ -1,9 +1,7 @@
 import { sql } from "@/lib/db";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { JWTUserPaylaod } from "@/types/global";
 import { ERRORS } from "@/constants/error-handling";
+import { getAuthUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -14,18 +12,13 @@ export async function POST(req: Request) {
         { ok: false, error: ERRORS.INVALID_REQUEST_ERROR },
         { status: 400 },
       );
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
-      ?.value as string;
-    let payload;
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
-    }
+    const auth = await getAuthUser();
+    if (auth.error)
+      return NextResponse.json(
+        { ok: false, error: auth.error },
+        { status: 401 },
+      );
+    const payload = auth.user;
 
     const rawSQL = `INSERT INTO likes (user_id, post_id) VALUES ($1, $2) RETURNING id as like_id`;
     const likes = await sql.query(rawSQL, [payload.userId, postId]);

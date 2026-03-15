@@ -1,9 +1,7 @@
 import { ERRORS } from "@/constants/error-handling";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
-import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
+import { getAuthUser } from "@/lib/auth";
 
 export async function DELETE(req: Request) {
   try {
@@ -15,31 +13,13 @@ export async function DELETE(req: Request) {
         { status: 400 },
       );
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(
-      process.env.ACCESS_COOKIE_NAME!,
-    )?.value;
-
-    if (!access_token)
+    const auth = await getAuthUser();
+    if (auth.error)
       return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_MISSING },
+        { ok: false, error: auth.error },
         { status: 401 },
       );
-
-    let payload;
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      console.error(error);
-
-      return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_INVALID },
-        { status: 401 },
-      );
-    }
+    const payload = auth.user;
 
     const friends = await sql.query(
       `SELECT id, friend_id, user_id FROM friends WHERE id = $1`,

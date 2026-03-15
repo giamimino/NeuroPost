@@ -1,12 +1,11 @@
 import { sql } from "@/lib/db";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { JWTUserPaylaod, TagType } from "@/types/global";
+import { TagType } from "@/types/global";
 import { Post, UserJoin } from "@/types/neon";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3 } from "@/lib/aws-sdk";
+import { getAuthUser } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
@@ -28,18 +27,13 @@ export async function GET(req: Request) {
         ? new Date(cursor).toISOString()
         : new Date(Date.now()).toISOString();
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
-      ?.value as string;
-    let payload;
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
-    }
+    const auth = await getAuthUser();
+    if (auth.error)
+      return NextResponse.json(
+        { ok: false, error: auth.error },
+        { status: 401 },
+      );
+    const payload = auth.user;
 
     const rawSql = `
       SELECT 

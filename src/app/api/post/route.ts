@@ -1,12 +1,10 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
 import { ERRORS } from "@/constants/error-handling";
 import { MediaValidator } from "@/utils/validator";
 import { s3 } from "@/lib/aws-sdk";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getAuthUser } from "@/lib/auth";
 
 interface TagInput {
   id?: number;
@@ -82,23 +80,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)?.value;
-
-    if (!accessToken) {
-      return NextResponse.json({ ok: false }, { status: 401 });
-    }
-
-    let payload: JWTUserPaylaod;
-
-    try {
-      payload = jwt.verify(
-        accessToken,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch {
-      return NextResponse.json({ ok: false }, { status: 401 });
-    }
+    const auth = await getAuthUser();
+    if (auth.error)
+      return NextResponse.json(
+        { ok: false, error: auth.error },
+        { status: 401 },
+      );
+    const payload = auth.user;
 
     await sql.query("BEGIN");
 
@@ -221,19 +209,13 @@ export async function DELETE(req: Request) {
     if (!postId || !Number(postId))
       return NextResponse.json({ ok: false }, { status: 400 });
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
-      ?.value as string;
-
-    let payload;
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
-    }
+    const auth = await getAuthUser();
+    if (auth.error)
+      return NextResponse.json(
+        { ok: false, error: auth.error },
+        { status: 401 },
+      );
+    const payload = auth.user;
 
     const posts = await sql.query(
       `SELECT p.author_id, p.id, json_agg(json_build_object('media_id', m.id, 'fileurl', m.fileurl)) as media

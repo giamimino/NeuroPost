@@ -1,13 +1,11 @@
 import { ERRORS } from "@/constants/error-handling";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
 import { NOTIFICATIONS_TEXT } from "@/constants/notifications";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3 } from "@/lib/aws-sdk";
+import { getAuthUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -33,29 +31,13 @@ export async function POST(req: Request) {
         { status: 404 },
       );
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(
-      process.env.ACCESS_COOKIE_NAME!,
-    )?.value;
-    if (!access_token)
+    const auth = await getAuthUser();
+    if (auth.error)
       return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_MISSING },
+        { ok: false, error: auth.error },
         { status: 401 },
       );
-    let payload;
-
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      console.error(error);
-      return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_INVALID },
-        { status: 401 },
-      );
-    }
+    const payload = auth.user;
 
     if (payload.userId === receiverId)
       return NextResponse.json(
@@ -118,31 +100,13 @@ export async function DELETE(req: Request) {
         { status: 400 },
       );
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(
-      process.env.ACCESS_COOKIE_NAME!,
-    )?.value;
-
-    if (!access_token)
+    const auth = await getAuthUser();
+    if (auth.error)
       return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_MISSING },
+        { ok: false, error: auth.error },
         { status: 401 },
       );
-
-    let payload;
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      console.error(error);
-
-      return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_INVALID },
-        { status: 401 },
-      );
-    }
+    const payload = auth.user;
 
     const friend_requests = await sql.query(
       `SELECT * FROM friend_request WHERE id = $1`,
@@ -176,32 +140,13 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const { limit } = Object.fromEntries(searchParams.entries());
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(
-      process.env.ACCESS_COOKIE_NAME!,
-    )?.value;
-
-    if (!access_token)
+    const auth = await getAuthUser();
+    if (auth.error)
       return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_INVALID },
+        { ok: false, error: auth.error },
         { status: 401 },
       );
-
-    let payload;
-
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      console.error(error);
-
-      return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_MISSING },
-        { status: 401 },
-      );
-    }
+    const payload = auth.user;
 
     const friend_requests = await sql.query(
       `SELECT fr.id, fr.status, fr.created_at,  

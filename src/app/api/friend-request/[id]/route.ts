@@ -1,10 +1,8 @@
 import { ERRORS } from "@/constants/error-handling";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { JWTUserPaylaod } from "@/types/global";
 import { sql } from "@/lib/db";
 import { NOTIFICATIONS_TEXT } from "@/constants/notifications";
+import { getAuthUser } from "@/lib/auth";
 
 export async function POST(
   req: Request,
@@ -27,29 +25,13 @@ export async function POST(
     const { searchParams } = new URL(req.url);
     const { withNotif } = Object.fromEntries(searchParams.entries());
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(
-      process.env.ACCESS_COOKIE_NAME!,
-    )?.value;
-    if (!access_token)
+    const auth = await getAuthUser();
+    if (auth.error)
       return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_MISSING },
-        { status: 404 },
-      );
-
-    let payload;
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      console.error(error);
-      return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_INVALID },
+        { ok: false, error: auth.error },
         { status: 401 },
       );
-    }
+    const payload = auth.user;
 
     const friend_requests = await sql.query(
       `SELECT requester_id, receiver_id FROM friend_request WHERE id = $1`,

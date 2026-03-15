@@ -1,12 +1,10 @@
 import { sql } from "@/lib/db";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { JWTUserPaylaod } from "@/types/global";
 import { ERRORS } from "@/constants/error-handling";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3 } from "@/lib/aws-sdk";
+import { getAuthUser } from "@/lib/auth";
 
 export async function GET(
   req: NextRequest,
@@ -17,19 +15,13 @@ export async function GET(
     const { searchParams } = new URL(req.url);
     const { stats, friend_status } = Object.fromEntries(searchParams.entries());
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)
-      ?.value as string;
-    let payload;
-
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
-    }
+    const auth = await getAuthUser();
+    if (auth.error)
+      return NextResponse.json(
+        { ok: false, error: auth.error },
+        { status: 401 },
+      );
+    const payload = auth.user;
 
     const rawSql = `SELECT u.id, u.email, u.name, u.username, u.profile_url, u.bio, json_build_object('id', f.id, 'created_at', f.created_at) as follow FROM users u 
     LEFT JOIN follows f ON f.follower_id = $2 AND f.follow_id = u.id where u.username = $1`;

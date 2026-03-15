@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { sql } from "./db";
 import { JWTUserPaylaod } from "@/types/global";
+import { ERRORS } from "@/constants/error-handling";
 
 export async function auth({
   userId,
@@ -32,4 +33,25 @@ export async function auth({
   const user = await sql.query(rawSql, [payload.userId]);
 
   return { payload, user: user[0] };
+}
+
+export async function getAuthUser() {
+  const cookieStore = await cookies();
+
+  const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)?.value;
+
+  if (!access_token) {
+    return { error: ERRORS.TOKEN_MISSING };
+  }
+
+  try {
+    const payload = jwt.verify(
+      access_token,
+      process.env.ACCESS_SECRET!,
+    ) as JWTUserPaylaod;
+
+    return { user: payload };
+  } catch {
+    return { error: ERRORS.TOKEN_INVALID };
+  }
 }

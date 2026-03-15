@@ -1,5 +1,5 @@
 import { ERRORS } from "@/constants/error-handling";
-import { auth } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth";
 import { s3 } from "@/lib/aws-sdk";
 import { sql } from "@/lib/db";
 import {
@@ -9,9 +9,6 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
-import { JWTUserPaylaod } from "@/types/global";
 import { MediaValidator } from "@/utils/validator";
 
 export async function PUT(
@@ -34,29 +31,13 @@ export async function PUT(
     if (!title && !description && !media)
       return NextResponse.json({ ok: false, error: ERRORS.GENERIC_ERROR });
 
-    const cookieStore = await cookies();
-    const access_token = cookieStore.get(
-      process.env.ACCESS_COOKIE_NAME!,
-    )?.value;
-    if (!access_token)
+    const auth = await getAuthUser();
+    if (auth.error)
       return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_MISSING },
+        { ok: false, error: auth.error },
         { status: 401 },
       );
-
-    let payload;
-    try {
-      payload = jwt.verify(
-        access_token,
-        process.env.ACCESS_SECRET!,
-      ) as JWTUserPaylaod;
-    } catch (error) {
-      console.error(error);
-      return NextResponse.json(
-        { ok: false, error: ERRORS.GENERIC_ERROR },
-        { status: 401 },
-      );
-    }
+    const payload = auth.user;
 
     const posts = await sql.query(
       `SELECT id, author_id, title, description FROM posts WHERE id = $1 LIMIT 1`,
@@ -177,12 +158,13 @@ export async function GET(
     if (!id || !Number(id))
       return NextResponse.json({ ok: false }, { status: 400 });
 
-    let payload;
-    try {
-      payload = await auth({ userId: true });
-    } catch (error) {
-      return NextResponse.json({ ok: false, dev: error }, { status: 401 });
-    }
+    const auth = await getAuthUser();
+    if (auth.error)
+      return NextResponse.json(
+        { ok: false, error: auth.error },
+        { status: 401 },
+      );
+    const payload = auth.user;
 
     const posts = await sql.query(
       `SELECT p.*, json_build_object('name', u.name, 'username', u.username, 'profile_url', u.profile_url) AS user, l.id AS likeId 
