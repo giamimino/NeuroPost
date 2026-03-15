@@ -16,6 +16,8 @@ const PostWrapper = ({ children }: Children) => {
   const postRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const postElement = postRef.current;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -27,13 +29,13 @@ const PostWrapper = ({ children }: Children) => {
       { threshold: 0.3 },
     );
 
-    if (postRef.current) {
-      observer.observe(postRef.current);
+    if (postElement) {
+      observer.observe(postElement);
     }
 
     return () => {
-      if (postRef.current) {
-        observer.unobserve(postRef.current);
+      if (postElement) {
+        observer.unobserve(postElement);
         observer.disconnect();
       }
     };

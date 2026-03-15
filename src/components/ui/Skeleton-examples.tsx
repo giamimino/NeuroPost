@@ -153,7 +153,7 @@ function SkeletonFriendRequests({
   className?: string;
 }) {
   return Array.from({ length }).map((_, i) => (
-    <SkeletonFriendRequest key={i} />
+    <SkeletonFriendRequest key={i} {...(className ? { className } : {})} />
   ));
 }
 

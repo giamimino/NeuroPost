@@ -1,9 +1,168 @@
+import { ERRORS } from "@/constants/error-handling";
 import { auth } from "@/lib/auth";
 import { s3 } from "@/lib/aws-sdk";
 import { sql } from "@/lib/db";
-import { GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
+import { JWTUserPaylaod } from "@/types/global";
+import { MediaValidator } from "@/utils/validator";
+
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+
+    if (!id)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.GENERIC_ERROR },
+        { status: 400 },
+      );
+
+    const formData = await req.formData();
+    const title = formData.get("title") as string | undefined;
+    const description = formData.get("description") as string | undefined;
+    const media = formData.get("media") as File | undefined;
+    if (!title && !description && !media)
+      return NextResponse.json({ ok: false, error: ERRORS.GENERIC_ERROR });
+
+    const cookieStore = await cookies();
+    const access_token = cookieStore.get(
+      process.env.ACCESS_COOKIE_NAME!,
+    )?.value;
+    if (!access_token)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.TOKEN_MISSING },
+        { status: 401 },
+      );
+
+    let payload;
+    try {
+      payload = jwt.verify(
+        access_token,
+        process.env.ACCESS_SECRET!,
+      ) as JWTUserPaylaod;
+    } catch (error) {
+      return NextResponse.json(
+        { ok: false, error: ERRORS.GENERIC_ERROR },
+        { status: 401 },
+      );
+    }
+
+    const posts = await sql.query(
+      `SELECT id, author_id, title, description FROM posts WHERE id = $1 LIMIT 1`,
+      [id],
+    );
+    const post = posts[0];
+
+    if (payload.userId !== post.author_id)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.NOT_ALLOWED },
+        { status: 403 },
+      );
+
+    if (title || description) {
+      const editedValues = {
+        title: title || post.title,
+        description: description || post.description,
+      };
+
+      await sql.query(
+        "UPDATE posts SET title = $1, description = $2 WHERE id = $3",
+        [editedValues.title, editedValues.description, id],
+      );
+    }
+    let resMedia;
+    if (media) {
+      const error = MediaValidator(media);
+      if (error)
+        return NextResponse.json({ ok: false, error }, { status: 400 });
+
+      const postMedias = await sql.query(
+        `SELECT * FROM media WHERE post_id = $1 LIMIT 1`,
+        [id],
+      );
+      const postMedia = postMedias[0];
+
+      if (postMedia) {
+        await s3.send(
+          new DeleteObjectCommand({
+            Bucket: "neuropost",
+            Key: postMedia.fileurl,
+          }),
+        );
+      }
+
+      const extension = media.name.split(".").pop();
+      const filename = `${crypto.randomUUID}.${extension}`;
+      const key = `media/${payload.userId}/${post.id}/${filename}`;
+      const arrayBuffer = await media.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const type = media.type.split("/")[0];
+
+      try {
+        await s3.send(
+          new PutObjectCommand({
+            Bucket: "neuropost",
+            Key: key,
+            Body: buffer,
+            ContentType: media.type,
+          }),
+        );
+
+        if (postMedia) {
+          resMedia = await sql.query(
+            `UPDATE media SET fileurl = $1, type = $2 WHERE id = $3 RETURNING *`,
+            [key, type, postMedia.id],
+          );
+        } else {
+          resMedia = await sql.query(
+            `INSERT INTO media (fileurl, type, post_id) VALUES ($1, $2, $3) RETURNING *`,
+            [key, type, id],
+          );
+        }
+      } catch (error) {
+        console.error(error);
+        return NextResponse.json(
+          { ok: false, error: ERRORS.MEDIA_PROCESSING_FAILED },
+          { status: 500 },
+        );
+      }
+    }
+    let signedUrl;
+    if (resMedia && resMedia.length > 0) {
+      const command = new GetObjectCommand({
+        Bucket: "neuropost",
+        Key: resMedia[0].fileurl,
+      });
+      signedUrl = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      post: {
+        title,
+        description,
+        meida: resMedia ? resMedia[0] : undefined,
+      },
+      signedUrl,
+    });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { ok: false, error: ERRORS.GENERIC_ERROR },
+      { status: 500 },
+    );
+  }
+}
 
 export async function GET(
   req: Request,

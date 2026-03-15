@@ -4,17 +4,15 @@ import {
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NotificationType } from "@/types/neon";
 import { timeAgo } from "@/utils/functions/timeAgo";
-import { Circle, Dot } from "lucide-react";
+import { Circle } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
-import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonNotifications } from "@/components/ui/Skeleton-examples";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import {

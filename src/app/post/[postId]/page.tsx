@@ -78,7 +78,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
   const { addAlert } = useAlertStore();
 
   const handleEditPost = async () => {
-    if (!editing || !editableValuesRef.current) return;
+    if (!editing || !editableValuesRef.current || !post) return;
 
     const formData = new FormData(editableValuesRef.current);
     if (media) {
@@ -88,7 +88,27 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
       formData.append("media", media);
     }
 
-    const res = await apiFetch("");
+    const url = `/api/post/p/${post.id}`;
+    const res = await apiFetch(url, { ...ApiConfig.purForm, body: formData });
+    const data = await res?.json();
+
+    if (data.ok && data.post) {
+      setPost((prev) =>
+        prev
+          ? {
+              ...prev,
+              title: data.post.title || prev.title,
+              description: data.post.description || prev.description,
+              media: data.post.media || prev.media,
+              signedUrl: data.signedUrl || prev.signedUrl,
+            }
+          : prev,
+      );
+      setEditing(false);
+      setMedia(null);
+    } else if (data.error) {
+      addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
+    }
   };
 
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,19 +275,17 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                     </button>
                   </div>
                 </CardContent>
-                {post?.signedUrl &&
-                  post.media?.type === "image" &&
-                  !editing && (
-                    <CardFooter className="px-0 mt-5">
-                      <Image
-                        width={1080}
-                        height={720}
-                        alt="post-media"
-                        src={post.signedUrl}
-                        className="w-full object-cover max-h-150 rounded-xl"
-                      />
-                    </CardFooter>
-                  )}
+                {post?.signedUrl && post.media?.type === "image" && !media && (
+                  <CardFooter className="px-0 mt-5">
+                    <Image
+                      width={1080}
+                      height={720}
+                      alt="post-media"
+                      src={post.signedUrl}
+                      className="w-full object-cover max-h-150 rounded-xl"
+                    />
+                  </CardFooter>
+                )}
                 {media && editing && (
                   <CardFooter className="px-0 mt-5">
                     <Image
@@ -302,7 +320,12 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                     <div className="flex flex-1 gap-3 p-3 justify-end font-plusJakartaSans">
                       <Button
                         variant={"secondary"}
-                        onClick={() => setEditing(false)}
+                        onClick={() => {
+                          setMedia(null);
+                          setEditing(false);
+                          if (editableValuesRef.current)
+                            editableValuesRef.current.reset();
+                        }}
                         className="cursor-pointer"
                       >
                         Cancel
@@ -310,6 +333,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
                       <Button
                         variant={"destructive"}
                         className={`cursor-pointer`}
+                        onClick={handleEditPost}
                       >
                         Save
                       </Button>
