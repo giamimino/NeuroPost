@@ -33,6 +33,8 @@ export async function DELETE(req: Request) {
         process.env.ACCESS_SECRET!,
       ) as JWTUserPaylaod;
     } catch (error) {
+      console.error(error);
+
       return NextResponse.json(
         { ok: false, error: ERRORS.TOKEN_INVALID },
         { status: 401 },

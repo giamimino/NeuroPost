@@ -1,9 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollContextProvider } from "@/store/contexts/ScrollContext";
-import { useEffect, useRef } from "react";
+import { CardContent } from "@/components/ui/card";
 
 export default function Page() {
   // const ws = useRef<WebSocket | null>(null);

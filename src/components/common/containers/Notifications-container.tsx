@@ -98,7 +98,7 @@ const NotificationsContainer = () => {
       }
       setLoading(false);
     })();
-  }, [select]);
+  }, [select, addAlert]);
 
   return (
     <motion.div

@@ -1,7 +1,7 @@
 import { Card, CardFooter, CardTitle } from "@/components/ui/card";
 import React from "react";
 
-const pages = [{ label: "" }];
+// const pages = [{ label: "" }];
 
 const SettingsPage = () => {
   return (

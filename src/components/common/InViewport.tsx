@@ -6,6 +6,7 @@ const InViewport = ({ children }: Children & { animate?: boolean }) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const wrapperElement = wrapperRef.current;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -17,13 +18,13 @@ const InViewport = ({ children }: Children & { animate?: boolean }) => {
       { threshold: 0.3 },
     );
 
-    if (wrapperRef.current) {
-      observer.observe(wrapperRef.current);
+    if (wrapperElement) {
+      observer.observe(wrapperElement);
     }
 
     return () => {
-      if (wrapperRef.current) {
-        observer.unobserve(wrapperRef.current);
+      if (wrapperElement) {
+        observer.unobserve(wrapperElement);
       }
     };
   }, []);

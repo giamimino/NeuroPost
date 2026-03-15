@@ -5,7 +5,6 @@ import {
   CardAction,
   CardContent,
   CardDescription,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import {
@@ -15,21 +14,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  SkeletonFriendRequest,
-  SkeletonFriendRequests,
-} from "@/components/ui/Skeleton-examples";
+import { SkeletonFriendRequests } from "@/components/ui/Skeleton-examples";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
-import { months, monthsShort } from "@/constants/months";
+import { monthsShort } from "@/constants/months";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
-import { FriendStatusEnumType } from "@/types/enums";
-import {
-  FriendRequestType,
-  FriendType,
-  FriendWithSettingsType,
-} from "@/types/neon";
+import { FriendRequestType, FriendWithSettingsType } from "@/types/neon";
 import { timeAgo } from "@/utils/functions/timeAgo";
 import {
   EllipsisVertical,
@@ -205,7 +196,7 @@ const FriendsPage = () => {
         setLoading(false);
       }
     })();
-  }, [section]);
+  }, [section, addAlert]);
 
   return (
     <div className="w-full pt-20 px-5">

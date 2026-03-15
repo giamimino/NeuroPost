@@ -51,6 +51,7 @@ export async function PUT(
         process.env.ACCESS_SECRET!,
       ) as JWTUserPaylaod;
     } catch (error) {
+      console.error(error);
       return NextResponse.json(
         { ok: false, error: ERRORS.GENERIC_ERROR },
         { status: 401 },

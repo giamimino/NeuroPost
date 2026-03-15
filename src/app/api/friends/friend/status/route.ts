@@ -1,5 +1,4 @@
 import { ERRORS } from "@/constants/error-handling";
-import { FriendStatusEnumType } from "@/types/enums";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { JWTUserPaylaod } from "@/types/global";
@@ -37,6 +36,7 @@ export async function POST(req: Request) {
         process.env.ACCESS_SECRET!,
       ) as JWTUserPaylaod;
     } catch (error) {
+      console.error(error);
       return NextResponse.json(
         { ok: false, error: ERRORS.TOKEN_INVALID },
         { status: 401 },

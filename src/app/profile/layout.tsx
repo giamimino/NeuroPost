@@ -1,9 +1,5 @@
 "use client";
-import NotificationsContainer from "@/components/common/containers/Notifications-container";
-import ToggleController from "@/components/common/ToggleController";
 import { ProfileNavigation } from "@/components/header";
-import { Button } from "@/components/ui/button";
-import { Bell } from "lucide-react";
 import React from "react";
 
 const ProfileLayout = ({ children }: { children: React.ReactNode }) => {
