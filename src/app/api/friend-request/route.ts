@@ -45,19 +45,18 @@ export async function POST(req: Request) {
         { status: 400 },
       );
 
-    let friend_requests;
-    if (Boolean(withNotif) == true) {
-      friend_requests = await sql.query(
-        "INSERT INTO friend_request (requester_id, receiver_id) VALUES ($1, $2) RETURNING *",
-        [payload.userId, receiverId],
+    const friend_requests = await sql.query(
+      "INSERT INTO friend_request (requester_id, receiver_id) VALUES ($1, $2) RETURNING *",
+      [payload.userId, receiverId],
+    );
+    const friend_request = friend_requests[0];
+    if (!friend_request)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.GENERIC_ERROR },
+        { status: 520 },
       );
-      const friend_request = friend_requests[0];
-      if (!friend_request)
-        return NextResponse.json(
-          { ok: false, error: ERRORS.GENERIC_ERROR },
-          { status: 520 },
-        );
 
+    if (Boolean(withNotif) == true) {
       const title = NOTIFICATIONS_TEXT.FRIEND_REQUEST.title;
       const description = `${checkReceiver[0].username} ${NOTIFICATIONS_TEXT.FRIEND_REQUEST.description}`;
       const body = {
@@ -71,11 +70,6 @@ export async function POST(req: Request) {
       await sql.query(
         "INSERT INTO notifications (user_id, type, title, body) VALUES ($1, $2, $3, $4)",
         [receiverId, type, title, body],
-      );
-    } else {
-      friend_requests = await sql.query(
-        "INSERT INTO friend_request (requester_id, receiver_id) VALUES ($1, $2) RETURNING *",
-        [payload.userId, receiverId],
       );
     }
 
