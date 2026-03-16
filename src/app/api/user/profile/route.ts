@@ -9,6 +9,7 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;
+    console.log(formData);
 
     if (!file) return NextResponse.json({ ok: false }, { status: 400 });
 
@@ -30,12 +31,14 @@ export async function POST(req: Request) {
     );
     const ruser = users[0];
 
-    await s3.send(
-      new DeleteObjectCommand({
-        Bucket: "neuropost",
-        Key: ruser.profile_url,
-      }),
-    );
+    if (ruser.profile_url) {
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: "neuropost",
+          Key: ruser.profile_url,
+        }),
+      );
+    }
 
     const extension = file.name.split(".").pop();
     const filename = `${crypto.randomUUID()}.${extension}`;

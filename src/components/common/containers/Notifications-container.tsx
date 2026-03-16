@@ -92,7 +92,13 @@ const NotificationsContainer = () => {
       const data = await res?.json();
       if (data.ok) {
         console.log("data", data);
-        setNotifications(data.notifications);
+        setNotifications(
+          data.notifications.sort(
+            (a: any, b: any) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          ),
+        );
       } else if (!data.ok && data.error) {
         addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
       }

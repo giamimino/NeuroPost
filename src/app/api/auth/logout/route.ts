@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
+import { cookies } from "next/headers";
 
 export async function POST() {
   try {
+    const cookieStore = await cookies();
     const auth = await getAuthUser();
 
     if (auth.error)
