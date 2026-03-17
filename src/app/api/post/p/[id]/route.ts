@@ -84,7 +84,7 @@ export async function PUT(
       }
 
       const extension = media.name.split(".").pop();
-      const filename = `${crypto.randomUUID}.${extension}`;
+      const filename = `${crypto.randomUUID()}.${extension}`;
       const key = `media/${payload.userId}/${post.id}/${filename}`;
       const arrayBuffer = await media.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
@@ -107,8 +107,8 @@ export async function PUT(
           );
         } else {
           resMedia = await sql.query(
-            `INSERT INTO media (fileurl, type, post_id) VALUES ($1, $2, $3) RETURNING *`,
-            [key, type, id],
+            `INSERT INTO media (fileurl, type, post_id, user_id) VALUES ($1, $2, $3, $4) RETURNING *`,
+            [key, type, id, payload.userId],
           );
         }
       } catch (error) {

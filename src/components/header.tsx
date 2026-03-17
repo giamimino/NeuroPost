@@ -5,8 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/apiFetch";
 import { ApiConfig } from "@/configs/api-configs";
 import { Button } from "./ui/button";
-import { ArrowBigLeftDash, Search } from "lucide-react";
-import { ThemeToggle } from "./providers/theme-provider";
+import { Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,12 +74,6 @@ const Header = () => {
     <header
       className={`w-full px-12 flex justify-center items-center py-3 fixed top-0 left-0 z-99 transition-all duration-300`}
     >
-      <div className="absolute left-5 top-5 flex gap-3.5">
-        <ThemeToggle />
-        <Button className="cursor-pointer" onClick={() => router.back()}>
-          <ArrowBigLeftDash />
-        </Button>
-      </div>
       <motion.div
         initial={{ opacity: 0, y: "-100%" }}
         animate={show ? { opacity: 1, y: 0 } : { opacity: 0.5, y: "-150%" }}

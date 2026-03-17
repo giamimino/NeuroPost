@@ -10,6 +10,7 @@ const pages = {
   security: { label: "Security", id: "security" },
   notifications: { label: "Notifications", id: "notifications" },
   privacy: { label: "Privacy", id: "privacy" },
+  appearance: { label: "Appearance", id: "appearance" },
 };
 
 const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
@@ -36,7 +37,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
               ))}
             </div>
           </CardFooter>
-          <CardContent className="p-6 flex flex-col gap-6">
+          <CardContent className="p-6 flex flex-col gap-6 w-full">
             {children}
           </CardContent>
         </div>
