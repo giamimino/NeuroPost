@@ -12,7 +12,13 @@ export default function MainLayout({
   const { comment } = useCommentsStore();
 
   const responsive =
-    window.innerWidth < 640 ? "100%" : window.innerWidth < 768 ? "45%" : "66%";
+    typeof window !== "undefined"
+      ? window.innerWidth < 640
+        ? "100%"
+        : window.innerWidth < 768
+          ? "45%"
+          : "66%"
+      : "66%";
 
   return (
     <div className="flex">
