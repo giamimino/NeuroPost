@@ -73,7 +73,7 @@ const ProfilePage = () => {
 
   return (
     <div className="pt-32 bg-background">
-      <div className="absolute top-17 z-99 right-5">
+      <div className="absolute top-17 max-xs:top-20 z-99 right-5">
         <ToggleController
           className="gap-2.5"
           animatePresence
@@ -95,7 +95,7 @@ const ProfilePage = () => {
         </ToggleController>
       </div>
       <div className="flex flex-col items-start gap-1">
-        <div className="pl-5.5 w-1/2">
+        <div className="pl-5.5 w-1/2 max-xs:w-full">
           {loading ? (
             <Skeleton className="w-24 h-24 rounded-full" />
           ) : signedUrl ? (
@@ -117,11 +117,11 @@ const ProfilePage = () => {
           )}
           {user ? (
             <>
-              <div className="flex items-end gap-1 w-full">
+              <div className="flex items-end gap-1 max-md:gap-0 w-full max-xs:flex-col max-xs:items-start">
                 <Title title={user.name} />
                 <p className="text-muted-foreground">@{user.username}</p>
               </div>
-              <div className="my-3">
+              <div className="my-3 max-xs:w-full">
                 <p className="text-foreground">{user?.bio ?? "No bio yet."}</p>
               </div>
             </>
@@ -130,7 +130,7 @@ const ProfilePage = () => {
           )}
         </div>
         <Line />
-        <div className="flex w-full gap-8 flex-wrap justify-center mt-5">
+        <div className="w-full gap-8 grid grid-cols-4 mt-5 px-7 max-lg:grid-cols-3 max-lg:mt-3 max-lg:px-5 max-lg:gap-5 max-md:grid-cols-2 max-md:mt-0 max-md:gap-4 max-md:px-3 max-sm:grid-cols-1">
           <DataFetcher
             url={`/api/post/u/${user?.id}`}
             config={{ ...ApiConfig.get, enabled: user !== null }}
@@ -141,7 +141,7 @@ const ProfilePage = () => {
               <>
                 {posts.map((post) => (
                   <Card
-                    className="w-1/4 gap-2 pb-0 overflow-hidden justify-between"
+                    className="gap-2 pb-0 overflow-hidden justify-between"
                     key={post.id}
                   >
                     <CardHeader>

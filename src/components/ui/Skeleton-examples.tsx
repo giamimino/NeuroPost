@@ -43,13 +43,11 @@ function SkeletonPosts({
   postClassName?: string;
 }) {
   return (
-    <div
-      className={cn("flex gap-6 flex-wrap justify-center w-full", className)}
-    >
+    <>
       {Array.from({ length }).map((_, i) => (
-        <SkeletonPost className={cn("w-1/4", postClassName)} key={i} />
+        <SkeletonPost className={cn("w-full", postClassName)} key={i} />
       ))}
-    </div>
+    </>
   );
 }
 

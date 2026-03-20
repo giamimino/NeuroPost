@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/apiFetch";
 import { ApiConfig } from "@/configs/api-configs";
 import { Button } from "./ui/button";
-import { Search } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,33 +19,25 @@ const Header = () => {
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
   const router = useRouter();
-  const pages = useMemo(
-    () => [
-      { label: "Home", url: "/", type: "router" },
-      { label: "Profile", url: "/profile", type: "router" },
-      { label: "Upload", url: "/profile/p/create", type: "router" },
-      {
-        label: "Logout",
-        url: "/auth/login",
-        type: "action",
-        onClick: async () => {
-          const url = "/api/auth/logout";
-          const res = await apiFetch(url, ApiConfig.post);
-          const data = await res?.json();
-          if (data.ok) {
-            router.push("/");
-          }
-          console.log(data);
-        },
+  const pages = [
+    { label: "Home", url: "/", type: "router" },
+    { label: "Profile", url: "/profile", type: "router" },
+    { label: "Upload", url: "/profile/p/create", type: "router" },
+    {
+      label: "Logout",
+      url: "/auth/login",
+      type: "action",
+      onClick: async () => {
+        const url = "/api/auth/logout";
+        const res = await apiFetch(url, ApiConfig.post);
+        const data = await res?.json();
+        if (data.ok) {
+          router.push("/");
+        }
+        console.log(data);
       },
-    ],
-    [router],
-  ) as {
-    url: string;
-    label: string;
-    type: "action" | "router";
-    onClick?: () => void;
-  }[];
+    },
+  ];
 
   useEffect(() => {
     const onScroll = () => {
@@ -101,7 +93,7 @@ const Header = () => {
         ))}
       </motion.div>
 
-      <div className="absolute right-5 top-5">
+      <div className="absolute right-5 top-5 max-xs:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant={"outline"} className="cursor-pointer">
@@ -133,56 +125,84 @@ const Header = () => {
   );
 };
 
+const profileNavigationPages: {
+  url: string;
+  label: string;
+  variant:
+    | "ghost"
+    | "link"
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary";
+}[] = [
+  { url: "p/create", label: "Upload", variant: "default" },
+  { url: "", label: "Profile", variant: "ghost" },
+  { url: "saves", label: "Saves", variant: "ghost" },
+  { url: "edit", label: "Edit", variant: "ghost" },
+  { url: "friends", label: "Friends", variant: "ghost" },
+  { url: "settings", label: "Settings", variant: "ghost" },
+];
+
 const ProfileNavigation = () => {
+  const [show, setShow] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  const pages: {
-    url: string;
-    label: string;
-    variant:
-      | "ghost"
-      | "link"
-      | "default"
-      | "destructive"
-      | "outline"
-      | "secondary";
-  }[] = [
-    { url: "p/create", label: "Upload", variant: "default" },
-    { url: "", label: "Profile", variant: "ghost" },
-    { url: "saves", label: "Saves", variant: "ghost" },
-    { url: "edit", label: "Edit", variant: "ghost" },
-    { url: "friends", label: "Friends", variant: "ghost" },
-    { url: "settings", label: "Settings", variant: "ghost" },
-  ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Menu</CardTitle>
-      </CardHeader>
-      <div>
-        <nav>
-          {pages.map((page) => (
-            <Button
-              variant={page.variant}
-              key={`${page.label}`}
-              className={"w-full rounded-none cursor-pointer"}
-              onClick={() => router.push(`/profile/${page.url}`)}
-            >
-              <p
-                className={
-                  pathname === page.url
-                    ? "text-current font-bold"
-                    : "text-current/90"
-                }
-              >
-                {page.label}
-              </p>
-            </Button>
-          ))}
-        </nav>
+    <div className="flex flex-col gap-2.5">
+      <div className="hidden max-xs:block">
+        <Button
+          onClick={() => setShow((prev) => !prev)}
+          variant={"none"}
+          size={"md"}
+          className="rounded-md border bg-secondary 
+                shadow-xs hover:bg-accent hover:text-accent-foreground 
+                 dark:border-input dark:hover:brightness-115 
+                cursor-pointer w-fit self-end"
+        >
+          <Menu />
+        </Button>
       </div>
-    </Card>
+      <motion.div
+        animate={show ? { opacity: 100, y: 0 } : { opacity: 100, y: "-200%" }}
+        transition={{
+          type: "spring",
+          stiffness: 80,
+          damping: 20,
+        }}
+        initial={{ opacity: 0, z: -10 }}
+        className="pr-4"
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle>Menu</CardTitle>
+          </CardHeader>
+          <div>
+            <nav>
+              {profileNavigationPages.map((page) => (
+                <Button
+                  variant={page.variant}
+                  key={`${page.label}`}
+                  className={"w-full rounded-none cursor-pointer"}
+                  onClick={() => router.push(`/profile/${page.url}`)}
+                >
+                  <p
+                    className={
+                      pathname === page.url
+                        ? "text-current font-bold"
+                        : "text-current/90"
+                    }
+                  >
+                    {page.label}
+                  </p>
+                </Button>
+              ))}
+            </nav>
+          </div>
+        </Card>
+      </motion.div>
+    </div>
   );
 };
 
