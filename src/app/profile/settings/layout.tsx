@@ -37,7 +37,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
               ))}
             </div>
           </CardFooter>
-          <CardContent className="p-6 flex flex-col gap-6 w-full">
+          <CardContent className="p-6 max-md:p-3 flex flex-col gap-6 w-full">
             {children}
           </CardContent>
         </div>

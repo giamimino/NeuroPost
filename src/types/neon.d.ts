@@ -1,4 +1,4 @@
-import { FriendRequestStatusType, FriendStatusEnumType } from "./enums";
+import { FriendRequestStatusType } from "./enums";
 
 export interface Post {
   id: number;
@@ -12,7 +12,7 @@ export interface UserJoin {
   id: string;
   name: string;
   username: string;
-  profile_url: string | null;
+  profile_url: string;
 }
 
 export interface User {
@@ -126,17 +126,12 @@ export interface FriendType {
   id: string;
   user_id: string;
   friend_id: string;
-  status: FriendStatusEnumType;
   created_at: Date;
   user: FriendRequestUserJoinType;
 }
 
-export interface FriendWithSettingsType {
-  id: string;
-  user_id: string;
-  friend_id: string;
-  status: FriendStatusEnumType;
-  created_at: Date;
-  settings: { id: string | null; muted: boolean | null };
-  user: FriendRequestUserJoinType;
+export interface FriendSettingsType {
+  id: string | null;
+  muted: boolean | null;
+  blocked: boolean | null;
 }

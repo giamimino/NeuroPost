@@ -6,5 +6,3 @@ export type NotificationEnumType =
   | "NEW_POST";
 
 export type FriendRequestStatusType = "accepted" | "rejected" | "pending";
-
-export type FriendStatusEnumType = "none" | "blocked";

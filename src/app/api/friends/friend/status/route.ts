@@ -35,14 +35,12 @@ export async function POST(req: Request) {
         `INSERT INTO friendship_settings (friendship_id, user_id, muted) VALUES ($1, $2, $3)`,
         [friendshipId, payload.userId, muteStatus],
       );
-
-      return NextResponse.json({ ok: true }, { status: 200 });
+    } else {
+      await sql.query(
+        `UPDATE friendship_settings SET muted = $1 WHERE id = $2`,
+        [muteStatus, friend.id],
+      );
     }
-
-    await sql.query(`UPDATE friendship_settings SET muted = $1 WHERE id = $2`, [
-      muteStatus,
-      friend.id,
-    ]);
 
     return NextResponse.json(
       { ok: true, settings: { id: friend.id, muted: muteStatus } },
