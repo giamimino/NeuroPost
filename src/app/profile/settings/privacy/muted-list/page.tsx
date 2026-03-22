@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SkeletonUsers } from "@/components/ui/Skeleton-examples";
+import { SkeletonUser } from "@/components/ui/Skeleton-examples";
 import { Spinner } from "@/components/ui/spinner";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
@@ -52,6 +52,8 @@ const UsersMutedList = () => {
     }
   };
 
+  const handleRedirectBack = () => router.push("/profile/settings/privacy");
+
   useEffect(() => {
     const fetchData = () => {
       setLoading(true);
@@ -71,67 +73,68 @@ const UsersMutedList = () => {
 
     fetchData();
   }, []);
-
   return (
     <div className="flex flex-col gap-5">
       <div className="flex gap-2 items-center">
         <div
           className="cursor-pointer p-1 hover:bg-accent w-fit rounded-sm"
-          onClick={() => router.push("/profile/settings/privacy")}
+          onClick={handleRedirectBack}
         >
-          <ChevronLeft width={20} height={20} />
+          <span>
+            <ChevronLeft width={20} height={20} />
+          </span>
         </div>
         <CardTitle>Muted list</CardTitle>
       </div>
       <div className="w-full flex flex-col gap-3">
-        {loading ? (
-          <SkeletonUsers />
-        ) : (
-          friends.map((friend) => (
-            <div
-              key={friend.id}
-              className="flex gap-2.5 items-center justify-between"
-            >
-              <div className="flex gap-2.5 items-center">
-                <Image
-                  src={friend.user.profile_url}
-                  width={360}
-                  height={360}
-                  alt={friend.user.username}
-                  className="w-12 h-12 max-md:w-8 max-md:h-8 rounded-full object-cover"
-                />
-                <div className="flex flex-col gap-1">
-                  <CardTitle className="max-md:text-xs">
-                    {friend.user.name}
-                  </CardTitle>
-                  <CardDescription className="max-md:text-xs">
-                    {friend.user.username}
-                  </CardDescription>
+        {loading
+          ? Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonUser key={`skeleton-user-${i}`} />
+            ))
+          : friends.map((friend) => (
+              <div
+                key={friend.id}
+                className="flex gap-2.5 items-center justify-between"
+              >
+                <div className="flex gap-2.5 items-center">
+                  <Image
+                    src={friend.user.profile_url}
+                    width={360}
+                    height={360}
+                    alt={friend.user.username}
+                    className="w-12 h-12 max-md:w-8 max-md:h-8 rounded-full object-cover"
+                  />
+                  <div className="flex flex-col gap-1">
+                    <CardTitle className="max-md:text-xs">
+                      {friend.user.name}
+                    </CardTitle>
+                    <CardDescription className="max-md:text-xs">
+                      {friend.user.username}
+                    </CardDescription>
+                  </div>
+                  {friendLoading === friend.id && (
+                    <div>
+                      <Spinner />
+                    </div>
+                  )}
                 </div>
-                {friendLoading === friend.id && (
-                  <div>
-                    <Spinner />
-                  </div>
-                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="cursor-pointer max-md:scale-75">
+                      <EllipsisVertical width={24} height={24} />
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem
+                      onClick={() => handleUnmuteFriend(friend.id)}
+                      className="cursor-pointer font-semibold"
+                    >
+                      <p>unmute</p>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <div className="cursor-pointer max-md:scale-75">
-                    <EllipsisVertical width={24} height={24} />
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem
-                    onClick={() => handleUnmuteFriend(friend.id)}
-                    className="cursor-pointer font-semibold"
-                  >
-                    <p>unmute</p>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ))
-        )}
+            ))}
       </div>
     </div>
   );

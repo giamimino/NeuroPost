@@ -169,16 +169,6 @@ function SkeletonUser() {
   );
 }
 
-function SkeletonUsers({ length = 6 }: { length?: number }) {
-  return (
-    <>
-      {Array.from({ length }).map((_, i) => (
-        <SkeletonUser key={i} />
-      ))}
-    </>
-  );
-}
-
 export {
   SkeletonCard,
   SkeletonPost,
@@ -192,5 +182,4 @@ export {
   SkeletonFriendRequest,
   SkeletonFriendRequests,
   SkeletonUser,
-  SkeletonUsers,
 };

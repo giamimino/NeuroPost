@@ -1,7 +1,7 @@
 import { getAuthUser } from "@/lib/auth";
 import { s3 } from "@/lib/aws-sdk";
 import { sql } from "@/lib/db";
-import { Bucket$, GetObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 
