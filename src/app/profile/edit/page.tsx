@@ -139,7 +139,7 @@ const ProfileEditPage = () => {
   }, [user]);
 
   return (
-    <div className="pt-20 px-6">
+    <div className="pt-20 20 px-5">
       <Card>
         <CardHeader>
           <CardTitle>Edit profile</CardTitle>
@@ -157,14 +157,14 @@ const ProfileEditPage = () => {
           />
           {fields.map((f) => (
             <div key={`${f.name}`}>
-              <div className="flex">
+              <div className="flex max-md:flex-col max-md:gap-3">
                 <CardTitle className="sm:w-25 lg:w-1/5">{f.label}</CardTitle>
-                <div className="max-w-61">
+                <div className="max-w-61 w-full">
                   {f.type === "input" ? (
                     <Input
                       value={f.state}
                       onChange={(e) => f.setState(e.target.value)}
-                      className="w-fit"
+                      className="w-full"
                     />
                   ) : (
                     <DefaultTextarea

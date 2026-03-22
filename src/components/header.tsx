@@ -69,7 +69,7 @@ const Header = () => {
       <motion.div
         initial={{ opacity: 0, y: "-100%" }}
         animate={show ? { opacity: 1, y: 0 } : { opacity: 0.5, y: "-150%" }}
-        transition={{ stiffness: 80, type: "spring" }}
+        transition={{ stiffness: 80, type: "spring", damping: 20 }}
         layout
         className={`flex gap-4 items-center px-4 py-2.5 dark:bg-card
        rounded-full border-input ring ring-ring/80`}
@@ -149,6 +149,14 @@ const ProfileNavigation = () => {
   const router = useRouter();
   const pathname = usePathname();
 
+  useEffect(() => {
+    if (!window) return;
+
+    if (window.innerWidth < 480) {
+      setShow(false);
+    }
+  }, []);
+
   return (
     <div className="flex flex-col gap-2.5">
       <div className="hidden max-xs:block">
@@ -165,14 +173,17 @@ const ProfileNavigation = () => {
         </Button>
       </div>
       <motion.div
-        animate={show ? { opacity: 100, y: 0 } : { opacity: 100, y: "-200%" }}
+        animate={show ? "open" : "closed"}
+        variants={{
+          open: { opacity: 1, height: "auto", y: 0, scale: 1 },
+          closed: { opacity: 0, height: 0, y: 20, scale: 1.05 },
+        }}
         transition={{
           type: "spring",
-          stiffness: 80,
+          stiffness: 110,
           damping: 20,
         }}
         initial={{ opacity: 0, z: -10 }}
-        className="pr-4"
       >
         <Card>
           <CardHeader>

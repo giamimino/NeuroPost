@@ -90,7 +90,7 @@ const ProfileSavesPage = () => {
           </div>
           <Line />
         </CardHeader>
-        <CardContent className="grid  gap-6 grid-cols-3 justify-center">
+        <CardContent className="grid gap-6 grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1 justify-center">
           {section === "likes" &&
             likes.map((item) => (
               <Card
