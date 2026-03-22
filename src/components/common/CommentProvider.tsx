@@ -110,14 +110,14 @@ const CommentProvider = () => {
       <AnimatePresence>
         {comment && (
           <motion.div
-            className="w-1/3"
+            className="w-1/3 max-sm:w-0"
             layout
             initial={{ flexBasis: 0, opacity: 0 }}
             animate={{ flexBasis: "33%", opacity: 1 }}
             exit={{ flexBasis: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 120, damping: 20 }}
           >
-            <Card className="fixed top-20 w-1/3 pb-3 h-[80vh] gap-0">
+            <Card className="fixed top-20 w-1/3 max-md:w-1/2 max-sm:w-[94%] max-sm:left-[3%] pb-3 h-[80vh] gap-0">
               <div className="flex justify-between items-center px-6">
                 <CardTitle>Comments</CardTitle>
                 <Button

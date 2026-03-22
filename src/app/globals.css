@@ -19,7 +19,10 @@
 
   --background: var(--color-bg);
   --foreground: var(--color-foreground);
-  
+
+  --breakpoint-xs: 30rem;
+  --breakpoint-2xs: 24rem;
+
   --font-plusJakartaSans: "Plus Jakarta Sans", sans-serif;
   --font-inter: "Inter", sans-serif;
 

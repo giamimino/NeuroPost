@@ -221,7 +221,7 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
     );
   return (
     <div className="pt-25 flex flex-col gap-5">
-      <div className="w-full flex justify-center gap-1.5 px-5">
+      <div className="w-full flex max-sm:flex-col-reverse justify-center gap-1.5 px-5">
         <div className="w-1/2 max-sm:w-full flex flex-col gap-5">
           <div className="flex items-center justify-center w-full">
             {loading ? (
@@ -492,163 +492,167 @@ const PostPage = ({ params }: { params: Promise<{ postId: number }> }) => {
 
         {/* settings, likes, comments and etc  */}
         <div>
-          <Card className="p-3 w-full relative flex flex-col gap-2">
-            <Button
-              size={"xs"}
-              className="rounded-sm cursor-pointer text-xs"
-              variant={"ghost"}
-            >
-              {post?.likes}
-            </Button>
-            <Button
-              size={"icon-xs"}
-              className={`rounded-sm cursor-pointer ${post?.likeid && "text-red-600"}`}
-              variant={"outline"}
-              onClick={
-                post
-                  ? async () => {
-                      const args: HandleLikeArgs = post.likeid
-                        ? { action: "delete", id: post.likeid }
-                        : {
-                            action: "post",
-                            postId: post.id,
-                          };
-                      const data = await handleLike(args);
-                      if (args.action === "delete" && data.ok) {
-                        setPost((p) =>
-                          p
-                            ? {
-                                ...p,
-                                likeid: null,
-                                likes: post.likes - 1,
-                              }
-                            : p,
-                        );
-                      } else if (args.action === "post" && data.ok) {
-                        setPost((p) =>
-                          p
-                            ? {
-                                ...p,
-                                likeid: data.like,
-                                likes: post.likes + 1,
-                              }
-                            : p,
-                        );
-                      } else if (data.error) {
-                        addAlert({
-                          ...data.error,
-                          id: crypto.randomUUID(),
-                          duration: 3 * 1000,
-                          type: "error",
-                        });
+          <Card className="p-3 w-full relative gap-0">
+            <div className="flex sm:flex-col gap-2">
+              <Button
+                size={"xs"}
+                className="rounded-sm cursor-pointer text-xs"
+                variant={"ghost"}
+              >
+                {post?.likes}
+              </Button>
+              <Button
+                size={"icon-xs"}
+                className={`rounded-sm cursor-pointer ${post?.likeid && "text-red-600"}`}
+                variant={"outline"}
+                onClick={
+                  post
+                    ? async () => {
+                        const args: HandleLikeArgs = post.likeid
+                          ? { action: "delete", id: post.likeid }
+                          : {
+                              action: "post",
+                              postId: post.id,
+                            };
+                        const data = await handleLike(args);
+                        if (args.action === "delete" && data.ok) {
+                          setPost((p) =>
+                            p
+                              ? {
+                                  ...p,
+                                  likeid: null,
+                                  likes: post.likes - 1,
+                                }
+                              : p,
+                          );
+                        } else if (args.action === "post" && data.ok) {
+                          setPost((p) =>
+                            p
+                              ? {
+                                  ...p,
+                                  likeid: data.like,
+                                  likes: post.likes + 1,
+                                }
+                              : p,
+                          );
+                        } else if (data.error) {
+                          addAlert({
+                            ...data.error,
+                            id: crypto.randomUUID(),
+                            duration: 3 * 1000,
+                            type: "error",
+                          });
+                        }
                       }
-                    }
-                  : undefined
-              }
-            >
-              <Heart {...(post?.likeid ? { fill: "#ff0000" } : {})} />
-            </Button>
-            <Button
-              size={"icon-xs"}
-              className={`rounded-sm cursor-pointer`}
-              variant={"outline"}
-              onClick={() => setShowComments((prev) => !prev)}
-            >
-              <MessageCircle {...(showComments ? { fill: "#fff" } : {})} />
-            </Button>
-            <ToggleController
-              whatToShow={({ handleShow }) => (
-                <Card className="fixed top-1/2 left-1/2 -translate-1/2 min-w-40 py-4">
-                  <div className="px-4 flex items-center">
-                    <Button
-                      className="w-fit rounded-sm flex-1 max-w-6 cursor-pointer"
-                      size={"xs"}
-                      variant={"outline"}
-                      onClick={() => handleShow(false)}
-                    >
-                      <XIcon />
-                    </Button>
-                    <CardTitle className="flex-1 text-center">Share</CardTitle>
-                  </div>
-                  <CardContent></CardContent>
-                </Card>
-              )}
-            >
-              {({ setShow }) => (
-                <Button
-                  size={"icon-xs"}
-                  variant={"outline"}
-                  className="cursor-pointer rounded-sm"
-                  onClick={() => setShow((prev) => !prev)}
-                >
-                  <ExternalLink />
-                </Button>
-              )}
-            </ToggleController>
-            {post?.role === "creator" && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                    : undefined
+                }
+              >
+                <Heart {...(post?.likeid ? { fill: "#ff0000" } : {})} />
+              </Button>
+              <Button
+                size={"icon-xs"}
+                className={`rounded-sm cursor-pointer`}
+                variant={"outline"}
+                onClick={() => setShowComments((prev) => !prev)}
+              >
+                <MessageCircle {...(showComments ? { fill: "#fff" } : {})} />
+              </Button>
+              <ToggleController
+                whatToShow={({ handleShow }) => (
+                  <Card className="fixed top-1/2 left-1/2 -translate-1/2 min-w-40 py-4">
+                    <div className="px-4 flex items-center">
+                      <Button
+                        className="w-fit rounded-sm flex-1 max-w-6 cursor-pointer"
+                        size={"xs"}
+                        variant={"outline"}
+                        onClick={() => handleShow(false)}
+                      >
+                        <XIcon />
+                      </Button>
+                      <CardTitle className="flex-1 text-center">
+                        Share
+                      </CardTitle>
+                    </div>
+                    <CardContent></CardContent>
+                  </Card>
+                )}
+              >
+                {({ setShow }) => (
                   <Button
                     size={"icon-xs"}
-                    className={`rounded-sm cursor-pointer`}
                     variant={"outline"}
+                    className="cursor-pointer rounded-sm"
+                    onClick={() => setShow((prev) => !prev)}
                   >
-                    <Settings />
+                    <ExternalLink />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <div className="p-1 flex flex-col gap-2">
-                    <DropdownMenuItem className="p-0">
-                      <Button
-                        size={"md"}
-                        variant={"outline"}
-                        className="cursor-pointer w-full"
-                        onClick={() => setEditing(true)}
-                      >
-                        Edit
-                      </Button>
-                    </DropdownMenuItem>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                )}
+              </ToggleController>
+              {post?.role === "creator" && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size={"icon-xs"}
+                      className={`rounded-sm cursor-pointer`}
+                      variant={"outline"}
+                    >
+                      <Settings />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <div className="p-1 flex flex-col gap-2">
+                      <DropdownMenuItem className="p-0">
                         <Button
                           size={"md"}
                           variant={"outline"}
-                          className="cursor-pointer w-full hover:text-red-600"
+                          className="cursor-pointer w-full"
+                          onClick={() => setEditing(true)}
                         >
-                          Delete
+                          Edit
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <div className="flex flex-col gap-2.5 p-2.5">
-                          <CardDescription>
-                            Are you sure you want to delete this post?
-                          </CardDescription>
-                          <div className="flex gap-2.5">
-                            <DropdownMenuItem className="p-0">
-                              <Button
-                                variant={"outline"}
-                                className="cursor-pointer"
-                                onClick={handleDelete}
-                              >
-                                Yes
-                              </Button>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="p-0">
-                              <Button
-                                variant={"ghost"}
-                                className="cursor-pointer"
-                              >
-                                cancel
-                              </Button>
-                            </DropdownMenuItem>
+                      </DropdownMenuItem>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size={"md"}
+                            variant={"outline"}
+                            className="cursor-pointer w-full hover:text-red-600"
+                          >
+                            Delete
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <div className="flex flex-col gap-2.5 p-2.5">
+                            <CardDescription>
+                              Are you sure you want to delete this post?
+                            </CardDescription>
+                            <div className="flex gap-2.5">
+                              <DropdownMenuItem className="p-0">
+                                <Button
+                                  variant={"outline"}
+                                  className="cursor-pointer"
+                                  onClick={handleDelete}
+                                >
+                                  Yes
+                                </Button>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="p-0">
+                                <Button
+                                  variant={"ghost"}
+                                  className="cursor-pointer"
+                                >
+                                  cancel
+                                </Button>
+                              </DropdownMenuItem>
+                            </div>
                           </div>
-                        </div>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </Card>
         </div>
       </div>

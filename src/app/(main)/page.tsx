@@ -112,7 +112,7 @@ export default function Home() {
                     {post.user.name}
                   </CardDescription>
                 </div>
-                <div>
+                <div className="w-full">
                   {post.mediaUrl && (
                     <Image
                       src={post.mediaUrl}
