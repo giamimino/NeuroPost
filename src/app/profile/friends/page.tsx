@@ -20,7 +20,11 @@ import { ERRORS } from "@/constants/error-handling";
 import { monthsShort } from "@/constants/months";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
-import { FriendRequestType, FriendWithSettingsType } from "@/types/neon";
+import {
+  FriendRequestType,
+  FriendSettingsType,
+  FriendType,
+} from "@/types/neon";
 import { timeAgo } from "@/utils/functions/timeAgo";
 import {
   EllipsisVertical,
@@ -52,7 +56,9 @@ const FriendsPage = () => {
   const [section, setSection] = useState("friend_requests");
   const [friendRequests, setFriendRequests] = useState<FriendRequestType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [friends, setFriends] = useState<FriendWithSettingsType[]>([]);
+  const [friends, setFriends] = useState<
+    (FriendType & { settings: FriendSettingsType })[]
+  >([]);
   const { addAlert } = useAlertStore();
   const router = useRouter();
   const tickingRef = useRef(false);
@@ -84,7 +90,7 @@ const FriendsPage = () => {
           setFriends((prev) =>
             prev.map((p) =>
               p.id === friendshipId
-                ? { ...p, settings: { id: null, muted: null } }
+                ? { ...p, settings: { id: null, muted: null, blocked: null } }
                 : p,
             ),
           );
