@@ -88,7 +88,8 @@ const UsersMutedList = () => {
       </div>
       <div className="w-full flex flex-col gap-3">
         {loading
-          ? Array.from({ length: 6 }).map((_, i) => (
+          ? // eslint-disable-next-line react/no-array-index-key
+            Array.from({ length: 6 }).map((_, i) => (
               <SkeletonUser key={`skeleton-user-${i}`} />
             ))
           : friends.map((friend) => (
