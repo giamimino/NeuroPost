@@ -64,8 +64,12 @@ export async function GET(
 
     if (Boolean(friend_status) === true && username !== payload.username) {
       const friends = await sql.query(
-        `SELECT id FROM friends WHERE user_id = $1 OR friend_id = $1`,
-        [payload.userId],
+        `SELECT id FROM friends WHERE CASE
+                                        WHEN user_id = $1 AND friend_id = $2 THEN 1
+                                        WHEN user_id = $2 AND friend_id = $1 THEN 1
+                                        ELSE 0
+                                      END = 1;`,
+        [payload.userId, user.id],
       );
       const friend = friends[0];
       if (friend) {
