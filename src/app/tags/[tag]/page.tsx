@@ -50,8 +50,7 @@ const TagPage = ({ params }: { params: Promise<{ tag: string }> }) => {
         {loading && (
           <SkeletonPosts
             length={5}
-            className="grid sm:grid-cols-2 lg:grid-cols-3 px-10"
-            postClassName="w-auto"
+            className="w-1/3"
           />
         )}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full px-10 ">
