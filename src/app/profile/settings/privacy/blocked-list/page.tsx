@@ -1,5 +1,4 @@
 "use client";
-import { Button } from "@/components/ui/button";
 import { CardDescription, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -71,7 +70,7 @@ const UsersBlockedList = () => {
     };
 
     fetchData();
-  }, []);
+  }, [addAlert]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -86,8 +85,7 @@ const UsersBlockedList = () => {
       </div>
       <div className="w-full flex flex-col gap-3">
         {loading
-          ? // eslint-disable-next-line react/no-array-index-key
-            Array.from({ length: 6 }).map((_, i) => (
+          ? Array.from({ length: 6 }).map((_, i) => (
               <SkeletonUser key={`skeleton-user-${i}`} />
             ))
           : friends.map((friend) => (

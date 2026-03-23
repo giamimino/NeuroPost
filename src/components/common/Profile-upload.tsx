@@ -71,13 +71,13 @@ const ProfileUpload = ({
 
   useEffect(() => {
     (async () => {
-      if (image !== profile_url && !changed) {
+      if (image !== profile_url) {
         setChanged(true);
-      } else if (image == (profile_url || "/user.jpg") && changed) {
+      } else if (image == (profile_url || "/user.jpg")) {
         setChanged(false);
       }
     })();
-  }, [image]);
+  }, [image, profile_url]);
 
   return (
     <div className="flex flex-col">

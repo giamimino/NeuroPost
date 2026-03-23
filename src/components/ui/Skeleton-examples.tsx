@@ -36,16 +36,14 @@ function SkeletonPost({ className }: { className?: string }) {
 function SkeletonPosts({
   className,
   length = 5,
-  postClassName,
 }: {
   className?: string;
   length: number;
-  postClassName?: string;
 }) {
   return (
     <>
       {Array.from({ length }).map((_, i) => (
-        <SkeletonPost className={cn("w-full", postClassName)} key={i} />
+        <SkeletonPost className={cn("w-full", className)} key={i} />
       ))}
     </>
   );

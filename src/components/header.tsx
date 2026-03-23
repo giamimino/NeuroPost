@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/apiFetch";
@@ -148,13 +148,24 @@ const ProfileNavigation = () => {
   const [show, setShow] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const isMobile = () => window.innerWidth < 480;
+
+  const handleClick = (pageUrl: string) => {
+    if (isMobile()) {
+      setShow(false);
+    }
+
+    router.push(`/profile/${pageUrl}`);
+  };
 
   useEffect(() => {
     if (!window) return;
-
-    if (window.innerWidth < 480) {
-      setShow(false);
+    const hide = () => {
+      if (isMobile()) {
+        setShow(false);
+      }
     }
+    hide()
   }, []);
 
   return (
@@ -200,13 +211,7 @@ const ProfileNavigation = () => {
                   variant={page.variant}
                   key={`${page.label}`}
                   className={"w-full rounded-none cursor-pointer"}
-                  onClick={() => {
-                    if (window.innerWidth < 480) {
-                      setShow(false);
-                    }
-
-                    router.push(`/profile/${page.url}`);
-                  }}
+                  onClick={() => handleClick(page.url)}
                 >
                   <p
                     className={

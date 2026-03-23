@@ -72,7 +72,7 @@ const SettingsPrivacyPage = () => {
         });
         setPrivateStatus("error");
       });
-  }, []);
+  }, [addAlert]);
 
   return (
     <div className="flex flex-col gap-6 w-full">

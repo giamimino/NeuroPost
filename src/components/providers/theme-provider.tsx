@@ -19,7 +19,7 @@ function ThemeProvider({
 }
 
 function ThemeToggle() {
-  const { setTheme, theme } = useTheme();
+  const { setTheme } = useTheme();
 
   return (
     <DropdownMenu>

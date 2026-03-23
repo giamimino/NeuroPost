@@ -1,10 +1,6 @@
 import { ToggleContext, useToggle } from "@/store/contexts/ToggleContext";
 import clsx from "clsx";
-import React, { createContext, useState } from "react";
-
-const variants = {
-  default: "",
-};
+import React, { useState } from "react";
 
 const ToggleSwitch = ({
   className,
