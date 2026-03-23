@@ -46,11 +46,13 @@ const LoginPage = () => {
                 name="email"
                 icon="eva:email-outline"
                 placeholder="Email"
+                autoComplete="email"
               />
               <DefaultInput
                 name="password"
                 icon="gg:lock"
                 placeholder="Password"
+                autoComplete="current-password"
               />
             </div>
             <div className="flex justify-between text-foreground">

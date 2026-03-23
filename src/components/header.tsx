@@ -175,15 +175,19 @@ const ProfileNavigation = () => {
       <motion.div
         animate={show ? "open" : "closed"}
         variants={{
-          open: { opacity: 1, height: "auto", y: 0, scale: 1 },
-          closed: { opacity: 0, height: 0, y: 20, scale: 1.05 },
+          open: { opacity: 1, height: "auto", width: "auto", y: 0 },
+          closed: { opacity: 1, height: 0, width: 0, y: 20 },
         }}
         transition={{
           type: "spring",
-          stiffness: 110,
+          stiffness: 100,
           damping: 20,
         }}
-        initial={{ opacity: 0, z: -10 }}
+        initial={{
+          opacity: 0,
+          y: 10,
+        }}
+        className=" overflow-hidden relative"
       >
         <Card>
           <CardHeader>
@@ -196,7 +200,13 @@ const ProfileNavigation = () => {
                   variant={page.variant}
                   key={`${page.label}`}
                   className={"w-full rounded-none cursor-pointer"}
-                  onClick={() => router.push(`/profile/${page.url}`)}
+                  onClick={() => {
+                    if (window.innerWidth < 480) {
+                      setShow(false);
+                    }
+
+                    router.push(`/profile/${page.url}`);
+                  }}
                 >
                   <p
                     className={

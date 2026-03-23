@@ -91,7 +91,7 @@ const ProfileUpload = ({
             ref={imageUploadRef}
             onChange={uploadImage}
           />
-          <div className="relative w-24 h-24">
+          <div className="w-24 h-24 relative">
             {loading ? (
               <Skeleton className="w-24 h-24 rounded-full" />
             ) : (
