@@ -43,13 +43,11 @@ function SkeletonPosts({
   postClassName?: string;
 }) {
   return (
-    <div
-      className={cn("flex gap-6 flex-wrap justify-center w-full", className)}
-    >
+    <>
       {Array.from({ length }).map((_, i) => (
-        <SkeletonPost className={cn("w-1/4", postClassName)} key={i} />
+        <SkeletonPost className={cn("w-full", postClassName)} key={i} />
       ))}
-    </div>
+    </>
   );
 }
 
@@ -91,7 +89,12 @@ function SkeletonComments({
 
 function SkeletonProfile({ className }: { className?: string }) {
   return (
-    <div className={clsx("w-full flex pl-20 pb-5 gap-4", className)}>
+    <div
+      className={clsx(
+        "w-full flex pl-20 max-sm:pl-0 max-sm:flex-col pb-5 gap-4",
+        className,
+      )}
+    >
       <Skeleton className="w-20.5 h-20.5 rounded-full" />
       <div className="flex flex-col gap-2.5">
         <div>

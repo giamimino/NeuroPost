@@ -251,17 +251,21 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
 
   return (
     <div className="pt-32">
-      <div className="flex flex-col items-start gap-1 px-10">
+      <div className="flex flex-col items-start gap-1 px-10 max-lg:px-5">
         {loading ? (
           <SkeletonProfile />
         ) : user ? (
-          <div className="flex pl-20 gap-4">
+          <div className="flex pl-20 max-md:pl-0 gap-4 max-md:flex-col">
             <Image
               src={user.profile_url}
-              width={82}
-              height={82}
+              width={160}
+              height={160}
               alt="user-profile"
               className="rounded-full object-cover w-20.5 h-20.5"
+              style={{
+                width: "82px",
+                height: "82px",
+              }}
             />
             <div className="flex flex-col gap-1">
               <div className="flex gap-1">
@@ -351,10 +355,10 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
           </div>
         )}
         <Line />
-        <div className="flex w-full gap-8 flex-wrap justify-center mt-5">
+        <div className="w-full gap-8 max-lg:gap-4 max-lg:mt-0 grid grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 mt-5">
           {user?.posts?.map((post) => (
             <Card
-              className="w-1/4 gap-2 pb-0 overflow-hidden justify-between"
+              className="gap-2 pb-0 overflow-hidden justify-between"
               key={post.id}
             >
               <CardHeader>

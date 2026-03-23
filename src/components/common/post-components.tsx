@@ -44,9 +44,9 @@ const PostWrapper = ({ children }: Children) => {
   return (
     <div
       ref={postRef}
-      className={`w-full flex flex-col items-center px-10 pt-2 opacity-0 ${animate ? "animate-fadeUpDown opacity-0" : ""}`}
+      className={`w-full flex flex-col items-center px-10 max-xs:px-5 pt-2 opacity-0 ${animate ? "animate-fadeUpDown opacity-0" : ""}`}
     >
-      <div className="py-10 px-40 w-5/7">{children}</div>
+      <div className="py-10 w-full max-w-125">{children}</div>
       <Line />
     </div>
   );

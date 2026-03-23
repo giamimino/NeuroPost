@@ -28,7 +28,7 @@ const SearchPostsPage = () => {
     if (posts.length !== 0) return;
     const controller = new AbortController();
     const signal = controller.signal;
-    const url = `/api/post?limit=4&col=created_at&dir=DESC`;
+    const url = `/api/post?limit=6&col=created_at&dir=DESC`;
 
     (async () => {
       try {
@@ -86,10 +86,21 @@ const SearchPostsPage = () => {
           />
         </div>
       </div>
-      <div className="w-full flex flex-wrap gap-8 px-10 justify-center mt-10">
+      <div className="w-full grid grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 gap-8 px-10 justify-center mt-10">
+        {loading && (
+          <>
+            {Array.from({ length: 6 })
+              .fill("")
+              .map((_, index) => (
+                <div key={index}>
+                  <SkeletonPost />
+                </div>
+              ))}
+          </>
+        )}
         {posts.map((post) => (
           <Card
-            className="w-1/4 gap-2 pb-0 overflow-hidden justify-between"
+            className="gap-2 pb-0 overflow-hidden justify-between"
             key={post.id}
           >
             <CardHeader>
@@ -113,19 +124,6 @@ const SearchPostsPage = () => {
             </CardFooter>
           </Card>
         ))}
-      </div>
-      <div className="w-full flex justify-center flex-wrap gap-8 text-white mt-5 px-20">
-        {loading && (
-          <>
-            {Array.from({ length: 4 })
-              .fill("")
-              .map((_, index) => (
-                <div key={index} className="w-2/7">
-                  <SkeletonPost />
-                </div>
-              ))}
-          </>
-        )}
       </div>
     </div>
   );

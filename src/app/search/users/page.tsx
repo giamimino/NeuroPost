@@ -50,7 +50,7 @@ const SearchUsersPage = () => {
     <div className="w-full pt-32">
       <div className="w-full flex justify-center">
         <div className="max-w-100 flex flex-col items-center gap-2">
-          <Title title="Search For Posts" />
+          <Title title="Search For Users" />
           <Input
             className="text-foreground"
             value={searchValue}
@@ -58,10 +58,21 @@ const SearchUsersPage = () => {
           />
         </div>
       </div>
-      <div className="w-full flex flex-wrap gap-8 px-10 justify-center mt-10">
+      <div className="w-full grid gap-8 grid-cols-5 max-lg:grid-cols-4 max-md:grid-cols-3 max-sm:grid-cols-2 max-xs:grid-cols-1 px-10 justify-center mt-10">
+        {loading && (
+          <>
+            {Array.from({ length: 6 })
+              .fill("")
+              .map((_, index) => (
+                <div key={index}>
+                  <SkeletonPost />
+                </div>
+              ))}
+          </>
+        )}
         {users.map((user) => (
           <Card
-            className="w-1/4 gap-2 pb-0 overflow-hidden justify-between"
+            className="gap-2 pb-0 overflow-hidden justify-between"
             key={user.id}
           >
             <CardHeader>
@@ -85,19 +96,6 @@ const SearchUsersPage = () => {
             </CardFooter>
           </Card>
         ))}
-      </div>
-      <div className="w-full flex justify-center flex-wrap gap-8 text-white mt-5 px-20">
-        {loading && (
-          <>
-            {Array.from({ length: 4 })
-              .fill("")
-              .map((_, index) => (
-                <div key={index} className="w-2/7">
-                  <SkeletonPost />
-                </div>
-              ))}
-          </>
-        )}
       </div>
     </div>
   );

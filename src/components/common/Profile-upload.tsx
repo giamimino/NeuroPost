@@ -81,7 +81,7 @@ const ProfileUpload = ({
 
   return (
     <div className="flex flex-col">
-      <div className="flex">
+      <div className="flex max-md:flex-col gap-3">
         <CardTitle className="sm:w-25 lg:w-1/5">Profile photo</CardTitle>
         <div>
           <input
@@ -91,7 +91,7 @@ const ProfileUpload = ({
             ref={imageUploadRef}
             onChange={uploadImage}
           />
-          <div className="relative">
+          <div className="w-24 h-24 relative">
             {loading ? (
               <Skeleton className="w-24 h-24 rounded-full" />
             ) : (
