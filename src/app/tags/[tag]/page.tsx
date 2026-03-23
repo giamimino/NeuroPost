@@ -47,12 +47,7 @@ const TagPage = ({ params }: { params: Promise<{ tag: string }> }) => {
         <div>
           <CardTitle className="text-xl">All #{tag} posts</CardTitle>
         </div>
-        {loading && (
-          <SkeletonPosts
-            length={5}
-            className="w-1/3"
-          />
-        )}
+        {loading && <SkeletonPosts length={5} className="w-1/3" />}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full px-10 ">
           {posts.map((post) => (
             <Card
