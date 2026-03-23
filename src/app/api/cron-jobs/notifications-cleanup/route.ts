@@ -17,8 +17,8 @@ export async function POST(req: Request) {
 
     await sql.query(
       `INSERT INTO cron_logs (job_name, status) VALUES ($1, $2)`,
-      ["cleanup_notifications", "success"]
-    )
+      ["cleanup_notifications", "success"],
+    );
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
@@ -26,8 +26,8 @@ export async function POST(req: Request) {
 
     await sql.query(
       `INSERT INTO cron_logs (job_name, status, error) VALUES ($1, $2, $3)`,
-      ["cleanup_notifications", "failed", JSON.stringify(err)]
-    )
+      ["cleanup_notifications", "failed", JSON.stringify(err)],
+    );
 
     return NextResponse.json({ ok: false, message: "" }, { status: 500 });
   }
