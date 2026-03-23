@@ -164,8 +164,8 @@ const ProfileNavigation = () => {
       if (isMobile()) {
         setShow(false);
       }
-    }
-    hide()
+    };
+    hide();
   }, []);
 
   return (
