@@ -10,8 +10,17 @@ export async function GET() {
   try {
     const user = await auth({ userId: false, bio: true });
 
-    if (!user || user.status === 401)
-      return NextResponse.json({ ok: false }, { status: 401 });
+    if (!user || !user.user || user.status === 401)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.TOKEN_INVALID },
+        { status: 401 },
+      );
+
+    if (user.user.status === "inactive")
+      return NextResponse.json(
+        { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
+        { status: 423 },
+      );
 
     return NextResponse.json({ user, ok: true }, { status: 200 });
   } catch (error) {

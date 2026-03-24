@@ -20,6 +20,7 @@ import {
 import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
+import { useAlertStore } from "@/store/zustand/alertStore";
 import { Post } from "@/types/neon";
 import { Bell } from "lucide-react";
 import Image from "next/image";
@@ -38,6 +39,7 @@ const ProfilePage = () => {
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { addAlert } = useAlertStore();
 
   const handleViewPost = (id: number) => {
     router.push(`/post/${id}`);
@@ -48,13 +50,17 @@ const ProfilePage = () => {
       setLoading(true);
       apiFetch("/api/user")
         .then((res) => res?.json())
-        .then((data) =>
-          setUser({ id: data.user.payload.userId, ...data.user.user }),
-        )
+        .then((data) => {
+          if (data.error) {
+            addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
+          } else if (data.ok) {
+            setUser({ id: data.user.payload.userId, ...data.user.user });
+          }
+        })
         .finally(() => setLoading(false));
     };
     fetchData();
-  }, []);
+  }, [addAlert]);
 
   useEffect(() => {
     if (!user?.profile_url) return;

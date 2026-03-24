@@ -22,14 +22,13 @@ export async function auth({
       accessToken,
       process.env.ACCESS_SECRET!,
     ) as JWTUserPaylaod;
-  } catch (error) {
-    console.error(error);
+  } catch {
     return { ok: false, status: 401 };
   }
 
   if (userId) return { userId: payload.userId };
 
-  const rawSql = `SELECT email, name, username, profile_url ${bio ? ", bio" : ""} FROM users id WHERE id = $1`;
+  const rawSql = `SELECT email, name, username, profile_url ${bio ? ", bio" : ""}, status FROM users id WHERE id = $1`;
   const user = await sql.query(rawSql, [payload.userId]);
 
   return { payload, user: user[0] };
@@ -41,7 +40,7 @@ export async function getAuthUser() {
   const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)?.value;
 
   if (!access_token) {
-    return { error: ERRORS.TOKEN_MISSING, code: 401 };
+    return { error: ERRORS.TOKEN_MISSING };
   }
 
   try {
@@ -50,9 +49,12 @@ export async function getAuthUser() {
       process.env.ACCESS_SECRET!,
     ) as JWTUserPaylaod;
 
-    return payload.status === "inactive" || !payload.status
-      ? { status: payload.status, code: 423 }
-      : { user: payload };
+    return {
+      user: payload,
+      ...(payload.status === "inactive" || !payload.status
+        ? { status: "inactive" }
+        : {}),
+    };
   } catch {
     return { error: ERRORS.TOKEN_INVALID };
   }

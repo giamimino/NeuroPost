@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
 
