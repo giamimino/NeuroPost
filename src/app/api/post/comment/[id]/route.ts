@@ -4,7 +4,6 @@ import { sql } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 
 export async function DELETE(
-  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -21,6 +20,11 @@ export async function DELETE(
       return NextResponse.json(
         { ok: false, error: auth.error },
         { status: 401 },
+      );
+      if (auth.status === "inactive")
+      return NextResponse.json(
+        { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
+        { status: 423 },
       );
     const payload = auth.user;
 

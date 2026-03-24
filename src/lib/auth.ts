@@ -41,7 +41,7 @@ export async function getAuthUser() {
   const access_token = cookieStore.get(process.env.ACCESS_COOKIE_NAME!)?.value;
 
   if (!access_token) {
-    return { error: ERRORS.TOKEN_MISSING };
+    return { error: ERRORS.TOKEN_MISSING, code: 401 };
   }
 
   try {
@@ -50,7 +50,9 @@ export async function getAuthUser() {
       process.env.ACCESS_SECRET!,
     ) as JWTUserPaylaod;
 
-    return { user: payload };
+    return payload.status === "inactive" || !payload.status
+      ? { status: payload.status, code: 423 }
+      : { user: payload };
   } catch {
     return { error: ERRORS.TOKEN_INVALID };
   }

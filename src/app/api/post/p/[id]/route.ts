@@ -37,6 +37,11 @@ export async function PUT(
         { ok: false, error: auth.error },
         { status: 401 },
       );
+      if (auth.status === "inactive")
+      return NextResponse.json(
+        { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
+        { status: 423 },
+      );
     const payload = auth.user;
 
     const posts = await sql.query(
@@ -164,6 +169,11 @@ export async function GET(
         { ok: false, error: auth.error },
         { status: 401 },
       );
+      if (auth.status === "inactive")
+      return NextResponse.json(
+        { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
+        { status: 423 },
+      );
     const payload = auth.user;
 
     const posts = await sql.query(
@@ -171,7 +181,7 @@ export async function GET(
       FROM posts p JOIN users u ON p.author_id=u.id 
       LEFT JOIN likes l ON l.post_id = $1 AND l.user_id = $2
       WHERE p.id = $1 GROUP BY p.id, u.name, u.username, u.profile_url, l.id`,
-      [Number(id), payload?.userId],
+      [Number(id), payload.userId],
     );
     const post = posts[0];
 

@@ -309,4 +309,8 @@ export const ERRORS = {
     title: "Friend not found",
     description: "This user may have unfriended you or is unavailable.",
   },
+  ACCOUNT_INACTIVE: {
+    title: "Account is inactive",
+    description: "Please verify email to activate account."
+  }
 } as const;

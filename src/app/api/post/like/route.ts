@@ -18,6 +18,11 @@ export async function POST(req: Request) {
         { ok: false, error: auth.error },
         { status: 401 },
       );
+      if (auth.status === "inactive")
+      return NextResponse.json(
+        { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
+        { status: 423 },
+      );
     const payload = auth.user;
 
     const rawSQL = `INSERT INTO likes (user_id, post_id) VALUES ($1, $2) RETURNING id as like_id`;

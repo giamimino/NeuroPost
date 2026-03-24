@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
+import { ERRORS } from "@/constants/error-handling";
 
 export async function GET(req: Request) {
   try {
@@ -12,6 +13,11 @@ export async function GET(req: Request) {
         { ok: false, error: auth.error },
         { status: 401 },
       );
+      if (auth.status === "inactive")
+            return NextResponse.json(
+              { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
+              { status: 423 },
+            );
     const payload = auth.user;
 
     const comments = await sql.query(

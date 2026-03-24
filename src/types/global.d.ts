@@ -1,4 +1,5 @@
 import React from "react";
+import { UserStatusType } from "./enums";
 
 export interface Children {
   children: React.ReactNode;
@@ -9,6 +10,7 @@ export interface JWTUserPaylaod {
   iat: number;
   userId: string;
   username: string;
+  status: UserStatusType
 }
 
 export interface TagType {
