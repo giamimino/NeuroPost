@@ -10,7 +10,7 @@ export interface JWTUserPaylaod {
   iat: number;
   userId: string;
   username: string;
-  status: UserStatusType
+  status: UserStatusType;
 }
 
 export interface TagType {

@@ -34,11 +34,11 @@ export async function GET(req: Request) {
         { ok: false, error: auth.error },
         { status: 401 },
       );
-      if (auth.status === "inactive")
-            return NextResponse.json(
-              { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
-              { status: 423 },
-            );
+    if (auth.status === "inactive")
+      return NextResponse.json(
+        { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
+        { status: 423 },
+      );
     const payload = auth.user;
 
     const rawSql = `

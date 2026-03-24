@@ -37,7 +37,7 @@ export async function PUT(
         { ok: false, error: auth.error },
         { status: 401 },
       );
-      if (auth.status === "inactive")
+    if (auth.status === "inactive")
       return NextResponse.json(
         { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
         { status: 423 },
@@ -169,7 +169,7 @@ export async function GET(
         { ok: false, error: auth.error },
         { status: 401 },
       );
-      if (auth.status === "inactive")
+    if (auth.status === "inactive")
       return NextResponse.json(
         { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
         { status: 423 },

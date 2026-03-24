@@ -14,7 +14,10 @@ export async function POST() {
     )?.value;
 
     if (!access_token) {
-      return NextResponse.json({ error: ERRORS.TOKEN_MISSING }, { status: 401});
+      return NextResponse.json(
+        { error: ERRORS.TOKEN_MISSING },
+        { status: 401 },
+      );
     }
     let payload;
     try {
@@ -23,7 +26,10 @@ export async function POST() {
         process.env.ACCESS_SECRET!,
       ) as JWTUserPaylaod;
     } catch {
-      return NextResponse.json({ ok: false, error: ERRORS.TOKEN_INVALID }, { status: 401});
+      return NextResponse.json(
+        { ok: false, error: ERRORS.TOKEN_INVALID },
+        { status: 401 },
+      );
     }
     await sql.query(`DELETE FROM refresh_tokens WHERE user_id = $1`, [
       payload.userId,

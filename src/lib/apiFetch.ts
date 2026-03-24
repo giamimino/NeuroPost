@@ -7,9 +7,9 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
     credentials: "include",
   });
 
-  if(res.status === 423) {
-    redirect("/verify")
-  } 
+  if (res.status === 423) {
+    redirect("/verify");
+  }
 
   if (res.status === 401) {
     const refreshRes = await fetch("/api/auth/refresh/token", {

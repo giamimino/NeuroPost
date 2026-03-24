@@ -7,4 +7,4 @@ export type NotificationEnumType =
 
 export type FriendRequestStatusType = "accepted" | "rejected" | "pending";
 
-export type UserStatusType = "active" | "inactive"
+export type UserStatusType = "active" | "inactive";

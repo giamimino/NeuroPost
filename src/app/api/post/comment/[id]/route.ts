@@ -3,9 +3,7 @@ import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 
-export async function DELETE(
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE({ params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
@@ -21,7 +19,7 @@ export async function DELETE(
         { ok: false, error: auth.error },
         { status: 401 },
       );
-      if (auth.status === "inactive")
+    if (auth.status === "inactive")
       return NextResponse.json(
         { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
         { status: 423 },

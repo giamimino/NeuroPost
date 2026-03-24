@@ -24,7 +24,7 @@ export async function POST(req: Request) {
         { ok: false, error: auth.error },
         { status: 401 },
       );
-      if (auth.status === "inactive")
+    if (auth.status === "inactive")
       return NextResponse.json(
         { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
         { status: 423 },
@@ -85,7 +85,7 @@ export async function GET(req: Request) {
         { ok: false, error: auth.error },
         { status: 401 },
       );
-      if (auth.status === "inactive")
+    if (auth.status === "inactive")
       return NextResponse.json(
         { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
         { status: 423 },

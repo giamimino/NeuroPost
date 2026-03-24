@@ -19,7 +19,7 @@ export async function POST() {
       process.env.REFRESH_COOKIE_NAME!,
     )?.value;
     if (!refreshToken) return NextResponse.json({}, { status: 401 });
-    
+
     const rawSql = `SELECT token FROM refresh_tokens WHERE token = $1`;
     const rows = await sql.query(rawSql, [refreshToken]);
 
@@ -30,7 +30,11 @@ export async function POST() {
       process.env.REFRESH_SECRET!,
     ) as JWTUserPaylaod;
 
-    const newAccessToken = createAccessToken(payload.userId, payload.username, payload.status);
+    const newAccessToken = createAccessToken(
+      payload.userId,
+      payload.username,
+      payload.status,
+    );
 
     const res = NextResponse.json({ ok: true, rows }, { status: 200 });
     res.cookies.set(process.env.ACCESS_COOKIE_NAME!, newAccessToken, {

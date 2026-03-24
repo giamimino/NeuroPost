@@ -311,6 +311,6 @@ export const ERRORS = {
   },
   ACCOUNT_INACTIVE: {
     title: "Account is inactive",
-    description: "Please verify email to activate account."
-  }
+    description: "Please verify email to activate account.",
+  },
 } as const;
