@@ -31,3 +31,13 @@ export function MediaValidator(
 
   return null;
 }
+
+export function PasswordValidator(password: string) {
+  if (password.length < 8) return { error: ERRORS.PASSWORD_TOO_SHORT };
+  if (!/\d/.test(password)) return { error: ERRORS.PASSWORD_NO_NUMBER };
+  if (!/[A-Z]/.test(password)) return { error: ERRORS.PASSWORD_NO_UPPERCASE };
+  if (!/[a-z]/.test(password)) return { error: ERRORS.PASSWORD_NO_LOWERCASE };
+  if (!/[^a-zA-Z0-9]/.test(password))
+    return { error: ERRORS.PASSWORD_NO_SPECIAL_CHAR };
+  return { ok: true };
+}
