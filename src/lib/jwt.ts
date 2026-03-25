@@ -20,3 +20,9 @@ export function createRefreshToken(
     expiresIn: "7d",
   });
 }
+
+export function createEmailVerifyToken({ id }: { id: string }) {
+  return jwt.sign({ id }, process.env.EMAIL_VERIFY_SECRET!, {
+    expiresIn: "15m",
+  });
+}
