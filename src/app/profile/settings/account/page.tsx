@@ -11,6 +11,7 @@ import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 const SettingsAccountPage = () => {
@@ -18,6 +19,7 @@ const SettingsAccountPage = () => {
     "pending" | "active" | "deleted" | "unknown"
   >("active");
   const { addAlert } = useAlertStore();
+  const router = useRouter();
 
   const handleDeleteAccount = async () => {
     setAccountStatus("pending");
@@ -35,21 +37,36 @@ const SettingsAccountPage = () => {
       setAccountStatus("active");
     }
   };
+
+  const handleRedirect = (page: string) => {
+    router.push(`/profile/settings/account/${page}`);
+  };
   return (
     <div className="flex flex-col gap-6 w-full">
       <CardTitle>Account</CardTitle>
       <div className="flex flex-col gap-2 w-full">
-        <div className="cursor-pointer flex text-muted-foreground justify-between w-full items-center hover:text-foreground group hover:bg-accent p-2 rounded-md">
+        <div
+          onClick={() => handleRedirect("/change_email")}
+          className="cursor-pointer flex text-muted-foreground justify-between w-full items-center hover:text-foreground group hover:bg-accent p-2 rounded-md"
+        >
           <CardDescription className="group-hover:text-foreground">
             Change Email Address
           </CardDescription>
           <ChevronRight width={20} height={20} />
         </div>
-        <div className="cursor-pointer flex text-muted-foreground justify-between w-full items-center hover:text-foreground group hover:bg-accent p-2 rounded-md">
+        <div
+          onClick={() => handleRedirect("/change_password")}
+          className="cursor-pointer flex text-muted-foreground justify-between w-full items-center hover:text-foreground group hover:bg-accent p-2 rounded-md"
+        >
           <CardDescription className="group-hover:text-foreground">
             Change Password
           </CardDescription>
           <ChevronRight width={20} height={20} />
+        </div>
+        <div className="cursor-pointer flex text-muted-foreground gap-2.5 w-full items-center group hover:bg-destructive/10 p-2 rounded-md">
+          <CardDescription className="group-hover:text-destructive">
+            Logout Account
+          </CardDescription>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
