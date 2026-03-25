@@ -10,8 +10,17 @@ export async function GET() {
   try {
     const user = await auth({ userId: false, bio: true });
 
-    if (!user || user.status === 401)
-      return NextResponse.json({ ok: false }, { status: 401 });
+    if (!user || !user.user || user.status === 401)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.TOKEN_INVALID },
+        { status: 401 },
+      );
+
+    if (user.user.status === "inactive")
+      return NextResponse.json(
+        { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
+        { status: 423 },
+      );
 
     return NextResponse.json({ user, ok: true }, { status: 200 });
   } catch (error) {
@@ -36,6 +45,11 @@ export async function PUT(req: Request) {
         { ok: false, error: auth.error },
         { status: 401 },
       );
+    if (auth.status === "inactive")
+      return NextResponse.json(
+        { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
+        { status: 423 },
+      );
     const payload = auth.user;
     const user = await sql.query(
       `UPDATE users SET name = $1, username = $2, bio = $3 WHERE id = $4 RETURNING name, username, bio`,
@@ -57,6 +71,11 @@ export async function DELETE() {
         { ok: false, error: auth.error },
         { status: 401 },
       );
+    if (auth.status === "inactive")
+      return NextResponse.json(
+        { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
+        { status: 423 },
+      );
 
     const payload = auth.user;
 
@@ -64,6 +83,7 @@ export async function DELETE() {
       `SELECT id, profile_url FROM users WHERE id = $1 LIMIT 1`,
       [payload.userId],
     );
+
     const user = users[0];
 
     if (!user)

@@ -22,6 +22,11 @@ export async function DELETE(
         { ok: false, error: auth.error },
         { status: 401 },
       );
+    if (auth.status === "inactive")
+      return NextResponse.json(
+        { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
+        { status: 423 },
+      );
     const payload = auth.user;
 
     const comments = await sql.query(`SELECT * FROM comments WHERE id = $1`, [

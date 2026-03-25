@@ -309,4 +309,35 @@ export const ERRORS = {
     title: "Friend not found",
     description: "This user may have unfriended you or is unavailable.",
   },
+  ACCOUNT_INACTIVE: {
+    title: "Account is inactive",
+    description: "Please verify email to activate account.",
+  },
+  EMAIL_VERIFICATION_SEND_ERROR: {
+    title: "Email Verification error",
+    description: "Failed to send verification to email",
+  },
+  ACCOUNT_ACTIVE: {
+    title: "Account already active",
+    description: "You can't visit this page your account already active.",
+  },
+  EMAIL_VERIFICATIONS_ALREADY_SENT: {
+    title: "Verification link already sent",
+    description: "You can't send mutiple verification links.",
+  },
+  VERIFICATION_TOKEN_INVALID: {
+    title: "Invalid Verification Link",
+    description:
+      "The verification link is invalid or malformed. Please request a new verification email.",
+  },
+  VERIFICATION_TOKEN_EXPIRED: {
+    title: "Verification Link Expired",
+    description:
+      "This verification link has expired. Please request a new one to verify your account.",
+  },
+  VERIFICATION_ALREADY_COMPLETED: {
+    title: "Already Verified",
+    description:
+      "This email has already been verified. You can log in to your account.",
+  },
 } as const;

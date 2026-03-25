@@ -4,6 +4,7 @@ import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { ImageValidator } from "@/utils/imageValidator";
 import { sql } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
+import { ERRORS } from "@/constants/error-handling";
 
 export async function POST(req: Request) {
   try {
@@ -22,6 +23,11 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { ok: false, error: auth.error },
         { status: 401 },
+      );
+    if (auth.status === "inactive")
+      return NextResponse.json(
+        { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
+        { status: 423 },
       );
     const payload = auth.user;
 
