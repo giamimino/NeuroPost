@@ -10,24 +10,16 @@ import { Skeleton } from "../ui/skeleton";
 
 const ProfileUpload = ({
   profile_url,
-  signed_url,
   save,
   loading,
 }: {
-  signed_url: string | null;
-  profile_url: string | null;
+  profile_url: string;
   save: (signedUrl: string) => void;
   loading: boolean;
 }) => {
   const imageUploadRef = useRef<HTMLInputElement>(null);
-  const [image, setImage] = useState<File | string | null>(null);
+  const [image, setImage] = useState<File | string | null>(profile_url);
   const [changed, setChanged] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      setImage(signed_url || "/user.jpg");
-    })();
-  }, [signed_url]);
 
   const uploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -61,8 +53,10 @@ const ProfileUpload = ({
       const signedUrl = await signRes.json();
       if (signedUrl.ok) {
         save(signedUrl.profileImage);
+        setImage(signedUrl.profileImage);
       }
     }
+    if (imageUploadRef.current) imageUploadRef.current.value = "";
   };
 
   const pickFile = () => {
@@ -121,7 +115,14 @@ const ProfileUpload = ({
         </div>
       </div>
       <div className="flex gap-3 font-plusJakartaSans justify-end">
-        <Button variant={"secondary"} className="cursor-pointer">
+        <Button
+          variant={"secondary"}
+          className="cursor-pointer"
+          onClick={() => {
+            if (imageUploadRef.current) imageUploadRef.current.value = "";
+            setImage(profile_url);
+          }}
+        >
           Cancel
         </Button>
         <Button

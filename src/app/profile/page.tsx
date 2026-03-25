@@ -34,7 +34,7 @@ const ProfilePage = () => {
     email: string;
     username: string;
     bio: string | null;
-    profile_url: string | null;
+    profile_url: string;
   } | null>(null);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,21 +61,6 @@ const ProfilePage = () => {
     };
     fetchData();
   }, [addAlert]);
-
-  useEffect(() => {
-    if (!user?.profile_url) return;
-
-    fetch("/api/r2/image", {
-      ...ApiConfig.post,
-      body: JSON.stringify({ image_url: user.profile_url }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.ok) {
-          setSignedUrl(data.profileImage);
-        }
-      });
-  }, [user]);
 
   return (
     <div className="pt-32 bg-background">
@@ -104,17 +89,9 @@ const ProfilePage = () => {
         <div className="pl-5.5 w-1/2 max-xs:w-full">
           {loading ? (
             <Skeleton className="w-24 h-24 rounded-full" />
-          ) : signedUrl ? (
-            <Image
-              src={signedUrl}
-              width={96}
-              height={96}
-              alt="user-profile"
-              className="rounded-full w-24 h-24 object-cover"
-            />
           ) : (
             <Image
-              src={"/user.jpg"}
+              src={user!.profile_url}
               width={96}
               height={96}
               alt="user-profile"

@@ -2,9 +2,10 @@ import { auth, getAuthUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { ERRORS } from "@/constants/error-handling";
-import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { s3 } from "@/lib/aws-sdk";
 import { cookies } from "next/headers";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export async function GET() {
   try {
@@ -22,7 +23,25 @@ export async function GET() {
         { status: 423 },
       );
 
-    return NextResponse.json({ user, ok: true }, { status: 200 });
+    const signedUrl = await getSignedUrl(
+      s3,
+      new GetObjectCommand({ Bucket: "neuropost", Key: user.user.profile_url }),
+      { expiresIn: 5 * 60 },
+    );
+
+    return NextResponse.json(
+      {
+        user: {
+          ...user,
+          user: {
+            ...user.user,
+            profile_url: user.user.profile_url ? signedUrl : "/user.jpg",
+          },
+        },
+        ok: true,
+      },
+      { status: 200 },
+    );
   } catch (error) {
     return NextResponse.json({ ok: false, dev: error }, { status: 500 });
   }
