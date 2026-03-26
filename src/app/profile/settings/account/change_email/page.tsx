@@ -1,8 +1,11 @@
 "use client";
+import SendCodeButton from "@/components/SendCodeButton";
 import { Button } from "@/components/ui/button";
 import { CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ApiConfig } from "@/configs/api-configs";
+import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { ChevronLeft } from "lucide-react";
@@ -29,6 +32,27 @@ const ChangeEmailSettingPage = () => {
       });
   }, []);
 
+  const handleSend = async () => {
+    try {
+      if (!user)
+        return {
+          error: ERRORS.USER_NOT_FOUND,
+        };
+      const res = await apiFetch("/api/send/code", {
+        ...ApiConfig.post,
+        body: JSON.stringify({ email: user.email }),
+      });
+      const data = await res?.json();
+
+      if (data.ok) return { data };
+      else if (data.error) return { error: data.error };
+
+      return { error: ERRORS.GENERIC_ERROR };
+    } catch (error) {
+      return { error: ERRORS.GENERIC_ERROR };
+    }
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex gap-2 items-center">
@@ -51,9 +75,11 @@ const ChangeEmailSettingPage = () => {
           )}
           <div className="flex gap-2">
             <Input placeholder="code..." />
-            <Button variant={"outline"} className="cursor-pointer">
-              Send
-            </Button>
+            <SendCodeButton
+              handleSend={handleSend}
+              variant={"outline"}
+              className="cursor-pointer"
+            />
           </div>
         </div>
       </div>

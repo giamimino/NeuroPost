@@ -50,7 +50,6 @@ export async function POST(req: Request) {
         { ok: false, error: ERRORS.EMAIL_VERIFICATION_SEND_ERROR },
         { status: 500 },
       );
-      
 
     return NextResponse.json({ ok: true, data }, { status: 200 });
   } catch (err) {

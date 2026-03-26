@@ -96,9 +96,8 @@ export function EmailChangeTemplate({ code }: { code: number }) {
         account. Please use the verification code below to confirm this change.
       </p>
 
-       <p>
-        The code expires in{" "}
-        <strong>15 minutes</strong>.
+      <p>
+        The code expires in <strong>15 minutes</strong>.
       </p>
 
       <p style={{ fontSize: "24px", fontWeight: "bold", margin: "20px 0" }}>
