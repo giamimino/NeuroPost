@@ -405,4 +405,8 @@ export const ERRORS = {
     title: "Password Update Failed",
     description: "Your password could not be updated.",
   },
+  EMAIL_REQUIRED: {
+    title: "Email Required",
+    description: "Please provide an email address.",
+  },
 } as const;
