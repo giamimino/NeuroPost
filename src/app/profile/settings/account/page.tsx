@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ApiConfig } from "@/configs/api-configs";
+import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { ChevronRight } from "lucide-react";
@@ -41,6 +42,27 @@ const SettingsAccountPage = () => {
   const handleRedirect = (page: string) => {
     router.push(`/profile/settings/account/${page}`);
   };
+
+  const handleLogout = async () => {
+    try {
+      const url = "/api/auth/logout";
+      const res = await apiFetch(url, ApiConfig.post);
+      const data = await res?.json();
+
+      if (data.ok) {
+        router.push("/");
+      } else if (data.error) {
+        addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
+      }
+    } catch {
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 w-full">
       <CardTitle>Account</CardTitle>
@@ -63,7 +85,10 @@ const SettingsAccountPage = () => {
           </CardDescription>
           <ChevronRight width={20} height={20} />
         </div>
-        <div className="cursor-pointer flex text-muted-foreground gap-2.5 w-full items-center group hover:bg-destructive/10 p-2 rounded-md">
+        <div
+          onClick={handleLogout}
+          className="cursor-pointer flex text-muted-foreground gap-2.5 w-full items-center group hover:bg-destructive/10 p-2 rounded-md"
+        >
           <CardDescription className="group-hover:text-destructive">
             Logout Account
           </CardDescription>
