@@ -5,6 +5,7 @@ import { useAlertStore } from "@/store/zustand/alertStore";
 import { Spinner } from "./ui/spinner";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
+import { Check } from "lucide-react";
 
 type status = "check" | "idle" | "loading" | "success" | "error";
 type Variant =
@@ -35,16 +36,26 @@ interface SendCodeButtonProps {
       }
     | { data?: any; error: { title: string; description: string } }
   >;
+  handleCheck: () => Promise<
+    | {
+        data: any;
+        error?: { title: string; description: string };
+      }
+    | { data?: any; error: { title: string; description: string } }
+  >;
   variant?: Variant;
   size?: Size;
   className?: string;
+  onSuccess: () => void;
 }
 
 export default function SendCodeButton({
   handleSend,
+  handleCheck,
   variant,
   size,
   className,
+  onSuccess,
 }: SendCodeButtonProps) {
   const [status, setStatus] = useState<status>("idle");
   const { addAlert } = useAlertStore();
@@ -56,7 +67,6 @@ export default function SendCodeButton({
         setStatus("check");
       } else if (error) {
         addAlert({ id: crypto.randomUUID(), type: "error", ...error });
-        setStatus("error");
       }
     } catch {
       setStatus("idle");
@@ -68,9 +78,38 @@ export default function SendCodeButton({
     }
   };
 
+  console.log(status);
+  const handleCheckClick = async () => {
+    setStatus("loading");
+    try {
+      const { data, error } = await handleCheck();
+      if (data?.ok) {
+        setStatus("success");
+        onSuccess();
+      } else if (error) {
+        addAlert({ id: crypto.randomUUID(), type: "error", ...error });
+        setStatus("check");
+      }
+    } catch (error) {
+      console.error(error);
+
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+    }
+  };
+
   return (
     <Button
-      onClick={status === "idle" ? handleSendClick : undefined}
+      onClick={
+        status === "idle"
+          ? handleSendClick
+          : status === "check"
+            ? handleCheckClick
+            : undefined
+      }
       variant={status === "loading" ? "disabled" : variant}
       size={size}
       className={clsx("relative w-28", className)}
@@ -98,6 +137,17 @@ export default function SendCodeButton({
             className="flex gap-2 items-center"
           >
             <p>check</p>
+          </motion.div>
+        ) : status === "success" ? (
+          <motion.div
+            key={"success"}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="flex gap-2 items-center"
+          >
+            <Check />
           </motion.div>
         ) : (
           <motion.div

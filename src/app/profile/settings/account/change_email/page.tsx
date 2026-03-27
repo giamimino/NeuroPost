@@ -10,11 +10,13 @@ import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const ChangeEmailSettingPage = () => {
   const [loading, setLoading] = useState(false);
+  const [isOldEmailCheck, setIsOldEmailCheck] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
+  const OldEmailInput = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { addAlert } = useAlertStore();
 
@@ -53,6 +55,35 @@ const ChangeEmailSettingPage = () => {
     }
   };
 
+  const handleCheck = async () => {
+    try {
+      if (!user)
+        return {
+          error: ERRORS.USER_NOT_FOUND,
+        };
+
+      if (!OldEmailInput.current || !OldEmailInput.current.value)
+        return { error: ERRORS.VERIFICATION_CODE_REQUIRED };
+
+      const res = await apiFetch("/api/send/code/check", {
+        ...ApiConfig.post,
+        body: JSON.stringify({
+          email: user.email,
+          code: OldEmailInput.current.value,
+        }),
+      });
+      const data = await res?.json();
+
+      if (data.ok) return { data };
+      else if (data.error) return { error: data.error };
+
+      return { error: ERRORS.GENERIC_ERROR };
+    } catch (error) {
+      console.error(error);
+      return { error: ERRORS.GENERIC_ERROR };
+    }
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex gap-2 items-center">
@@ -74,11 +105,13 @@ const ChangeEmailSettingPage = () => {
             <Skeleton className="w-full h-6" />
           )}
           <div className="flex gap-2">
-            <Input placeholder="code..." />
+            <Input ref={OldEmailInput} placeholder="code..." />
             <SendCodeButton
               handleSend={handleSend}
+              handleCheck={handleCheck}
               variant={"outline"}
               className="cursor-pointer"
+              onSuccess={() => setIsOldEmailCheck(true)}
             />
           </div>
         </div>

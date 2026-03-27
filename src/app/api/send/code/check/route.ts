@@ -41,7 +41,8 @@ export async function POST(req: Request) {
       );
 
     const parsedValid = JSON.parse(valid);
-    if (parsedValid.code !== Number(code) || parsedValid.email !== email)
+
+    if (parsedValid.code !== Number(code))
       return NextResponse.json(
         {
           ok: false,
