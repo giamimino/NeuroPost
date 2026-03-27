@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       key,
       JSON.stringify({ code, email, userId: payload.userId }),
       {
-        expiration: { type: "EX", value: 60 * 15 },
+        expiration: { type: "EX", value: 60 * 5 },
       },
     );
 

@@ -97,7 +97,7 @@ export function EmailChangeTemplate({ code }: { code: number }) {
       </p>
 
       <p>
-        The code expires in <strong>15 minutes</strong>.
+        The code expires in <strong>5 minutes</strong>.
       </p>
 
       <p style={{ fontSize: "24px", fontWeight: "bold", margin: "20px 0" }}>

@@ -409,4 +409,17 @@ export const ERRORS = {
     title: "Email Required",
     description: "Please provide an email address.",
   },
+  VERIFICATION_CODE_REQUIRED: {
+    title: "Verification Code Required",
+    description: "Please provide the verification code sent to your email.",
+  },
+  VERIFICAATION_CODE_INVALID: {
+    title: "Invalid Verification Code",
+    description: "The verification code you entered is invalid.",
+  },
+  VERIFICATION_CODE_EXPIRED: {
+    title: "Verification Code Expired",
+    description:
+      "The verification code has expired. Please request a new one to verify your email.",
+  },
 } as const;
