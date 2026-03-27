@@ -8,6 +8,7 @@ import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
+import { error } from "console";
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -15,8 +16,10 @@ import React, { useEffect, useRef, useState } from "react";
 const ChangeEmailSettingPage = () => {
   const [loading, setLoading] = useState(false);
   const [isOldEmailCheck, setIsOldEmailCheck] = useState(false);
+  const [isNewEmailCheck, setIsNewEmailCheck] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
   const OldEmailInput = useRef<HTMLInputElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { addAlert } = useAlertStore();
 
@@ -55,6 +58,29 @@ const ChangeEmailSettingPage = () => {
     }
   };
 
+  const handleSendNewEmail = async () => {
+    try {
+      if (!user) return { error: ERRORS.USER_NOT_FOUND };
+      if (!emailInputRef.current || !emailInputRef.current.value)
+        return { error: ERRORS.EMAIL_REQUIRED };
+      if (emailInputRef.current.value === user.email)
+        return { error: ERRORS.SAME_EMAIL };
+
+      const res = await apiFetch("/api/send/code", {
+        ...ApiConfig.post,
+        body: JSON.stringify({ email: emailInputRef.current.value }),
+      });
+      const data = await res?.json();
+
+      if (data.ok) return { data };
+      else if (data.error) return { error: data.error };
+
+      return { error: ERRORS.GENERIC_ERROR };
+    } catch {
+      return { error: ERRORS.GENERIC_ERROR };
+    }
+  };
+
   const handleCheck = async () => {
     try {
       if (!user)
@@ -84,6 +110,28 @@ const ChangeEmailSettingPage = () => {
     }
   };
 
+  const handleConfirmEmailChange = async () => {
+    try {
+      if (!emailInputRef.current || !emailInputRef.current.value)
+        return { error: ERRORS.EMAIL_REQUIRED };
+
+      const res = await apiFetch("/api/user/email", {
+        ...ApiConfig.post,
+        body: JSON.stringify({ email: emailInputRef.current.value }),
+      });
+      const data = await res?.json();
+
+      if (data.ok) {
+      }
+    } catch {
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex gap-2 items-center">
@@ -97,7 +145,7 @@ const ChangeEmailSettingPage = () => {
         </div>
         <CardTitle>Change Email</CardTitle>
       </div>
-      <div className="w-full max-w-65">
+      <div className="w-full max-w-65 flex flex-col gap-5">
         <div className="flex flex-col gap-2.5">
           {user ? (
             <CardTitle>{user.email}</CardTitle>
@@ -115,6 +163,24 @@ const ChangeEmailSettingPage = () => {
             />
           </div>
         </div>
+        {isOldEmailCheck && (
+          <div className="flex flex-col gap-2.5">
+            <Input ref={emailInputRef} placeholder="New Email..." />
+            <div className="flex gap-2">
+              <Input ref={OldEmailInput} placeholder="code..." />
+              <SendCodeButton
+                handleSend={handleSendNewEmail}
+                handleCheck={handleCheck}
+                variant={"outline"}
+                className="cursor-pointer"
+                onSuccess={() => setIsNewEmailCheck(true)}
+              />
+            </div>
+          </div>
+        )}
+        {isOldEmailCheck && isNewEmailCheck && (
+          <Button>Confirm Email Change</Button>
+        )}
       </div>
     </div>
   );

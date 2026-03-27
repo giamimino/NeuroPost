@@ -422,4 +422,9 @@ export const ERRORS = {
     description:
       "The verification code has expired. Please request a new one to verify your email.",
   },
+  SAME_EMAIL: {
+    title: "Same Email",
+    description:
+      "The new email address must be different from the current one.",
+  },
 } as const;

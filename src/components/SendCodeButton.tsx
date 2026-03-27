@@ -59,13 +59,14 @@ export default function SendCodeButton({
 }: SendCodeButtonProps) {
   const [status, setStatus] = useState<status>("idle");
   const { addAlert } = useAlertStore();
-  const handleSendClick = async () => {
+  const onSendClick = async () => {
     setStatus("loading");
     try {
       const { data, error } = await handleSend();
-      if (data.ok) {
+      if (data?.ok) {
         setStatus("check");
       } else if (error) {
+        setStatus("idle");
         addAlert({ id: crypto.randomUUID(), type: "error", ...error });
       }
     } catch {
@@ -105,7 +106,7 @@ export default function SendCodeButton({
     <Button
       onClick={
         status === "idle"
-          ? handleSendClick
+          ? onSendClick
           : status === "check"
             ? handleCheckClick
             : undefined
