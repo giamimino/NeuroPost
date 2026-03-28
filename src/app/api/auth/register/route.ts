@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     if (!username?.trim() || !email?.trim() || !password?.trim())
       return NextResponse.json(
         { ok: false, error: ERRORS.REQUIRED_FIELDS },
-        { status: 401 },
+        { status: 422 },
       );
 
     const validPassword = PasswordValidator(password);
