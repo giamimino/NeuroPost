@@ -340,4 +340,91 @@ export const ERRORS = {
     description:
       "This email has already been verified. You can log in to your account.",
   },
+  PASSWORD_TOO_SHORT: {
+    title: "Password Too Short",
+    description: "Your password must be at least 8 characters long.",
+  },
+
+  PASSWORD_TOO_LONG: {
+    title: "Password Too Long",
+    description: "Your password exceeds the maximum allowed length.",
+  },
+
+  PASSWORD_NO_UPPERCASE: {
+    title: "Missing Uppercase Letter",
+    description: "Your password must include at least one uppercase letter.",
+  },
+
+  PASSWORD_NO_LOWERCASE: {
+    title: "Missing Lowercase Letter",
+    description: "Your password must include at least one lowercase letter.",
+  },
+
+  PASSWORD_NO_NUMBER: {
+    title: "Missing Number",
+    description: "Your password must include at least one number.",
+  },
+
+  PASSWORD_NO_SPECIAL_CHAR: {
+    title: "Missing Special Character",
+    description: "Your password must include at least one special character.",
+  },
+
+  PASSWORDS_DO_NOT_MATCH: {
+    title: "Passwords Do Not Match",
+    description: "The passwords you entered do not match.",
+  },
+
+  CURRENT_PASSWORD_INCORRECT: {
+    title: "Incorrect Password",
+    description: "Your current password is incorrect.",
+  },
+
+  NEW_PASSWORD_SAME_AS_OLD: {
+    title: "Password Unchanged",
+    description: "Your new password must be different from the current one.",
+  },
+
+  PASSWORD_RESET_FAILED: {
+    title: "Password Reset Failed",
+    description: "We couldn’t reset your password. Please try again.",
+  },
+
+  PASSWORD_RESET_TOKEN_INVALID: {
+    title: "Invalid Reset Link",
+    description: "This password reset link is invalid or malformed.",
+  },
+
+  PASSWORD_RESET_TOKEN_EXPIRED: {
+    title: "Reset Link Expired",
+    description:
+      "This password reset link has expired. Please request a new one.",
+  },
+
+  PASSWORD_UPDATE_FAILED: {
+    title: "Password Update Failed",
+    description: "Your password could not be updated.",
+  },
+  EMAIL_REQUIRED: {
+    title: "Email Required",
+    description: "Please provide an email address.",
+  },
+  VERIFICATION_CODE_REQUIRED: {
+    title: "Verification Code Required",
+    description: "Please provide the verification code sent to your email.",
+  },
+  VERIFICAATION_CODE_INVALID: {
+    title: "Invalid Verification Code",
+    description: "The verification code you entered is invalid.",
+  },
+  VERIFICATION_CODE_EXPIRED: {
+    title: "Verification Code Expired",
+    description:
+      "The verification code has expired. Please request a new one to verify your email.",
+  },
+  SAME_EMAIL: {
+    title: "Same Email",
+    description:
+      "The new email address must be different from the current one.",
+  },
 } as const;

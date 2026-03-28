@@ -30,7 +30,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
                   key={page.id}
                   variant={"ghost"}
                   className="cursor-pointer"
-                  onClick={() => router.push(`${page.id}`)}
+                  onClick={() => router.push(`/profile/settings/${page.id}`)}
                 >
                   {page.label}
                 </Button>
