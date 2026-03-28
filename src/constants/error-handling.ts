@@ -427,4 +427,8 @@ export const ERRORS = {
     description:
       "The new email address must be different from the current one.",
   },
+  INTERNAL_SERVER_ERROR: {
+    title: "Internal Server Error",
+    description: "An unexpected error occurred. Please try again later.",
+  },
 } as const;

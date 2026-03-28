@@ -2,31 +2,43 @@
 import BlurWrapper from "@/components/BlurWrapper";
 import DefaultInput from "@/components/common/DefaultInput";
 import { ApiConfig } from "@/configs/api-configs";
+import { ERRORS } from "@/constants/error-handling";
+import { useAlertStore } from "@/store/zustand/alertStore";
 import { useRouter } from "next/navigation";
 import React from "react";
 
 const LoginPage = () => {
   const router = useRouter();
+  const { addAlert } = useAlertStore();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
 
-    const formData = new FormData(e.currentTarget);
+      const formData = new FormData(e.currentTarget);
 
-    const email = (formData.get("email") as string) || "";
-    const password = (formData.get("password") as string) || "";
+      const email = (formData.get("email") as string) || "";
+      const password = (formData.get("password") as string) || "";
 
-    if (!email.trim() || !password.trim()) return;
+      const url = "/api/auth/login";
+      const res = await fetch(url, {
+        ...ApiConfig.post,
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res?.json();
+      console.log(data);
 
-    const url = "/api/auth/login";
-    const res = await fetch(url, {
-      ...ApiConfig.post,
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res?.json();
-
-    if (data?.success) {
-      router.push("/profile");
+      if (data?.ok) {
+        router.push("/profile");
+      } else if (data.error) {
+        addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
+      }
+    } catch {
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
     }
   };
 
