@@ -2,10 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
-import { apiFetch } from "@/lib/apiFetch";
-import { ApiConfig } from "@/configs/api-configs";
 import { Button } from "./ui/button";
-import { Menu, Search } from "lucide-react";
+import { Menu } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,30 +12,16 @@ import {
 } from "./ui/dropdown-menu";
 import { Card, CardHeader, CardTitle } from "./ui/card";
 
+const pages = [
+  { label: "Home", url: "/", type: "router" },
+  { label: "Profile", url: "/profile", type: "router" },
+];
+
 const Header = () => {
   const [show, setShow] = useState(true);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
   const router = useRouter();
-  const pages = [
-    { label: "Home", url: "/", type: "router" },
-    { label: "Profile", url: "/profile", type: "router" },
-    { label: "Upload", url: "/profile/p/create", type: "router" },
-    {
-      label: "Logout",
-      url: "/auth/login",
-      type: "action",
-      onClick: async () => {
-        const url = "/api/auth/logout";
-        const res = await apiFetch(url, ApiConfig.post);
-        const data = await res?.json();
-        if (data.ok) {
-          router.push("/");
-        }
-        console.log(data);
-      },
-    },
-  ];
 
   useEffect(() => {
     const onScroll = () => {
@@ -71,17 +55,13 @@ const Header = () => {
         animate={show ? { opacity: 1, y: 0 } : { opacity: 0.5, y: "-150%" }}
         transition={{ stiffness: 80, type: "spring", damping: 20 }}
         layout
-        className={`flex gap-4 items-center px-4 py-2.5 dark:bg-card
+        className={`flex gap-4 items-center px-5 py-2.5 dark:bg-card
        rounded-full border-input ring ring-ring/80`}
       >
         {pages.map((page) => (
           <div
             onClick={
-              page.type === "router"
-                ? () => router.push(page.url)
-                : page.type === "action" && page.onClick
-                  ? page.onClick
-                  : undefined
+              page.type === "router" ? () => router.push(page.url) : undefined
             }
             className={`${page.label === "Logout" ? "text-red-400" : "text-muted-foreground"} font-inter text-center font-medium 
               tracking-tight cursor-pointer px-2.5 py-1.5 hover:bg-active-bg ${page.label === "Logout" ? "hover:text-red-500" : "hover:text-white"} hover:tracking-wide 
@@ -91,20 +71,15 @@ const Header = () => {
             {page.label}
           </div>
         ))}
-      </motion.div>
-
-      <div className="absolute right-5 top-5 max-xs:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant={"outline"} className="cursor-pointer">
-              <Search />
+              Search
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            side="left"
-            align="start"
-            sideOffset={4}
-            className="max-h-60 overflow-y-auto"
+            sideOffset={20}
+            className="max-h-60 overflow-y-auto mr-5"
           >
             <DropdownMenuItem
               onClick={() => router.push("/search/posts")}
@@ -120,7 +95,7 @@ const Header = () => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
+      </motion.div>
     </header>
   );
 };
