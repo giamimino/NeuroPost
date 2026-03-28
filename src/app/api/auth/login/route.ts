@@ -14,13 +14,14 @@ export async function POST(req: Request) {
         { status: 422 },
       );
 
-    const selectUsersSql = `SELECT * FROM users WHERE email = $1`;
-    const users = await sql.query(selectUsersSql, [email]);
+    const users = await sql.query(`SELECT * FROM users WHERE email = $1`, [
+      email,
+    ]);
     const user = users[0];
 
     if (!user) {
       return NextResponse.json(
-        { error: ERRORS.TOKEN_INVALID },
+        { error: ERRORS.USER_NOT_FOUND },
         { status: 401 },
       );
     }
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
       return NextResponse.json(
-        { ok: false, error: ERRORS.TOKEN_INVALID },
+        { ok: false, error: ERRORS.INVALID_CREDENTIALS },
         { status: 401 },
       );
     }
@@ -40,14 +41,13 @@ export async function POST(req: Request) {
       user.status,
     );
 
-    const refreshTokenSql = `
-      INSERT INTO refresh_tokens (token, user_id, expires_at)
-      VALUES ($1, $2, NOW() + INTERVAL '7 days')
-    `;
+    await sql.query(
+      `INSERT INTO refresh_tokens (token, user_id, expires_at)
+      VALUES ($1, $2, NOW() + INTERVAL '7 days')`,
+      [refreshToken, user.id],
+    );
 
-    await sql.query(refreshTokenSql, [refreshToken, user.id]);
-
-    const res = NextResponse.json({ success: true }, { status: 200 });
+    const res = NextResponse.json({ ok: true }, { status: 200 });
 
     res.cookies.set(process.env.ACCESS_COOKIE_NAME!, accessToken, {
       httpOnly: true,
@@ -67,6 +67,9 @@ export async function POST(req: Request) {
     return res;
   } catch (err) {
     console.log(err);
-    return NextResponse.json({ ok: false }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: ERRORS.INTERNAL_SERVER_ERROR },
+      { status: 500 },
+    );
   }
 }
