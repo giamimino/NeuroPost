@@ -101,4 +101,4 @@ const VerifyClient = () => {
   );
 };
 
-export default VerifyClient
+export default VerifyClient;
