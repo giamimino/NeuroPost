@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Spinner } from "./ui/spinner";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { ERRORS } from "@/constants/error-handling";
+import { Check } from "lucide-react";
 
 type status = "idle" | "loading" | "success" | "error";
 type Variant =
@@ -26,12 +27,14 @@ type Size =
   | "icon-sm"
   | "icon-lg";
 
-const DefaultLoading = () => (
-  <div className="flex gap-2">
-    <Spinner />
-    <p>loading...</p>
-  </div>
-);
+const DefaultLoading = () => {
+  return (
+    <div className="flex gap-2">
+      <Spinner />
+      <p>loading...</p>
+    </div>
+  );
+};
 
 interface ActionButtonProps {
   onAction: () => Promise<
@@ -44,7 +47,7 @@ interface ActionButtonProps {
   variant?: Variant;
   size?: Size;
   className?: string;
-  onSuccess?: () => void;
+  onSuccess?: (data: any) => void;
   children: React.ReactNode;
   loadingUI?: React.ReactNode;
   successUI?: React.ReactNode;
@@ -56,8 +59,9 @@ export default function ActionButton({
   variant,
   size,
   children,
+  onSuccess,
   loadingUI = <DefaultLoading />,
-  successUI,
+  successUI = <Check />,
 }: ActionButtonProps) {
   const [status, setStatus] = useState<status>("idle");
   const { addAlert } = useAlertStore();
@@ -65,8 +69,14 @@ export default function ActionButton({
   const onClick = async () => {
     setStatus("loading");
     try {
-      await onAction();
-      setStatus("success");
+      const { data, error } = await onAction();
+      if (data.ok) {
+        setStatus("success");
+        onSuccess?.(data);
+      } else if (error) {
+        setStatus("idle");
+        addAlert({ id: crypto.randomUUID(), type: "error", ...error });
+      }
     } catch {
       setStatus("error");
       addAlert({
@@ -79,7 +89,7 @@ export default function ActionButton({
 
   return (
     <Button
-      onClick={onClick}
+      onClick={status === "idle" || status === "error" ? onClick : undefined}
       variant={variant}
       size={size}
       className={className}
@@ -104,7 +114,9 @@ export default function ActionButton({
             exit={{ opacity: 0, y: -10 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className="flex gap-2 items-center"
-          ></motion.div>
+          >
+            {successUI}
+          </motion.div>
         ) : (
           <motion.div
             key={"idle"}

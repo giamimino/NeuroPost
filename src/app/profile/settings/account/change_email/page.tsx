@@ -1,6 +1,6 @@
 "use client";
+import ActionButton from "@/components/action-button";
 import SendCodeButton from "@/components/SendCodeButton";
-import { Button } from "@/components/ui/button";
 import { CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,7 +8,6 @@ import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
-import { error } from "console";
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -19,6 +18,7 @@ const ChangeEmailSettingPage = () => {
   const [isNewEmailCheck, setIsNewEmailCheck] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
   const OldEmailInput = useRef<HTMLInputElement>(null);
+  const NewEmailInput = useRef<HTMLInputElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { addAlert } = useAlertStore();
@@ -110,6 +110,35 @@ const ChangeEmailSettingPage = () => {
     }
   };
 
+  const handleCheckNewEmail = async () => {
+    try {
+      if (!user)
+        return {
+          error: ERRORS.USER_NOT_FOUND,
+        };
+
+      if (!NewEmailInput.current || !NewEmailInput.current.value)
+        return { error: ERRORS.VERIFICATION_CODE_REQUIRED };
+
+      const res = await apiFetch("/api/send/code/check", {
+        ...ApiConfig.post,
+        body: JSON.stringify({
+          email: user.email,
+          code: NewEmailInput.current.value,
+        }),
+      });
+      const data = await res?.json();
+
+      if (data.ok) return { data };
+      else if (data.error) return { error: data.error };
+
+      return { error: ERRORS.GENERIC_ERROR };
+    } catch (error) {
+      console.error(error);
+      return { error: ERRORS.GENERIC_ERROR };
+    }
+  };
+
   const handleConfirmEmailChange = async () => {
     try {
       if (!emailInputRef.current || !emailInputRef.current.value)
@@ -121,14 +150,12 @@ const ChangeEmailSettingPage = () => {
       });
       const data = await res?.json();
 
-      if (data.ok) {
-      }
+      if (data.ok) return { data };
+      else if (data.error) return { error: data.error };
+
+      return { error: ERRORS.GENERIC_ERROR };
     } catch {
-      addAlert({
-        id: crypto.randomUUID(),
-        type: "error",
-        ...ERRORS.GENERIC_ERROR,
-      });
+      return { error: ERRORS.GENERIC_ERROR };
     }
   };
 
@@ -167,10 +194,10 @@ const ChangeEmailSettingPage = () => {
           <div className="flex flex-col gap-2.5">
             <Input ref={emailInputRef} placeholder="New Email..." />
             <div className="flex gap-2">
-              <Input ref={OldEmailInput} placeholder="code..." />
+              <Input ref={NewEmailInput} placeholder="code..." />
               <SendCodeButton
                 handleSend={handleSendNewEmail}
-                handleCheck={handleCheck}
+                handleCheck={handleCheckNewEmail}
                 variant={"outline"}
                 className="cursor-pointer"
                 onSuccess={() => setIsNewEmailCheck(true)}
@@ -179,7 +206,16 @@ const ChangeEmailSettingPage = () => {
           </div>
         )}
         {isOldEmailCheck && isNewEmailCheck && (
-          <Button>Confirm Email Change</Button>
+          <ActionButton
+            variant="outline"
+            onAction={handleConfirmEmailChange}
+            className="cursor-pointer"
+            onSuccess={(data) => {
+              setUser({ email: data.email });
+            }}
+          >
+            Confirm Email Change
+          </ActionButton>
         )}
       </div>
     </div>
