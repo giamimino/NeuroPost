@@ -2,6 +2,7 @@
 import { ToggleSwitch } from "@/components/common/toggle";
 import { CardDescription, CardTitle } from "@/components/ui/card";
 import { ApiConfig } from "@/configs/api-configs";
+import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import React, { useEffect, useState } from "react";
@@ -45,6 +46,29 @@ const SettingsNotificationsPage = () => {
     friend_accepts: true,
   });
   const { addAlert } = useAlertStore();
+
+  const handleChange = async (value: boolean, key: keyof typeof settings) => {
+    try {
+      const url = `/api/user/settings`;
+      const res = await apiFetch(url, {
+        ...ApiConfig.post,
+        body: JSON.stringify({ key, value: String(value), type: "boolean" }),
+      });
+      const data = await res?.json();
+
+      if (data.ok) {
+        setSettings((prev) => ({ ...prev, [key]: value }));
+      } else if (data.error) {
+        addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
+      }
+    } catch {
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+    }
+  };
 
   useEffect(() => {
     const url = `/api/user/settings?category=NOTIFICATIONS_SETTINGS_KEYS`;
@@ -94,9 +118,7 @@ const SettingsNotificationsPage = () => {
             <ToggleSwitch
               className="cursor-pointer"
               checked={settings[setting.id as keyof typeof settings]}
-              onChange={(value) =>
-                setSettings((prev) => ({ ...prev, [setting.id]: value }))
-              }
+              onChange={(value) => handleChange(value, setting.id as any)}
             >
               <ToggleSwitch.Track>
                 <ToggleSwitch.Thumb />
