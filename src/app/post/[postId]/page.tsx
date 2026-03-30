@@ -17,6 +17,23 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const resolvedParams = await params;
   const data = await getPost(Number(resolvedParams.postId));
+  if (!data.ok)
+    return {
+      title: "NeuroPost",
+      description:
+        "NeuroPost – social media platform for sharing your thoughts",
+      openGraph: {
+        title: "NeuroPost",
+        description:
+          "NeuroPost – social media platform for sharing your thoughts",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: "NeuroPost",
+        description:
+          "NeuroPost – social media platform for sharing your thoughts",
+      },
+    };
 
   return {
     title: data.post.title,

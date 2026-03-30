@@ -1,5 +1,6 @@
 "use client";
 import DefaultTextarea from "@/components/common/DefaultTextarea";
+import Video from "@/components/common/video";
 import DataFetcher from "@/components/data-fetcher";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,9 +68,9 @@ const PostUploadPage = () => {
       console.error(error);
     } finally {
       setLoading(false);
-      e.currentTarget.reset();
-      setMedia(null);
-      setTags([]);
+      // e.currentTarget.reset();
+      // setMedia(null);
+      // setTags([]);
     }
   };
 
@@ -81,11 +82,10 @@ const PostUploadPage = () => {
 
     const error = MediaValidator(file);
     if (error) {
-      alert(error);
-      return;
+      addAlert({ id: crypto.randomUUID(), type: "error", ...error });
+    } else {
+      setMedia(file);
     }
-
-    setMedia(file);
   };
 
   const handleAddTag = (tag: string, id?: string) => {
@@ -193,7 +193,7 @@ const PostUploadPage = () => {
             </CardFooter>
           </Card>
           <div>
-            {media && ALLOWED_IMAGE_TYPES.includes(media.type) && (
+            {media && ALLOWED_IMAGE_TYPES.includes(media.type) ? (
               <Image
                 src={URL.createObjectURL(media)}
                 width={1080}
@@ -202,6 +202,16 @@ const PostUploadPage = () => {
                 alt="uploaded-media"
                 className="rounded-lg w-full"
               />
+            ) : (
+              media &&
+              ALLOWED_VIDEO_TYPES.includes(media.type) && (
+                <Video
+                  src={URL.createObjectURL(media)}
+                  autoPlay
+                  controls={false}
+                  className="rounded-lg w-full"
+                ></Video>
+              )
             )}
           </div>
           <div>
