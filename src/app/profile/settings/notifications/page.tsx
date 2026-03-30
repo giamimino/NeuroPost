@@ -7,28 +7,28 @@ import { useAlertStore } from "@/store/zustand/alertStore";
 import React, { useEffect, useState } from "react";
 
 const $settings = {
-  LIKES: {
+  likes_notifications: {
     id: "likes",
     label: "Likes",
     description: "Receive notifications when someone likes your post.",
   },
-  COMMENTS: {
+  comments_notifications: {
     id: "comments",
     label: "Comments",
     description: "Receive notifications when someone comments on your post.",
   },
-  NEW_FOLLOWERS: {
+  new_followers_notifications: {
     id: "new_followers",
     label: "New Followers",
     description: "Receive notifications when someone starts following you.",
   },
-  FRIEND_REQUESTS: {
+  friend_requests_notifications: {
     id: "friend_requests",
     label: "Friend Requests",
     description:
       "Receive notifications when someone sends you a friend request.",
   },
-  FRIEND_ACCEPTS: {
+  friend_accepts_notifications: {
     id: "friend_accepts",
     label: "Friend Accepts",
     description:
@@ -38,11 +38,11 @@ const $settings = {
 
 const SettingsNotificationsPage = () => {
   const [settings, setSettings] = useState({
-    likes: false,
-    comments: false,
-    new_followers: false,
-    friend_requests: false,
-    friend_accepts: false,
+    likes: true,
+    comments: true,
+    new_followers: true,
+    friend_requests: true,
+    friend_accepts: true,
   });
   const { addAlert } = useAlertStore();
 
@@ -52,8 +52,20 @@ const SettingsNotificationsPage = () => {
       .then((res) => res?.json())
       .then((data) => {
         if (data.ok) {
-          console.log(data);
-        } else if (data.error) {
+          for (const item of data.settings) {
+            const key = item.key as keyof typeof $settings;
+            const set = $settings[key];
+            if (
+              Object.keys(settings).includes(set.id) &&
+              item.type === "boolean" &&
+              Boolean(item.value)
+            ) {
+              const bool = item.value === "true";
+
+              setSettings((prev) => ({ ...prev, [set.id]: bool }));
+            }
+          }
+        } else if (data?.error) {
           addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
         }
       });
