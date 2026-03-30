@@ -83,7 +83,8 @@ const ClientPostPage = ({
   const commentInputRef = useRef<HTMLInputElement>(null);
   const shareUrlRef = useRef<HTMLDivElement>(null);
   const { addAlert } = useAlertStore();
-  const pathname = usePathname();
+
+  console.log(post);
 
   const handleEditPost = async () => {
     if (!editing || !editableValuesRef.current || !post) return;

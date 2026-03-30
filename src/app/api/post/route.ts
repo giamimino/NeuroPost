@@ -86,7 +86,6 @@ export async function POST(req: Request) {
         { ok: false, error: auth.error },
         { status: 401 },
       );
-    console.log(auth);
 
     if (auth.status === "inactive")
       return NextResponse.json(
@@ -166,7 +165,7 @@ export async function POST(req: Request) {
 
     if (file) {
       const error = MediaValidator(file);
-      if (error) return NextResponse.json({ ok: true, message: error });
+      if (error) return NextResponse.json({ ok: true, error: error });
 
       const extension = file.name.split(".").pop();
       const filename = `${crypto.randomUUID()}.${extension}`;
@@ -192,8 +191,8 @@ export async function POST(req: Request) {
       }
 
       const media = await sql.query(
-        `INSERT INTO media (fileurl, type, post_id) VALUES ($1, $2, $3)`,
-        [key, type, post.id],
+        `INSERT INTO media (fileurl, type, post_id, user_id) VALUES ($1, $2, $3, $4)`,
+        [key, type, post.id, payload.userId],
       );
       console.log(media);
     }

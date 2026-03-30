@@ -68,9 +68,9 @@ const PostUploadPage = () => {
       console.error(error);
     } finally {
       setLoading(false);
-      e.currentTarget.reset();
-      setMedia(null);
-      setTags([]);
+      // e.currentTarget.reset();
+      // setMedia(null);
+      // setTags([]);
     }
   };
 
