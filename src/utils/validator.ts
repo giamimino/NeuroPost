@@ -3,6 +3,7 @@ import {
   ALLOWED_IMAGE_TYPES,
   ALLOWED_VIDEO_TYPES,
   MAX_POST_IMAGE_SIZE,
+  MAX_POST_VIDEO_SIZE,
 } from "@/constants/validators";
 
 const {
@@ -16,6 +17,7 @@ export function MediaValidator(
   file: File,
 ): { title: string; description: string } | null {
   const type = file.type.split("/")[0];
+  console.log(type);
 
   if (type === "video" && !ALLOWED_VIDEO_TYPES.includes(file.type)) {
     return VIDEO_TYPE_ERROR;
@@ -23,7 +25,7 @@ export function MediaValidator(
     return IMAGE_TYPE_ERROR;
   }
 
-  if (type === "video" && file.size > MAX_POST_IMAGE_SIZE) {
+  if (type === "video" && file.size > MAX_POST_VIDEO_SIZE) {
     return MAX_VIDEO_SIZE_ERROR;
   } else if (type === "image" && file.size > MAX_POST_IMAGE_SIZE) {
     return MAX_POST_IMAGE_SIZE_ERROR;
