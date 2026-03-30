@@ -122,32 +122,38 @@ const ProfilePage = () => {
           >
             {(posts: Post[]) => (
               <>
-                {posts.map((post) => (
-                  <Card
-                    className="gap-2 pb-0 overflow-hidden justify-between"
-                    key={post.id}
-                  >
-                    <CardHeader>
-                      <CardTitle>{post.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className=" line-clamp-3">
-                        {post.description}
-                      </CardDescription>
-                    </CardContent>
-                    <CardFooter className="bg-card-footer/60 border-t border-card-border max-h-15">
-                      <div className="py-2 w-full">
-                        <Button
-                          variant={"outline"}
-                          onClick={() => handleViewPost(post.id)}
-                          className="bg-button-bg border border-button-border cursor-pointer w-full"
-                        >
-                          View
-                        </Button>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                ))}
+                {posts
+                  .sort(
+                    (a, b) =>
+                      new Date(b.created_at).getTime() -
+                      new Date(a.created_at).getTime(),
+                  )
+                  .map((post) => (
+                    <Card
+                      className="gap-2 pb-0 overflow-hidden justify-between"
+                      key={post.id}
+                    >
+                      <CardHeader>
+                        <CardTitle>{post.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription className=" line-clamp-3">
+                          {post.description}
+                        </CardDescription>
+                      </CardContent>
+                      <CardFooter className="bg-card-footer/60 border-t border-card-border max-h-15">
+                        <div className="py-2 w-full">
+                          <Button
+                            variant={"outline"}
+                            onClick={() => handleViewPost(post.id)}
+                            className="bg-button-bg border border-button-border cursor-pointer w-full"
+                          >
+                            View
+                          </Button>
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  ))}
               </>
             )}
           </DataFetcher>

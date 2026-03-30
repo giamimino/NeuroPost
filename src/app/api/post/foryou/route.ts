@@ -129,7 +129,7 @@ export async function GET(req: Request) {
 
       posts = posts.map((p, i) => ({
         ...p,
-        mediaUrl: p.media.fileurl ? signedUrls[i] : null,
+        media: { ...p.media, url: p.media.fileurl ? signedUrls[i] : null },
       }));
     }
 
@@ -153,6 +153,8 @@ export async function GET(req: Request) {
         profile_url: p.user.profile_url ? signedProfiles[i] : "/user.jpg",
       },
     }));
+
+    console.log(posts);
 
     return NextResponse.json(
       {

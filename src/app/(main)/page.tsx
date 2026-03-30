@@ -9,20 +9,21 @@ import Title from "@/components/ui/title";
 import { apiFetch } from "@/lib/apiFetch";
 import { HandleLikeArgs } from "@/types/arguments";
 import { TagType } from "@/types/global";
-import { Post, UserJoin } from "@/types/neon";
+import { MediaEnumType, Post, UserJoin } from "@/types/neon";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Video from "@/components/common/video";
 
 export default function Home() {
   const [posts, setPosts] = useState<
     (Post & {
       tags: TagType[];
       like_id: string | null;
-      mediaUrl: string | null;
+      media: { type: MediaEnumType; url: string | null };
       user: UserJoin;
       likes: string;
     })[]
@@ -113,14 +114,27 @@ export default function Home() {
                   </CardDescription>
                 </div>
                 <div className="w-full">
-                  {post.mediaUrl && (
+                  {post.media &&
+                  post.media.url &&
+                  post.media.type === "image" ? (
                     <Image
-                      src={post.mediaUrl}
+                      src={post.media.url}
                       width={1080}
                       height={720}
                       alt={post.title}
                       className="object-cover rounded-md mt-2 w-full"
                     />
+                  ) : (
+                    post.media &&
+                    post.media.url &&
+                    post.media.type === "video" && (
+                      <Video
+                        src={post.media.url}
+                        loop
+                        playsInline
+                        className="rounded-xl w-full"
+                      />
+                    )
                   )}
                 </div>
                 <div className="flex gap-1.5 flex-wrap justify-center mt-5">

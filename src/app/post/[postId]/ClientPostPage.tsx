@@ -54,6 +54,7 @@ import {
 } from "@/constants/validators";
 import { MediaValidator } from "@/utils/validator";
 import ActionButton from "@/components/action-button";
+import Video from "@/components/common/video";
 
 const ClientPostPage = ({
   params,
@@ -296,7 +297,7 @@ const ClientPostPage = ({
                     </button>
                   </div>
                 </CardContent>
-                {post?.signedUrl && post.media?.type === "image" && !media && (
+                {post?.signedUrl && post.media?.type === "image" && !media ? (
                   <CardFooter className="px-0 mt-5">
                     <Image
                       width={1080}
@@ -306,6 +307,20 @@ const ClientPostPage = ({
                       className="w-full object-cover max-h-150 rounded-xl"
                     />
                   </CardFooter>
+                ) : (
+                  post?.signedUrl &&
+                  post.media?.type === "video" &&
+                  !media && (
+                    <CardFooter className="px-0 mt-5">
+                      <Video
+                        src={post.signedUrl}
+                        controls={false}
+                        loop
+                        playsInline
+                        className="rounded-xl w-full"
+                      />
+                    </CardFooter>
+                  )
                 )}
                 {media && editing && (
                   <CardFooter className="px-0 mt-5">

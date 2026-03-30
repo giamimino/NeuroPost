@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { Pause } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export default function Video({
   src,
@@ -26,6 +26,32 @@ export default function Video({
     }
   };
 
+  const handleSafePlay = () => {
+    videoRef.current?.play().catch(() => {});
+  };
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!video) return;
+        if (entry.isIntersecting) {
+          handleSafePlay();
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.4 },
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   return (
     <div className="relative" onClick={handlePause}>
       <video
@@ -33,7 +59,6 @@ export default function Video({
         src={src}
         poster={poster}
         preload="metadata"
-        controls
         className={clsx("w-full", className)}
         {...rest}
       ></video>
