@@ -9,8 +9,8 @@
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf .next node_modules",
-    "prettier:check": "prettier --check '/*.{ts,tsx,js,jsx}'",
-    "prettier:fix": "prettier --write \"/*.{ts,tsx,js,jsx}\""
+    "prettier:check": "prettier --check 'src/**/*.{ts,js}'",
+    "prettier:fix": "prettier --write \"src/**/*.{ts,js}\""
   },
   "dependencies": {
     "cookie": "^1.1.1",
