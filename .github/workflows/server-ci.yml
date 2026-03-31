@@ -1,29 +1,29 @@
-name: CI
+name: Server CI
 
 on:
   push:
     branches: [main]
     paths:
-      - "client/src/**"
-      - "client/package.json"
-      - "client/package-lock.json"
-      - ".github/workflows/**"
+      - "server/**"
+  pull_request:
+    paths:
+      - "server/**"
 
 concurrency:
   cancel-in-progress: true
-  group: ci-${{ github.ref }}
+  group: server-ci-${{ github.ref }}
 
 jobs:
-  ci:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     defaults:
       run:
-        working-directory: client
+        working-directory: server
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -32,20 +32,18 @@ jobs:
           node-version: 24
           cache: "npm"
 
+          
       - name: Install deps
         run: npm ci
-
+          
       - name: Format check
         run: npm run prettier:check
+
+      - name: Type check
+        run: npm run typecheck
 
       - name: Lint
         run: npm run lint
 
-      - name: Typecheck
-        run: npm run typecheck
-
       - name: Build
         run: npm run build
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          REDIS_URL: ${{ secrets.REDIS_URL }}
