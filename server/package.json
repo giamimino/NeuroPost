@@ -4,25 +4,28 @@
   "private": true,
   "scripts": {
     "dev": "ts-node  src/server.ts",
-    "lint": "eslint",
+    "build": "tsc",
+    "lint": "eslint .",
     "lint:fix": "eslint --fix",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "clean": "rimraf .next node_modules",
-    "prettier:check": "prettier --check '/*.{ts,tsx,js,jsx}'",
-    "prettier:fix": "prettier --write \"/*.{ts,tsx,js,jsx}\""
+    "prettier:check": "prettier --check 'src/**/*.{ts,js}'",
+    "prettier:fix": "prettier --write \"src/**/*.{ts,js}\""
   },
   "dependencies": {
-    "cookie":	"^1.1.1",
-    "dotenv":	"^17.3.1",
-    "http":	"^0.0.1-security",
-    "jsonwebtoken":	"^9.0.3",
-    "ws":	"^8.19.0"
+    "cookie": "^1.1.1",
+    "dotenv": "^17.3.1",
+    "http": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.3",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
-    "@types/jsonwebtoken":	"^9.0.10",
-    "@types/node":	"^25.3.3",
-    "@types/ws":	"^8.18.1",
-    "ts-node":	"^10.9.2",
-    "typescript":	"^5.9.3"
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.3.3",
+    "@types/ws": "^8.18.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "prettier": "^3.8.1",
+    "eslint": "^9"
   }
 }
