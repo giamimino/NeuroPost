@@ -9,6 +9,8 @@
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf .next node_modules",
+    "test": "vitest",
+    "test:run": "vitest run",
     "prettier:check": "prettier --check 'src/**/*.{ts,js}'",
     "prettier:fix": "prettier --write \"src/**/*.{ts,js}\""
   },
@@ -21,6 +23,7 @@
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
+    "vitest": "^4.1.2",
     "@types/node": "^25.3.3",
     "@types/ws": "^8.18.1",
     "ts-node": "^10.9.2",
