@@ -33,7 +33,9 @@
     "typecheck:client": "npm run typecheck --workspace=client",
     "clean": "npm run clean:server && npm run clean:client && rimraf node_modules",
     "clean:client": "npm run clean --workspace=client",
-    "clean:server": "npm run clean --workspace=server"
+    "clean:server": "npm run clean --workspace=server",
+    "test": "npm run test -w server",
+    "test:run": "npm run test:run -w server"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
