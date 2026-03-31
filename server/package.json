@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "ts-node  src/server.ts",
-    "lint": "eslint",
+    "build": "tsc",
+    "lint": "eslint .",
     "lint:fix": "eslint --fix",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "clean": "rimraf .next node_modules",
     "prettier:check": "prettier --check '/*.{ts,tsx,js,jsx}'",
     "prettier:fix": "prettier --write \"/*.{ts,tsx,js,jsx}\""
