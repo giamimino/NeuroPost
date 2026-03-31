@@ -32,11 +32,12 @@ jobs:
           node-version: 24
           cache: "npm"
 
-      - name: Format check
-        run: npm run prettier:check
-
+          
       - name: Install deps
         run: npm ci
+          
+      - name: Format check
+        run: npm run prettier:check
 
       - name: Type check
         run: npm run typecheck
