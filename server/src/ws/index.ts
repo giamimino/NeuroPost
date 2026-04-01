@@ -49,8 +49,8 @@ export function createWebSocketServer(port: number) {
   });
 
   wss.on("connection", (ws, req) => {
-    handleConnection(ws, req)
-  })
+    handleConnection(ws, req);
+  });
 
-  return wss
+  return wss;
 }

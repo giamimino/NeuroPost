@@ -2,7 +2,7 @@ import type WebSocket from "ws";
 
 export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
   let data;
-  
+
   try {
     data = JSON.parse(raw.toString());
   } catch (error) {
