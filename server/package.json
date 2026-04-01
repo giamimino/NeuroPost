@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "ts-node  src/server.ts",
+    "dev": "node --loader ts-node/esm src/server.ts",
     "build": "tsc",
     "lint": "eslint .",
     "lint:fix": "eslint --fix",
@@ -24,12 +24,13 @@
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
-    "vitest": "^4.1.2",
     "@types/node": "^25.3.3",
     "@types/ws": "^8.18.1",
+    "eslint": "^9",
+    "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "prettier": "^3.8.1",
-    "eslint": "^9"
+    "vitest": "^4.1.2",
+    "vitest-websocket-mock": "^0.5.0"
   }
 }

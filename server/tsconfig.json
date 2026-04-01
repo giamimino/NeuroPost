@@ -8,10 +8,6 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "rootDir": "src",
-    "paths": {
-      "@/*": ["src/*"],
-      "$/*": ["src/features/*"]
-    },
     "types": ["node"],
     "sourceMap": true,
     "outDir": "dist"

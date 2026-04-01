@@ -7,7 +7,7 @@
     "server"
   ],
   "scripts": {
-    "dev": "npm run dec:server -w server && npm run dev:client -w client",
+    "dev": "npm run dev:server && npm run dev:client",
     "dev:server": "npm run dev --workspace=server",
     "dev:client": "npm run dev --workspace=client",
     "build": "pnpm build:server && pnpm build:client",

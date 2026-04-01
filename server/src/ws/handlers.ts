@@ -1,8 +1,8 @@
 import type WebSocket from "ws";
 
-export function handleMessage(ws: WebSocket, raw: any) {
+export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
   let data;
-
+  
   try {
     data = JSON.parse(raw.toString());
   } catch (error) {
@@ -15,7 +15,7 @@ export function handleMessage(ws: WebSocket, raw: any) {
 
   switch (data.type) {
     case "message":
-      handleChatMessage(ws, data.payload)
+      handleChatMessage(ws, data.payload);
       break;
     case "ping":
       ws.send("pong");

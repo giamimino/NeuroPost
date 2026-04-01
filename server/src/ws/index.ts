@@ -1,6 +1,7 @@
 import cookie from "cookie";
 import { WebSocketServer } from "ws";
-import { verifyToken } from "@/lib/auth";
+import { handleConnection } from "./connections.js";
+import { verifyToken } from "../lib/auth.js";
 
 export function createWebSocketServer(port: number) {
   const wss = new WebSocketServer({
@@ -29,8 +30,6 @@ export function createWebSocketServer(port: number) {
         return done(false, 401, "Unauthorized");
       }
 
-      console.log(cookieHeader);
-
       const cookies = cookie.parse(cookieHeader);
       const token = cookies[process.env.ACCESS_COOKIE_NAME!];
 
@@ -48,4 +47,10 @@ export function createWebSocketServer(port: number) {
       }
     },
   });
+
+  wss.on("connection", (ws, req) => {
+    handleConnection(ws, req)
+  })
+
+  return wss
 }
