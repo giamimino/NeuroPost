@@ -3,7 +3,8 @@ export type NotificationEnumType =
   | "SYSTEM"
   | "NEW_MESSAGE"
   | "NEW_FOLLOWER"
-  | "NEW_POST";
+  | "NEW_POST"
+  | "NEW_LIKE";
 
 export type FriendRequestStatusType = "accepted" | "rejected" | "pending";
 

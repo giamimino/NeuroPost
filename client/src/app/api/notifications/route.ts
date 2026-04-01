@@ -13,7 +13,8 @@ export async function GET(req: Request) {
       "NEW_FOLLOWER",
       "NEW_MESSAGE",
       "NEW_POST",
-      "SYSTEM",
+      "NEW_LIKE",
+      "SYSTEM"
     ];
 
     if (
