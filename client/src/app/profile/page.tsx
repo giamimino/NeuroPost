@@ -89,7 +89,7 @@ const ProfilePage = () => {
         <div className="pl-5.5 w-1/2 max-xs:w-full">
           {loading ? (
             <Skeleton className="w-24 h-24 rounded-full" />
-          ) : (
+          ) : user?.profile_url &&  (
             <Image
               src={user!.profile_url}
               width={96}

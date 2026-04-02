@@ -154,8 +154,6 @@ export async function GET(req: Request) {
       },
     }));
 
-    console.log(posts);
-
     return NextResponse.json(
       {
         ok: true,
