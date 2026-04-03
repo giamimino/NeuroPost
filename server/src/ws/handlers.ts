@@ -5,7 +5,7 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
 
   try {
     data = JSON.parse(raw.toString());
-  } catch (error) {
+  } catch {
     ws.send(
       JSON.stringify({
         error: { message: "Invalid, message format", status: 1 },

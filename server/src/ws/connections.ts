@@ -2,15 +2,22 @@ import { WebSocket } from "ws";
 import { handleMessage } from "./handlers.js";
 import { MAX_MESSAGES_PER_SECOND, ORIGINS } from "../constants/ws.js";
 import type { IncomingMessage } from "http";
+import { checkAuth } from "../lib/auth.js";
 
 export function handleConnection(ws: WebSocket, req: IncomingMessage) {
+  // * origin check <===============>
   const origin = req.headers.origin;
+  
   if (!origin || !ORIGINS.includes(origin)) {
     console.log(`Not allowed this origin ${origin}`);
 
     ws.terminate();
-  }
+  } // * <=============>
 
+
+  checkAuth(ws, req) // * AUTH CHECK <=================>
+
+  // * messages rate limit <==========>
   let messageCount = 0;
 
   setInterval(() => (messageCount = 0), 1000);
@@ -22,8 +29,9 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
       ws.terminate();
       return;
     }
+    // * <==================>
 
-    handleMessage(ws, raw);
+    handleMessage(ws, raw); // * messaage handler, check message and give format
   });
 
   ws.on("close", () => {
