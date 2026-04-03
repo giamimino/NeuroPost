@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import AuthMiddleware from "./middlewares/auth.middleware";
 import RateLimitMiddleware from "./middlewares/rateLimit.middleware";
+import GlobalRateLimitMiddleware from "./middlewares/globalRateLimit.middleware";
 
 export default async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   if (pathname.startsWith("/api")) {
-    const rateLimitRes = RateLimitMiddleware(req)
-    return rateLimitRes
+    const globalRateLimitRes = GlobalRateLimitMiddleware();
+    if (globalRateLimitRes) return globalRateLimitRes;
+
+    const rateLimitRes = RateLimitMiddleware(req);
+    if (rateLimitRes) return rateLimitRes;
   }
 
-  if (pathname.startsWith("/profile") && pathname.startsWith("/auth")) {
+  if (pathname.startsWith("/profile") || pathname.startsWith("/auth")) {
     const authRes = AuthMiddleware(req);
-    return authRes;
+    if (authRes) return authRes;
   }
 
   return NextResponse.next();
