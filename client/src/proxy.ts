@@ -7,7 +7,7 @@ export default async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   if (pathname.startsWith("/api")) {
-    const globalRateLimitRes = GlobalRateLimitMiddleware();
+    const globalRateLimitRes = await GlobalRateLimitMiddleware();
     if (globalRateLimitRes) return globalRateLimitRes;
 
     const rateLimitRes = RateLimitMiddleware(req);
@@ -15,7 +15,7 @@ export default async function proxy(req: NextRequest) {
   }
 
   if (pathname.startsWith("/profile") || pathname.startsWith("/auth")) {
-    const authRes = AuthMiddleware(req);
+    const authRes = await AuthMiddleware(req);
     if (authRes) return authRes;
   }
 
