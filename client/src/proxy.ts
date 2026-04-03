@@ -1,25 +1,26 @@
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import AuthMiddleware from "./middlewares/auth.middleware";
+import RateLimitMiddleware from "./middlewares/rateLimit.middleware";
+import GlobalRateLimitMiddleware from "./middlewares/globalRateLimit.middleware";
 
 export default async function proxy(req: NextRequest) {
-  const cookieStore = await cookies();
-  const refreshCookieName = process.env.REFRESH_COOKIE_NAME;
-  if (!refreshCookieName) {
-    throw new Error("REFRESH_COOKIE_NAME is not set in production!");
-  }
-  const token = cookieStore.get(refreshCookieName)?.value;
   const pathname = req.nextUrl.pathname;
 
-  if (!token && pathname.startsWith("/profile")) {
-    return NextResponse.redirect(new URL("/auth/register", req.url));
+  if (pathname.startsWith("/api")) {
+    const globalRateLimitRes = await GlobalRateLimitMiddleware();
+    if (globalRateLimitRes) return globalRateLimitRes;
+
+    const rateLimitRes = RateLimitMiddleware(req);
+    if (rateLimitRes) return rateLimitRes;
   }
 
-  if (token && pathname.startsWith("/auth")) {
-    return NextResponse.redirect(new URL("/", req.url));
+  if (pathname.startsWith("/profile") || pathname.startsWith("/auth")) {
+    const authRes = await AuthMiddleware(req);
+    if (authRes) return authRes;
   }
 
   return NextResponse.next();
 }
 export const config = {
-  matcher: ["/profile/:path*", "/auth/:path*"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
