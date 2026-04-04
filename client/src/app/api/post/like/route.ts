@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { ERRORS } from "@/constants/error-handling";
 import { getAuthUser } from "@/lib/auth";
 import { SETTINGS_KEYS } from "@/constants/settings-keys";
+import { NOTIFICATIONS_TEXT } from "@/constants/notifications";
 
 export async function POST(req: Request) {
   try {
@@ -37,24 +38,34 @@ export async function POST(req: Request) {
         { status: 404 },
       );
 
-    if (post.author_id === payload.userId)
-      return NextResponse.json({ ok: false, error: ERRORS.LIKE_FAILED });
-
     const authors_settings = await sql.query(
-      `SELECT value WHERE user_id = $1 AND key = $2`,
+      `SELECT value FROM user_settings WHERE user_id = $1 AND key = $2`,
       [post.author_id, SETTINGS_KEYS.NOTIFICATIONS_SETTINGS_KEYS.LIKES],
     );
     const author_setting = authors_settings[0];
 
-    if (author_setting.value === false) {
+    if (
+      typeof author_setting === "undefined" ||
+      author_setting.value === false
+    ) {
+      const title = NOTIFICATIONS_TEXT.NEW_LIKE.title;
+      const description = `${payload.username} ${NOTIFICATIONS_TEXT.NEW_LIKE.description}`;
+      const type = "NEW_LIKE";
+      const body = {
+        description,
+        postId,
+      };
+
       await sql.query(
-        `INSERT INTO notifications (user_id, type, title, body)`,
-        [post.author_id, "NEW_LIKE"],
+        `INSERT INTO notifications (user_id, type, title, body) VALUES ($1, $2, $3, $4)`,
+        [post.author_id, type, title, body],
       );
     }
 
-    const rawSQL = `INSERT INTO likes (user_id, post_id) VALUES ($1, $2) RETURNING id as like_id`;
-    const likes = await sql.query(rawSQL, [payload.userId, postId]);
+    const likes = await sql.query(
+      `INSERT INTO likes (user_id, post_id) VALUES ($1, $2) RETURNING id as like_id`,
+      [payload.userId, postId],
+    );
 
     return NextResponse.json(
       { ok: true, like: likes[0].like_id },

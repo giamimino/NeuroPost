@@ -14,7 +14,7 @@ export async function GET(req: Request) {
       "NEW_MESSAGE",
       "NEW_POST",
       "NEW_LIKE",
-      "SYSTEM"
+      "SYSTEM",
     ];
 
     if (

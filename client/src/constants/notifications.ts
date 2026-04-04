@@ -11,4 +11,8 @@ export const NOTIFICATIONS_TEXT = {
     title: "Friend request accepted",
     description: "accepted your friend request",
   },
+  NEW_LIKE: {
+    title: "New Like",
+    description: "liked your post",
+  },
 };
