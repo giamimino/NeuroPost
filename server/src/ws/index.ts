@@ -1,7 +1,5 @@
-import cookie from "cookie";
 import { WebSocketServer } from "ws";
 import { handleConnection } from "./connections.js";
-import { verifyToken } from "../lib/auth.js";
 
 export function createWebSocketServer(port: number) {
   const wss = new WebSocketServer({

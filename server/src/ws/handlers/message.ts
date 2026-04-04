@@ -1,3 +1,4 @@
+import isWSSendType from "../../utils/isWSSendType.js";
 import type WebSocket from "ws";
 
 export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
@@ -5,12 +6,23 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
 
   try {
     data = JSON.parse(raw.toString());
+
+    if (!data || !isWSSendType(data.type)) {
+      ws.send(
+        JSON.stringify({
+          errorKey: "",
+        }),
+      );
+      return;
+    }
   } catch {
     ws.send(
       JSON.stringify({
-        error: { message: "Invalid, message format", status: 1 },
+        errorKey: "",
       }),
     );
+
+    return;
   }
 
   switch (data.type) {
@@ -19,6 +31,10 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
       break;
     case "ping":
       ws.send("pong");
+      break;
+    case "join-room":
+      console.log(data);
+      ws.send("join-room");
       break;
     default:
       ws.send("Unknown message type");

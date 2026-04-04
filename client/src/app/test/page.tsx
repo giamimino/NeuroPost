@@ -28,6 +28,12 @@ export default function Page() {
       ws.current?.send(
         JSON.stringify({ type: "message", payload: "Hello server" } as WSSend),
       );
+      ws.current?.send(
+        JSON.stringify({
+          type: "join-room",
+          payload: { roomId: `room:${crypto.randomUUID()}` },
+        } as WSSend),
+      );
     };
 
     ws.current.onmessage = (event) => {

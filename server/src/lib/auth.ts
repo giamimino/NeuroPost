@@ -21,7 +21,7 @@ export function checkAuth(ws: WebSocket, req: IncomingMessage) {
 
   if (!token) {
     ws.close(401, JSON.stringify({ errorKey: "" }));
-    return
+    return false
   }
 
   

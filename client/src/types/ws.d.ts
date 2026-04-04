@@ -1,7 +1,13 @@
+export type WSSendType = "message" | "ping";
 
-export type WSSendType = "message" | "ping"
-
-export interface WSSend {
-  type: WSSendType,
-  payload: string
-}
+export type WSSend =
+  | {
+      type: "join-room";
+      payload: {
+        roomId: string
+      }
+    }
+  | {
+      type: WSSendType;
+      payload: string;
+    };
