@@ -4,8 +4,9 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
+    const authHeader = req.headers.get("Authorization");
     if (
-      req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`
+      authHeader!== `Bearer ${process.env.CRON_SECRET}`
     ) {
       return NextResponse.json(
         { ok: false, error: ERRORS.UNAUTHORIZED },
