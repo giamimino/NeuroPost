@@ -22,6 +22,12 @@ import {
 } from "@/components/ui/hover-card";
 import { ERRORS } from "@/constants/error-handling";
 import { ApiConfig } from "@/configs/api-configs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type NotificationCategory = {
   id: string;
@@ -36,8 +42,12 @@ const notifications_hints = {
 };
 
 const notificationCategories: NotificationCategory[] = [
+  { id: "all", label: "All" },
+  { id: "new_like", label: "New Likes" },
+  { id: "new_post", label: "Feed" },
   { id: "friend_request", label: "Friend Requests" },
   { id: "new_follower", label: "New Followers" },
+  { id: "new_message", label: "Messages" },
   { id: "system", label: "System" },
 ];
 
@@ -47,6 +57,10 @@ const NotificationsContainer = () => {
   const [loading, setLoading] = useState(false);
   const scrollableContainer = useRef<HTMLDivElement>(null);
   const { addAlert } = useAlertStore();
+
+  const getNotifCat = (id: string) => {
+    return notificationCategories.find((n) => n.id === id);
+  };
 
   const RenderNotificationHint = () => {
     const key = select.id as keyof typeof notifications_hints;
@@ -112,20 +126,29 @@ const NotificationsContainer = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ type: "spring", stiffness: 120, damping: 20 }}
+      className="z-99 fixed right-5 max-xs:right-3"
     >
-      <Card className="min-w-100 max-h-[75vh] pt-3 pb-0 flex flex-col ">
+      <Card className="w-100 max-xs:w-85 max-h-[75vh] pt-3 pb-0 flex flex-col">
         <CardAction className="px-3">
-          <div className="flex gap-2.5">
-            {notificationCategories.map((cat) => (
-              <Button
-                key={cat.id}
-                variant={cat.id === select.id ? "outline" : "ghost"}
-                onClick={() => setSelect({ id: cat.id })}
-                className="cursor-pointer border border-transparent"
-              >
-                {cat.label}
-              </Button>
-            ))}
+          <div className="flex gap-2.5 relative z-100">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant={"outline"} className="cursor-pointer">
+                  {getNotifCat(select.id)?.label}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="relative z-100">
+                {notificationCategories.map((n) => (
+                  <DropdownMenuItem
+                    className="cursor-pointer px-3 py-2"
+                    onClick={() => setSelect({ id: n.id })}
+                    key={n.id}
+                  >
+                    {n.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardAction>
         <div
@@ -157,12 +180,12 @@ const NotificationsContainer = () => {
                       </HoverCardContent>
                     </HoverCard>
                   )}
-                  <CardContent className="px-3">
+                  <CardContent className="px-3 max-w-9/10">
                     <CardTitle className="text-[16px]">{notif.title}</CardTitle>
                     <CardDescription>{notif.body.description}</CardDescription>
                   </CardContent>
                   <CardFooter className="px-3 mt-0">
-                    {timeAgo(new Date(notif.body.sentAt))}
+                    {timeAgo(new Date(notif.created_at))}
                   </CardFooter>
                 </Card>
               ))

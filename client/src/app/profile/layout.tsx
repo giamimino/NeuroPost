@@ -5,7 +5,7 @@ import React from "react";
 const ProfileLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex w-full max-xs:flex-col">
-      <div className="py-20 pl-4 h-full max-md:w-1/2 max-lg:w-1/3 w-1/4 top-0 sticky max-xs:fixed max-xs:h-auto max-xs:w-full z-20">
+      <div className="py-20 pl-4 h-full max-md:w-1/2 max-lg:w-1/3 w-1/4 top-0 sticky max-xs:fixed max-xs:h-auto max-xs:w-fit z-20">
         <ProfileNavigation />
       </div>
       <div className="w-full">{children}</div>
