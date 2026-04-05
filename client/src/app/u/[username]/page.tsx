@@ -47,8 +47,6 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   const { addAlert } = useAlertStore();
   const tickingRef = useRef(false);
 
-  console.log(user);
-
   const handleRequestResponse = async (
     action: "accept" | "reject",
     requestId: string,

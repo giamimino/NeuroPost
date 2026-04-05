@@ -42,11 +42,10 @@ export async function POST(req: Request) {
       `SELECT value FROM user_settings WHERE user_id = $1 AND key = $2`,
       [post.author_id, SETTINGS_KEYS.NOTIFICATIONS_SETTINGS_KEYS.LIKES],
     );
-    const author_setting = authors_settings[0];
+    const author_setting = authors_settings[0] || { value: 'true'};
 
     if (
-      typeof author_setting === "undefined" ||
-      author_setting.value === false
+      author_setting.value === "true" ? true : false
     ) {
       const title = NOTIFICATIONS_TEXT.NEW_LIKE.title;
       const description = `${payload.username} ${NOTIFICATIONS_TEXT.NEW_LIKE.description}`;
@@ -68,7 +67,7 @@ export async function POST(req: Request) {
     );
 
     return NextResponse.json(
-      { ok: true, like: likes[0].like_id },
+      { ok: true, like: likes[0].like_id, author_setting },
       { status: 200 },
     );
   } catch (err) {
