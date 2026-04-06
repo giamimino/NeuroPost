@@ -3,3 +3,4 @@ export const ORIGINS = [
   "https://neuro-post.vercel.app",
   "http://localhost:3000",
 ];
+export const RATE_LIMIT_WINDOW = 1000

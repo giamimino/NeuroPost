@@ -3,34 +3,27 @@ import { handleMessage } from "./handlers/message.js";
 import { MAX_MESSAGES_PER_SECOND, ORIGINS } from "../constants/ws.js";
 import type { IncomingMessage } from "http";
 import { checkAuth } from "../lib/auth.js";
+import { rateLimit } from "src/middlewares/rateLimit.js";
 
 export function handleConnection(ws: WebSocket, req: IncomingMessage) {
   // * origin check <===============>
   const origin = req.headers.origin;
-  
+
   if (!origin || !ORIGINS.includes(origin)) {
     console.log(`Not allowed this origin ${origin}`);
 
     ws.terminate();
   } // * <=============>
 
+  const isAuth = checkAuth(ws, req); // * AUTH CHECK <=================>
+  if (!isAuth) return;
 
-  const isAuth = checkAuth(ws, req) // * AUTH CHECK <=================>
-  if(!isAuth) return
-
-  // * messages rate limit <==========>
-  let messageCount = 0;
-
-  setInterval(() => (messageCount = 0), 1000);
+  const ip = ((req.headers["x-forwarded-for"] as string)?.split(",")[0] ||
+    req.socket.remoteAddress) as string;
 
   ws.on("message", (raw) => {
-    messageCount++;
-
-    if (messageCount > MAX_MESSAGES_PER_SECOND) {
-      ws.terminate();
-      return;
-    }
-    // * <==================>
+    const res = rateLimit(ws, ip);
+    if (!res) return;
 
     handleMessage(ws, raw); // * messaage handler, check message and give format
   });
