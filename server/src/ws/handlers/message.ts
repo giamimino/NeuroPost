@@ -1,5 +1,6 @@
 import isWSSendType from "../../utils/isWSSendType.js";
 import type WebSocket from "ws";
+import { rooms } from "../rooms.js";
 
 export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
   let data;
@@ -14,7 +15,7 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
         }),
       );
       return;
-    }
+    } 
   } catch {
     ws.send(
       JSON.stringify({
@@ -41,8 +42,24 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
   }
 }
 
-export function handleChatMessage(ws: WebSocket, message: string) {
-  console.log("Chat:", message);
+export function handleChatMessage(
+  ws: WebSocket,
+  payload: any,
+) {
+  const roomId = (ws as any).roomId
 
-  ws.send("Server received: " + message);
+  if(!roomId || !rooms.has(roomId)) return
+
+  const room = rooms.get(roomId)!;
+
+  for(const client of room) {
+    if(client.readyState === 1) {
+      client.send(
+        JSON.stringify({
+          type: "message",
+          payload
+        })
+      )
+    }
+  } 
 }
