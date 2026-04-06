@@ -1,5 +1,7 @@
 export type NotificationEnumType =
   | "FRIEND_REQUEST"
+  | "FRIEND_DECLINE"
+  | "FRIEND_ACCEPT"
   | "SYSTEM"
   | "NEW_MESSAGE"
   | "NEW_FOLLOWER"

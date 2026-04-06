@@ -431,4 +431,8 @@ export const ERRORS = {
     title: "Internal Server Error",
     description: "An unexpected error occurred. Please try again later.",
   },
+  REQUEST_ALREADY_SENT: {
+    title: "Request Already Sent",
+    description: "You have already sent a friend request to this user.",
+  },
 } as const;

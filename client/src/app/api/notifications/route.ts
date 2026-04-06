@@ -8,7 +8,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const { type, limit } = Object.fromEntries(searchParams.entries());
-    const ALLOWED_NOTIFICATION_TYPES = [
+    const ALLOWED_NOTIFICATION_TYPES: (NotificationEnumType | "ALL")[] = [
       "FRIEND_REQUEST",
       "NEW_FOLLOWER",
       "NEW_MESSAGE",
@@ -16,6 +16,8 @@ export async function GET(req: Request) {
       "NEW_LIKE",
       "SYSTEM",
       "ALL",
+      "FRIEND_ACCEPT",
+      "FRIEND_DECLINE",
     ];
 
     if (
