@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NotificationType } from "@/types/neon";
 import { timeAgo } from "@/utils/functions/timeAgo";
-import { Circle } from "lucide-react";
+import { ChevronRight, Circle } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { SkeletonNotifications } from "@/components/ui/Skeleton-examples";
 import { useAlertStore } from "@/store/zustand/alertStore";
@@ -39,20 +39,40 @@ const notifications_hints = {
   friend_request: { hint: "No Friend requests yet." },
   new_follower: { hint: "No New followers yet." },
   system: { hint: "No Notifications yet." },
+  new_message: { hint: "No New Messages yet." },
+  new_post: { hint: "No New Posts in your feed yet." },
+  new_like: { hint: "No New Likes yet." },
+  friend_accept: { hint: "No Accepted Friend Requests yet." },
+  friend_decline: { hint: "No Declined Friend Requests yet." },
 };
 
-const notificationCategories: NotificationCategory[] = [
-  { id: "all", label: "All" },
-  { id: "new_like", label: "New Likes" },
-  { id: "new_post", label: "Feed" },
-  { id: "friend_request", label: "Friend Requests" },
-  { id: "new_follower", label: "New Followers" },
-  { id: "new_message", label: "Messages" },
-  { id: "system", label: "System" },
+const notificationCategories: (NotificationCategory & {
+  more?: NotificationCategory[];
+  isMore: boolean;
+})[] = [
+  { id: "all", label: "All", isMore: false },
+  { id: "new_like", label: "New Likes", isMore: false },
+  { id: "new_post", label: "Feed", isMore: false },
+  {
+    id: "friend_request_with_more",
+    label: "Friend Requests",
+    isMore: true,
+    more: [
+      { id: "friend_request", label: "Pending" },
+      { id: "friend_accept", label: "Accepted" },
+      { id: "friend_decline", label: "Declined" },
+    ],
+  },
+  { id: "new_follower", label: "New Followers", isMore: false },
+  { id: "new_message", label: "Messages", isMore: false },
+  { id: "system", label: "System", isMore: false },
 ];
 
 const NotificationsContainer = () => {
-  const [select, setSelect] = useState({ id: "friend_request" });
+  const [select, setSelect] = useState({
+    id: "all",
+    label: "All",
+  });
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
   const [loading, setLoading] = useState(false);
   const scrollableContainer = useRef<HTMLDivElement>(null);
@@ -134,19 +154,43 @@ const NotificationsContainer = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant={"outline"} className="cursor-pointer">
-                  {getNotifCat(select.id)?.label}
+                  {select.label}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="relative z-100">
-                {notificationCategories.map((n) => (
-                  <DropdownMenuItem
-                    className="cursor-pointer px-3 py-2"
-                    onClick={() => setSelect({ id: n.id })}
-                    key={n.id}
-                  >
-                    {n.label}
-                  </DropdownMenuItem>
-                ))}
+                {notificationCategories.map((n) =>
+                  n.isMore ? (
+                    <DropdownMenu key={n.id}>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant={"ghost"} className="cursor-pointer">
+                          <p>{n.label}</p>
+                          <ChevronRight />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="relative z-101">
+                        {n.more?.map((m) => (
+                          <DropdownMenuItem
+                            className="cursor-pointer px-3 py-2"
+                            onClick={() =>
+                              setSelect({ id: m.id, label: m.label })
+                            }
+                            key={m.id}
+                          >
+                            {m.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <DropdownMenuItem
+                      className="cursor-pointer px-3 py-2"
+                      onClick={() => setSelect({ id: n.id, label: n.label })}
+                      key={n.id}
+                    >
+                      {n.label}
+                    </DropdownMenuItem>
+                  ),
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
