@@ -12,7 +12,7 @@ export function validateMessage(raw: any) {
       return {
         error: ERRORS.VALIDATION_ERROR,
       };
-    } 
+    }
   } catch {
     return {
       error: ERRORS.VALIDATION_ERROR,

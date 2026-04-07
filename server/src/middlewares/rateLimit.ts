@@ -17,9 +17,9 @@ export function rateLimit(ws: WebSocket, ip: string) {
 
   if (timestampts.length > MAX_MESSAGES_PER_SECOND) {
     ws.send(JSON.stringify({ error: ERRORS.LIMIT_EXCEEDED }));
-    return false
+    return false;
   }
 
-  timestampts.push(currentDate)
-  rateLimits.set(ip, timestampts)
+  timestampts.push(currentDate);
+  rateLimits.set(ip, timestampts);
 }

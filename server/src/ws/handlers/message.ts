@@ -5,14 +5,16 @@ import WebSocket from "ws";
 export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
   let data;
 
-  const validationResult = validateMessage(raw)
-  if(validationResult.error) {
-    ws.send(JSON.stringify({
-      error: validationResult.error
-    }))
-    return
-  } else if(validationResult.data) {
-    data = validationResult.data
+  const validationResult = validateMessage(raw);
+  if (validationResult.error) {
+    ws.send(
+      JSON.stringify({
+        error: validationResult.error,
+      }),
+    );
+    return;
+  } else if (validationResult.data) {
+    data = validationResult.data;
   }
 
   switch (data.type) {
@@ -31,24 +33,21 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
   }
 }
 
-export function handleChatMessage(
-  ws: WebSocket,
-  payload: any,
-) {
-  const roomId = (ws as any).roomId
+export function handleChatMessage(ws: WebSocket, payload: any) {
+  const roomId = (ws as any).roomId;
 
-  if(!roomId || !rooms.has(roomId)) return
+  if (!roomId || !rooms.has(roomId)) return;
 
   const room = rooms.get(roomId)!;
 
-  for(const client of room) {
-    if(client.readyState === 1) {
+  for (const client of room) {
+    if (client.readyState === 1) {
       client.send(
         JSON.stringify({
           type: "message",
-          payload
-        })
-      )
+          payload,
+        }),
+      );
     }
-  } 
+  }
 }
