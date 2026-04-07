@@ -1,9 +1,9 @@
 import { WebSocket } from "ws";
 import { handleMessage } from "./handlers/message.js";
-import { MAX_MESSAGES_PER_SECOND, ORIGINS } from "../constants/ws.js";
+import { ORIGINS } from "../constants/ws.js";
 import type { IncomingMessage } from "http";
 import { checkAuth } from "../lib/auth.js";
-import { rateLimit } from "src/middlewares/rateLimit.js";
+import { rateLimit } from "../middlewares/rateLimit.js";
 
 export function handleConnection(ws: WebSocket, req: IncomingMessage) {
   // * origin check <===============>

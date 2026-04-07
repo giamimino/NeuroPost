@@ -1,29 +1,18 @@
-import isWSSendType from "../../utils/isWSSendType.js";
 import type WebSocket from "ws";
 import { rooms } from "../rooms.js";
+import { validateMessage } from "src/lib/validators/message.validator.js";
 
 export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
   let data;
 
-  try {
-    data = JSON.parse(raw.toString());
-
-    if (!data || !isWSSendType(data.type)) {
-      ws.send(
-        JSON.stringify({
-          errorKey: "",
-        }),
-      );
-      return;
-    } 
-  } catch {
-    ws.send(
-      JSON.stringify({
-        errorKey: "",
-      }),
-    );
-
-    return;
+  const validationResult = validateMessage(raw)
+  if(validationResult.error) {
+    ws.send(JSON.stringify({
+      error: validationResult.error
+    }))
+    return
+  } else if(validationResult.data) {
+    data = validationResult.data
   }
 
   switch (data.type) {

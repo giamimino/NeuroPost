@@ -1,3 +1,4 @@
+import { ERRORS } from "src/constants/errors";
 import { MAX_MESSAGES_PER_SECOND, RATE_LIMIT_WINDOW } from "src/constants/ws";
 import type { WebSocket } from "ws";
 
@@ -15,7 +16,7 @@ export function rateLimit(ws: WebSocket, ip: string) {
     .filter((ts) => currentDate - ts < RATE_LIMIT_WINDOW);
 
   if (timestampts.length > MAX_MESSAGES_PER_SECOND) {
-    ws.send(JSON.stringify({ errorKey: "" }));
+    ws.send(JSON.stringify({ error: ERRORS.LIMIT_EXCEEDED }));
     return false
   }
 

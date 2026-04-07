@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node dist/server.js",
     "dev": "node --loader ts-node/esm src/server.ts",
     "build": "tsc",
     "lint": "eslint .",
