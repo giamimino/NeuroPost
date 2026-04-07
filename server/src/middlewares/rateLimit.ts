@@ -1,6 +1,6 @@
-import { ERRORS } from "src/constants/errors";
-import { MAX_MESSAGES_PER_SECOND, RATE_LIMIT_WINDOW } from "src/constants/ws";
 import type { WebSocket } from "ws";
+import { MAX_MESSAGES_PER_SECOND, RATE_LIMIT_WINDOW } from "../constants/ws.js";
+import { ERRORS } from "../constants/errors.js";
 
 const rateLimits = new Map<string, number[]>();
 

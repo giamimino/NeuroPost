@@ -3,7 +3,8 @@ import dotenv from "dotenv";
 import type { IncomingMessage } from "http";
 import type WebSocket from "ws";
 import cookie from "cookie"
-import { ERRORS } from "src/constants/errors";
+import { ERRORS } from "../constants/errors.js";
+
 dotenv.config();
 
 export function verifyToken(token: string) {

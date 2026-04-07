@@ -1,6 +1,6 @@
-import { ERRORS } from "src/constants/errors";
-import { isObject } from "src/utils/isObject";
-import isWSSendType from "src/utils/isWSSendType";
+import { ERRORS } from "../../constants/errors.js";
+import { isObject } from "../../utils/isObject.js";
+import isWSSendType from "../../utils/isWSSendType.js";
 
 export function validateMessage(raw: any) {
   let data: any;

@@ -1,4 +1,4 @@
-import { rooms } from "../ws/rooms";
+import { rooms } from "../ws/rooms.js";
 import type WebSocket from "ws";
 
 export function handleJoinRoom(ws: WebSocket, roomId: string) {

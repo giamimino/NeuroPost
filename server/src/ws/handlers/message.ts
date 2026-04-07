@@ -1,6 +1,6 @@
-import type WebSocket from "ws";
+import { validateMessage } from "../../lib/validators/message.validator.js";
 import { rooms } from "../rooms.js";
-import { validateMessage } from "src/lib/validators/message.validator.js";
+import WebSocket from "ws";
 
 export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
   let data;

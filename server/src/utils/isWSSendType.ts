@@ -1,5 +1,5 @@
 import React from "react";
-import type { WSSendType } from "src/types/ws.types";
+import { WSSendType } from "../types/ws.types.js";
 
 export default function isWSSendType(type: any): type is WSSendType {
   return (["ping", "message", "join-room"] as WSSendType[]).includes(type);

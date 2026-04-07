@@ -1,7 +1,7 @@
 import { WebSocket } from "ws";
+import type { IncomingMessage } from "http";
 import { handleMessage } from "./handlers/message.js";
 import { ORIGINS } from "../constants/ws.js";
-import type { IncomingMessage } from "http";
 import { checkAuth } from "../lib/auth.js";
 import { rateLimit } from "../middlewares/rateLimit.js";
 
