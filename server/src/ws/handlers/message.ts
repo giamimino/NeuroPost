@@ -1,32 +1,49 @@
 import { validateMessage } from "../../lib/validators/message.validator.js";
+import { handleDisconnect, handleJoinRoom } from "../../rooms/room.manager.js";
 import { rooms } from "../rooms.js";
 import WebSocket from "ws";
 
 export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
-  let data;
+  console.log(rooms.values());
 
   const validationResult = validateMessage(raw);
-  if (validationResult.error) {
+  console.log(validationResult);
+
+  if (validationResult.error || !validationResult) {
     ws.send(
       JSON.stringify({
         error: validationResult.error,
       }),
     );
     return;
-  } else if (validationResult.data) {
-    data = validationResult.data;
   }
 
-  switch (data.type) {
+  switch (validationResult.type) {
     case "message":
-      handleChatMessage(ws, data.payload);
+      handleChatMessage(ws, validationResult.payload);
       break;
     case "ping":
-      ws.send("pong");
+      ws.send(
+        JSON.stringify({
+          type: "pong",
+          payload: {
+            success: true,
+          },
+        }),
+      );
       break;
     case "join-room":
-      console.log(data);
-      ws.send("join-room");
+      handleJoinRoom(ws, validationResult.payload.roomId);
+
+      break;
+    case "disconnect-room":
+      const success = handleDisconnect(ws);
+      ws.send(JSON.stringify({
+        type: "disconnect-room-result",
+        payload: {
+          success,
+        }
+      }))
       break;
     default:
       ws.send("Unknown message type");

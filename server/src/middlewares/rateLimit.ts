@@ -22,4 +22,5 @@ export function rateLimit(ws: WebSocket, ip: string) {
 
   timestampts.push(currentDate);
   rateLimits.set(ip, timestampts);
+  return true
 }

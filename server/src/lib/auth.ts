@@ -15,7 +15,7 @@ export function checkAuth(ws: WebSocket, req: IncomingMessage) {
 
   if (!cookiesHeader) {
     ws.close(401, JSON.stringify({ error: ERRORS.UNAUTHORIZED }));
-    return;
+    return false;
   }
 
   const cookies = cookie.parse(cookiesHeader);
@@ -31,5 +31,6 @@ export function checkAuth(ws: WebSocket, req: IncomingMessage) {
     return true;
   } catch (error) {
     ws.close(401, JSON.stringify({ error: ERRORS.INVALID_CREDENTIALS }));
+    return false
   }
 }

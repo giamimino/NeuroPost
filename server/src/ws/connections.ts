@@ -4,6 +4,7 @@ import { handleMessage } from "./handlers/message.js";
 import { ORIGINS } from "../constants/ws.js";
 import { checkAuth } from "../lib/auth.js";
 import { rateLimit } from "../middlewares/rateLimit.js";
+import { handleDisconnect } from "../rooms/room.manager.js";
 
 export function handleConnection(ws: WebSocket, req: IncomingMessage) {
   // * origin check <===============>
@@ -20,7 +21,8 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
 
   const ip = ((req.headers["x-forwarded-for"] as string)?.split(",")[0] ||
     req.socket.remoteAddress) as string;
-
+  console.log(ip);
+  
   ws.on("message", (raw) => {
     const res = rateLimit(ws, ip);
     if (!res) return;
@@ -29,8 +31,7 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
   });
 
   ws.on("close", () => {
+    handleDisconnect(ws)
     console.log("Client disconnected");
   });
-
-  ws.send("Welcome");
 }
