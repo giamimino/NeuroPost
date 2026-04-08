@@ -26,5 +26,23 @@ export function createWebSocketServer(port: number) {
     handleConnection(ws, req);
   });
 
+  const interval = setInterval(() => {
+    wss.clients.forEach((client) => {
+      if ((client as any).isAlive === false) {
+        console.log("terminate");
+        
+        return client.terminate();
+      }
+
+      (client as any).isAlive = false;
+
+      client.ping();
+    });
+  }, 30000);
+
+  wss.on("close", () => {
+    clearInterval(interval);
+  });
+
   return wss;
 }

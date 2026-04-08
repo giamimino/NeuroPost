@@ -5,6 +5,7 @@ import { ORIGINS } from "../constants/ws.js";
 import { checkAuth } from "../lib/auth.js";
 import { rateLimit } from "../middlewares/rateLimit.js";
 import { handleDisconnect } from "../rooms/room.manager.js";
+import { heartBeat } from "../utils/heartBeat.js";
 
 export function handleConnection(ws: WebSocket, req: IncomingMessage) {
   // * origin check <===============>
@@ -29,6 +30,8 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
 
     handleMessage(ws, raw); // * messaage handler, check message and give format
   });
+
+  ws.on("pong", heartBeat)
 
   ws.on("close", () => {
     handleDisconnect(ws)

@@ -8,8 +8,8 @@ import { useEffect, useRef, useState } from "react";
 
 export default function Page() {
   const ws = useRef<WebSocket | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const roomRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [messages, setMessages] = useState<string[]>([]);
   const [roomId, setRoomId] = useState<string | undefined>();
 
@@ -45,35 +45,56 @@ export default function Page() {
   useEffect(() => {
     ws.current = new WebSocket("ws://localhost:3001");
 
-    ws.current.onopen = () => {
-      console.log("Connected");
-      ws.current?.send(JSON.stringify({ type: "ping" }));
+    let interval: NodeJS.Timeout;
+
+    const connect = () => {
+      if (!ws.current) return;
+
+      ws.current.onopen = () => {
+        console.log("Connected");
+        interval = setInterval(() => {
+          if (ws.current?.readyState === WebSocket.OPEN) {
+            ws.current.send(JSON.stringify({ type: "ping" }));
+          }
+        }, 20000);
+      };
+
+      ws.current.onmessage = (event) => {
+        console.log(JSON.parse(event.data));
+        const data = JSON.parse(event.data);
+        const payload = data.payload;
+
+        switch (data.type) {
+          case "join-room-result":
+            if (payload.success) setRoomId(payload.roomId);
+            break;
+          case "pong":
+            console.log(data.payload);
+
+            break;
+          case "message":
+            setMessages((prev) => [...prev, payload.message]);
+            break;
+
+          default:
+            console.log(data);
+            break;
+        }
+      };
+
+      ws.current.onclose = () => {
+        console.log("Disconnected. Reconnecting...");
+        clearInterval(interval);
+        setTimeout(connect, 2000);
+      };
     };
 
-    ws.current.onmessage = (event) => {
-      console.log(JSON.parse(event.data));
-      const data = JSON.parse(event.data);
-      const payload = data.payload;
+    connect()
 
-      switch (data.type) {
-        case "join-room-result":
-          if (payload.success) setRoomId(payload.roomId);
-          break;
-        case "pong":
-          console.log(data.payload);
-
-          break;
-        case "message":
-          setMessages((prev) => [...prev, payload.message]);
-          break;
-
-        default:
-          console.log(data);
-          break;
-      }
+    return () => {
+      clearInterval(interval);
+      ws.current?.close();
     };
-
-    return () => ws.current?.close();
   }, []);
 
   return (

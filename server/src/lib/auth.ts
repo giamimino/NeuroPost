@@ -14,7 +14,7 @@ export function checkAuth(ws: WebSocket, req: IncomingMessage) {
   const cookiesHeader = req.headers.cookie;
 
   if (!cookiesHeader) {
-    ws.close(401, JSON.stringify({ error: ERRORS.UNAUTHORIZED }));
+    ws.send(JSON.stringify({ error: ERRORS.UNAUTHORIZED }));
     return false;
   }
 
@@ -22,7 +22,7 @@ export function checkAuth(ws: WebSocket, req: IncomingMessage) {
   const token = cookies[process.env.ACCESS_COOKIE_NAME!];
 
   if (!token) {
-    ws.close(401, JSON.stringify({ error: ERRORS.UNAUTHORIZED }));
+    ws.send(JSON.stringify({ error: ERRORS.UNAUTHORIZED }));
     return false;
   }
 
@@ -30,7 +30,7 @@ export function checkAuth(ws: WebSocket, req: IncomingMessage) {
     verifyToken(token);
     return true;
   } catch (error) {
-    ws.close(401, JSON.stringify({ error: ERRORS.INVALID_CREDENTIALS }));
+    ws.send(JSON.stringify({ error: ERRORS.INVALID_CREDENTIALS }));
     return false
   }
 }
