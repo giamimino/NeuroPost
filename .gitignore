@@ -47,3 +47,4 @@ dublicateDates.js
 .env*.local
 
 local/
+server/dist/

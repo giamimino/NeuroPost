@@ -2,9 +2,11 @@
   "name": "server",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "ts-node  src/server.ts",
-    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "node --loader ts-node/esm src/server.ts",
+    "build": "tsc && tsc-alias",
     "lint": "eslint .",
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
@@ -19,16 +21,19 @@
     "dotenv": "^17.3.1",
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.3",
+    "tsconfig-paths": "^4.2.0",
     "ws": "^8.19.0"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
-    "vitest": "^4.1.2",
     "@types/node": "^25.3.3",
     "@types/ws": "^8.18.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3",
+    "eslint": "^9",
     "prettier": "^3.8.1",
-    "eslint": "^9"
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2",
+    "vitest-websocket-mock": "^0.5.0"
   }
 }

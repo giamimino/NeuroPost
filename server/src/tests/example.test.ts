@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it } from "vitest";
 
-describe('math sanity check', () => {
-  it('adds numbers correctly', () => {
-    expect(1 + 1).toBe(2)
-  })
-})
+describe("Example Test", () => {
+  it("should pass", () => {
+    expect(true).toBe(true);
+  });
+});
