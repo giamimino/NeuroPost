@@ -6,8 +6,8 @@ const ipRequestMap = new Map<string, number[]>();
 const rules = [
   { match: /^\/api\/auth/, limit: 3 },
   { match: /^\/api\/follow/, limit: 3 },
-  { match: /^\/api\/friend-request/, limit: 3 },
-  { match: /^\/api\/friend-request/, limit: 3 },
+  { match: /^\/api\/friend-request/, limit: 10 },
+  { match: /^\/api\/pending-friends/, limit: 10 },
   { match: /^\/api\/friends/, limit: 7 },
   { match: /^\/api\/index/, limit: 30 },
   { match: /^\/api\/notifications/, limit: 30 },
@@ -29,7 +29,7 @@ const getRule = (path: string) => {
 
 export default function RateLimitMiddleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
-  const rule = getRule(path);
+  const rule = getRule(path) ?? { match: /.*/, limit: 5 };
 
   if (!rule)
     return NextResponse.json(
