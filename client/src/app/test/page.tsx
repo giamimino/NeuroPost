@@ -43,7 +43,7 @@ export default function Page() {
   };
 
   useEffect(() => {
-    ws.current = new WebSocket("ws://localhost:3001");
+    ws.current = new WebSocket(process.env.NEXT_PUBLIC_WEBSOCKET_URL!);
 
     let interval: NodeJS.Timeout;
 
