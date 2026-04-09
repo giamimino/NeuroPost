@@ -5,6 +5,8 @@ import { createAccessToken, createRefreshToken } from "@/lib/jwt";
 import { ERRORS } from "@/constants/error-handling";
 import { PasswordValidator } from "@/utils/validator";
 import { NeonDbError } from "@neondatabase/serverless";
+import { getIP } from "@/utils/getIp";
+import client from "@/lib/client";
 
 export async function POST(req: Request) {
   try {
@@ -41,10 +43,13 @@ export async function POST(req: Request) {
       user[0].status,
     );
 
-    await sql.query(
-      `INSERT INTO refresh_tokens (token, user_id, expires_at) values ($1, $2, NOW() + INTERVAL '7 days')`,
-      [refreshToken, user[0].id],
-    );
+    const ip = getIP(req.headers);
+    const key = `refresh:${user[0].id}:${ip}`;
+    const exp = 60 * 60 * 24 * 7;
+
+    await client.set(key, refreshToken, {
+      expiration: { type: "EX", value: exp },
+    });
 
     const res = NextResponse.json({ ok: true }, { status: 200 });
 

@@ -4,6 +4,9 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { createAccessToken } from "@/lib/jwt";
 import { JWTUserPaylaod } from "@/types/global";
+import { ERRORS } from "@/constants/error-handling";
+import { getIP } from "@/utils/getIp";
+import client from "@/lib/client";
 
 function errorResponse(message: string) {
   return NextResponse.json({
@@ -12,21 +15,49 @@ function errorResponse(message: string) {
   });
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get(
       process.env.REFRESH_COOKIE_NAME!,
     )?.value;
-    if (!refreshToken) return NextResponse.json({}, { status: 401 });
+    if (!refreshToken)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.GENERIC_ERROR },
+        { status: 500 },
+      );
 
-    const rawSql = `SELECT token FROM refresh_tokens WHERE token = $1`;
-    const rows = await sql.query(rawSql, [refreshToken]);
+    let auth;
+    try {
+      auth = jwt.verify(
+        refreshToken,
+        process.env.REFRESH_SECRET!,
+      ) as JWTUserPaylaod;
+    } catch (error) {
+      return NextResponse.json(
+        { ok: false, error: ERRORS.GENERIC_ERROR },
+        { status: 500 },
+      );
+    }
 
-    if (rows.length === 0) return NextResponse.json({}, { status: 403 });
+    if (!auth.userId)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.GENERIC_ERROR },
+        { status: 500 },
+      );
+
+    const ip = getIP(req.headers);
+    const key = `refresh:${auth.userId}:${ip}`;
+    const refresh = await client.get(key);
+
+    if (!refresh)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.GENERIC_ERROR },
+        { status: 403 },
+      );
 
     const payload = jwt.verify(
-      rows[0].token,
+      refresh,
       process.env.REFRESH_SECRET!,
     ) as JWTUserPaylaod;
 
@@ -36,10 +67,15 @@ export async function POST() {
       payload.status,
     );
 
-    const res = NextResponse.json({ ok: true, rows }, { status: 200 });
+    const res = NextResponse.json({ ok: true, refresh }, { status: 200 });
     res.cookies.set(process.env.ACCESS_COOKIE_NAME!, newAccessToken, {
       httpOnly: true,
+      maxAge: 60 * 15,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
     });
+    
     return res;
   } catch (err) {
     console.log(err);

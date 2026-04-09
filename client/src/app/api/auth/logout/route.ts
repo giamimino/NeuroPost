@@ -1,11 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextResponse, userAgent } from "next/server";
 import { sql } from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { ERRORS } from "@/constants/error-handling";
 import { JWTUserPaylaod } from "@/types/global";
+import { getIP } from "@/utils/getIp";
+import client from "@/lib/client";
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
     const cookieStore = await cookies();
 
@@ -31,9 +33,10 @@ export async function POST() {
         { status: 401 },
       );
     }
-    await sql.query(`DELETE FROM refresh_tokens WHERE user_id = $1`, [
-      payload.userId,
-    ]);
+    const ip = getIP(req.headers);
+    const key = `refresh:${payload.userId}:${ip}`;
+
+    await client.del(key);
 
     cookieStore.delete(process.env.ACCESS_COOKIE_NAME!);
     cookieStore.delete(process.env.REFRESH_COOKIE_NAME!);
