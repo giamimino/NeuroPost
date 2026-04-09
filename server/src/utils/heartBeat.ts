@@ -1,7 +1,5 @@
 import { WebSocket } from "ws";
 
-
 export function heartBeat(this: WebSocket) {
-  (this as any).isAlive = true
-  
+  (this as any).isAlive = true;
 }

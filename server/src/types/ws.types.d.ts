@@ -1,1 +1,6 @@
-export type WSSendType = "message" | "ping" | "join-room";
+export type WSSendType =
+  | "chat-message"
+  | "ping"
+  | "join-room"
+  | "leave-room"
+  | "create-room";

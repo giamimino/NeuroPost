@@ -27,10 +27,10 @@ export function checkAuth(ws: WebSocket, req: IncomingMessage) {
   }
 
   try {
-    verifyToken(token);
-    return true;
+    const user = verifyToken(token);
+    return user;
   } catch (error) {
     ws.send(JSON.stringify({ error: ERRORS.INVALID_CREDENTIALS }));
-    return false
+    return false;
   }
 }

@@ -30,7 +30,7 @@ export function createWebSocketServer(port: number) {
     wss.clients.forEach((client) => {
       if ((client as any).isAlive === false) {
         console.log("terminate");
-        
+
         return client.terminate();
       }
 

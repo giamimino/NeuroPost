@@ -1,41 +1,43 @@
+import { RoomType } from "../types/room.js";
+import { UserType } from "../types/user.js";
 import { rooms } from "../ws/rooms.js";
 import type WebSocket from "ws";
 
-export function handleJoinRoom(ws: WebSocket, roomId: string) {
-  if (!roomId) return;
-
-  if (!rooms.has(roomId)) {
-    rooms.set(roomId, new Set());
-  }
-
-  const room = rooms.get(roomId)!;
-  room.add(ws);
-
-  (ws as any).roomId = roomId;
-
-  ws.send(
-    JSON.stringify({
-      type: "join-room-result",
-      payload: {
-        success: true,
-        roomId,
-      },
-    }),
-  );
+export function getRoom(room: string) {
+  return rooms.get(room);
 }
 
-export function handleDisconnect(ws: WebSocket): boolean {
-  const roomId = (ws as any).roomId;
+export function canJoinRoom(user: UserType, room: RoomType) {
+  if (room.isPublic) return true;
 
-  if (!roomId || !rooms.has(roomId)) return false;
+  return room.members.has(user.userId);
+}
 
-  const room = rooms.get(roomId)!;
-  
+export function joinRoom(ws: WebSocket & { user?: UserType }, room: RoomType) {
+  room.sockets.add(ws);
+}
 
-  room.delete(ws);
+export function leaveRoom(ws: WebSocket, room: RoomType) {
+  room.sockets.delete(ws);
+}
 
-  if (room.size === 0) {
-    rooms.delete(roomId);
-  }
-  return true
+export function createRoom(
+  id: string,
+  ownerId: string,
+  isPublic = false,
+  members?: string[],
+) {
+  if (rooms.has(id)) return;
+
+  const room: RoomType = {
+    id,
+    ownerId,
+    isPublic,
+    members: new Set(members || [ownerId]),
+    sockets: new Set(),
+  };
+
+  rooms.set(id, room);
+
+  return room;
 }
