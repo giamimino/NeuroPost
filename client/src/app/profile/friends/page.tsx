@@ -33,6 +33,7 @@ import {
   MessageCircleOff,
   UserRoundPlus,
   UserRoundX,
+  Users,
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
@@ -50,11 +51,17 @@ const pages = [
     label: "All friends",
     icon: <UsersRound />,
   },
+  {
+    id: "pending_friends",
+    label: "Pending friends",
+    icon: <Users />,
+  },
 ];
 
 const FriendsPage = () => {
   const [section, setSection] = useState("friend_requests");
   const [friendRequests, setFriendRequests] = useState<FriendRequestType[]>([]);
+  const [pendingFriends, setPendingFriends] = useState<FriendRequestType[]>([]);
   const [loading, setLoading] = useState(false);
   const [friends, setFriends] = useState<
     (FriendType & { settings: FriendSettingsType })[]
@@ -77,7 +84,6 @@ const FriendsPage = () => {
         body: JSON.stringify({ friendshipId }),
       });
       const data = await res.json();
-      console.log(data);
 
       if (data.ok) {
         if (action === "mute") {
@@ -162,6 +168,21 @@ const FriendsPage = () => {
     }
   };
 
+  const handleCancelFriendRequest = async (requestId: string) => {
+    const url = `/api/friend-request?withNotif=true`;
+    const res = await apiFetch(url, {
+      ...ApiConfig.delete,
+      body: JSON.stringify({ requestId }),
+    });
+    const data = await res?.json();
+
+    if (data.ok) {
+      setFriendRequests((prev) => prev.filter((f) => f.id !== requestId));
+    } else if (!data.ok && data.error) {
+      addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
+    }
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -172,21 +193,23 @@ const FriendsPage = () => {
                 url: "/api/friend-request?limit=20",
                 request: ApiConfig.get,
               }
-            : {
-                url: "/api/friends?limit=20",
-                request: ApiConfig.get,
-              };
+            : section === "all_friends"
+              ? {
+                  url: "/api/friends?limit=20",
+                  request: ApiConfig.get,
+                }
+              : { url: "/api/pending-friends", request: ApiConfig.get };
 
         const res = await apiFetch(config.url, config.request);
         const data = await res?.json();
 
-        console.log(data);
-
         if (data.ok) {
           if (section === "friend_requests") {
             setFriendRequests(data.friend_requests);
-          } else if (section == "all_friends") {
+          } else if (section === "all_friends") {
             setFriends(data.friends);
+          } else if (section === "pending_friends") {
+            setPendingFriends(data.pending_friends);
           }
         } else if (!data.ok && data.error) {
           addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
@@ -280,7 +303,7 @@ const FriendsPage = () => {
                 </CardAction>
               </Card>
             ))
-          ) : (
+          ) : section === "all_friends" ? (
             friends.map((f) => (
               <Card key={f.id} className="p-0 gap-0">
                 <CardContent className="px-0 flex flex-col">
@@ -409,6 +432,40 @@ const FriendsPage = () => {
                   </div>
                 </CardContent>
                 <CardAction className="flex flex-col w-full gap-3 px-3 pb-3"></CardAction>
+              </Card>
+            ))
+          ) : (
+            pendingFriends.map((fr) => (
+              <Card key={fr.id} className="p-0 gap-0">
+                <CardContent className="px-0 flex flex-col">
+                  <Image
+                    src={fr.user.profile_url}
+                    width={320}
+                    height={320}
+                    alt={fr.user.name}
+                    className="object-cover w-full aspect-7/5 rounded-t-xl"
+                  />
+                  <div className="p-3">
+                    <CardTitle
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/u/${fr.user.username}`)}
+                    >
+                      {fr.user.name}
+                    </CardTitle>
+                    <CardDescription>
+                      {timeAgo(new Date(fr.created_at))}
+                    </CardDescription>
+                  </div>
+                </CardContent>
+                <CardAction className="flex flex-col w-full gap-3 px-3 pb-3">
+                  <Button
+                    onClick={() => handleCancelFriendRequest(fr.id)}
+                    className="w-full cursor-pointer"
+                    variant={"outline"}
+                  >
+                    cancel
+                  </Button>
+                </CardAction>
               </Card>
             ))
           )}
