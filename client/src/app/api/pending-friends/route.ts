@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { ERRORS } from "@/constants/error-handling";
 import { getAuthUser } from "@/lib/auth";
 import { s3 } from "@/lib/aws-sdk";

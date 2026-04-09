@@ -177,7 +177,7 @@ const FriendsPage = () => {
     const data = await res?.json();
 
     if (data.ok) {
-      setFriendRequests((prev) => prev.filter((f) => f.id !== requestId));
+      setPendingFriends((prev) => prev.filter((f) => f.id !== requestId));
     } else if (!data.ok && data.error) {
       addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
     }
