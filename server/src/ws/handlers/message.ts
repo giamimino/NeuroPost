@@ -1,5 +1,4 @@
 import { ERRORS } from "../../constants/errors.js";
-import { validateMessage } from "../../lib/validators/message.validator.js";
 import {
   canJoinRoom,
   createRoom,
@@ -7,15 +6,14 @@ import {
   joinRoom,
   leaveRoom,
 } from "../../rooms/room.manager.js";
+import { MessageSchema, validateMessage } from "../../schemas/ws/message.schema.js";
 import { RoomType } from "../../types/room.js";
-import { WSSendType } from "../../types/ws.types.js";
-import { rooms } from "../rooms.js";
 import WebSocket from "ws";
 
 export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
   const validationResult = validateMessage(raw);
 
-  if (validationResult.error || !validationResult) {
+  if (validationResult.error || !validationResult.data) {
     ws.send(
       JSON.stringify({
         error: validationResult.error,
@@ -24,38 +22,46 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
     return;
   }
 
-  switch (validationResult.type as WSSendType) {
+  const { type, payload } = validationResult.data;
+
+  switch (type) {
     case "chat-message": {
-      const { message } = validationResult.payload;
+      const { message } = payload;
       if (!(ws as any).roomId) return;
 
       const room = getRoom((ws as any).roomId);
       if (!room) return;
 
-      handleChatMessage(
-        {
-          type: "chat-message",
-          payload: {
-            message,
-            userId: (ws as any).user!.id,
-          },
+      const data = MessageSchema.safeParse({
+        type: "chat-message",
+        payload: {
+          message,
+          userId: (ws as any).user!.id,
         },
-        room,
+      });
+
+      if (data.error || !data.data) return;
+
+      handleChatMessage(data.data, room);
+
+      break;
+    }
+    case "ping": {
+      const data = MessageSchema.safeParse({
+        type: "pong",
+        payload: {
+          success: true,
+        },
+      });
+
+      if (data.error || !data.data) return;
+      
+      ws.send(
+        JSON.stringify(data.data),
       );
 
       break;
     }
-    case "ping":
-      ws.send(
-        JSON.stringify({
-          type: "pong",
-          payload: {
-            success: true,
-          },
-        }),
-      );
-
-      break;
 
     case "leave-room": {
       const roomId = (ws as any).roomId;
@@ -81,7 +87,7 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
       break;
     }
     case "join-room": {
-      const { roomId } = validationResult.payload;
+      const { roomId } = payload;
 
       if (!roomId) return;
 
@@ -124,11 +130,11 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
       break;
     }
     case "create-room": {
-      const { roomId, isPublic, members } = validationResult.payload;
+      const { id, isPublic, members } = payload;
 
-      if (!roomId) return;
+      if (!id) return;
 
-      const room = createRoom(roomId, (ws as any).user.id, isPublic, members);
+      const room = createRoom(id, (ws as any).user.id, isPublic, members);
 
       if (!room) {
         return ws.send(
@@ -152,7 +158,7 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
       );
     }
     default:
-      ws.send("Unknown message type");
+      ws.send(JSON.stringify({ error: ERRORS.INVALID_MESSAGE_TYPE }));
   }
 }
 
