@@ -12,8 +12,23 @@ export const JoinRoomSchema = z.object({
 
 export const RoomSchema = z.object({
   id: z.string(),
-  ownerId: z.string(),
+  ownerId: z.string().nullable(),
   members: z.set(z.string()),
   sockets: z.set(SocketSchema),
   isPublic: z.boolean(),
+});
+
+export const RoomMessageSchema = z.object({
+  id: z.string(),
+  ownerId: z.string().nullable(),
+  members: z.array(z.string()).optional(),
+  sockets: z.set(SocketSchema),
+  isPublic: z.boolean(),
+});
+
+export const RoomCreatePayloadSchema = z.object({
+  id: z.string(),
+  ownerId: z.string().nullable(),
+  isPublic: z.boolean(),
+  members: z.array(z.string()),
 });

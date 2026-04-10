@@ -13,10 +13,12 @@ import {
 import { RoomType } from "../../types/room.js";
 import WebSocket from "ws";
 import { WS } from "../../types/ws.types.js";
+import { rooms } from "../rooms.js";
 
 export function handleMessage(ws: WS, raw: WebSocket.RawData) {
   const validationResult = validateMessage(raw);
-
+  console.log(rooms.entries());
+  
   if (validationResult.error || !validationResult.data) {
     ws.send(
       JSON.stringify({
@@ -37,10 +39,10 @@ export function handleMessage(ws: WS, raw: WebSocket.RawData) {
       if (!room) return;
 
       const data = MessageSchema.safeParse({
-        type: "chat-message",
+        type: "chat-message-result",
         payload: {
+          success: true,
           message,
-          userId: ws.auth?.userId,
         },
       });
 
@@ -135,12 +137,17 @@ export function handleMessage(ws: WS, raw: WebSocket.RawData) {
       ws.send(JSON.stringify(result.data));
       break;
     }
-    case "create-room": {
+    case "create-room-payload": {
       const { id, isPublic, members } = payload;
 
       if (!id || !ws.auth?.userId) return;
 
-      const room = createRoom(id, ws.auth.userId, isPublic, members);
+      const room = createRoom(
+        id,
+        ws.auth.userId,
+        isPublic,
+        Array.from(members || []),
+      );
 
       if (!room) {
         return ws.send(

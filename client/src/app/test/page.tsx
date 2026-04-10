@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { auth, getAuthUser } from "@/lib/auth";
 import { WSSend } from "@/types/ws";
 import { useEffect, useRef, useState } from "react";
 
@@ -13,17 +14,23 @@ export default function Page() {
   const [messages, setMessages] = useState<string[]>([]);
   const [roomId, setRoomId] = useState<string | undefined>();
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputRef.current || !roomId) return;
     const message = inputRef.current.value;
     if (!message.trim()) return;
 
+    const auth = await getAuthUser()
+    console.log(auth);
+    
+
+    if(auth.error) return;
+
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(
         JSON.stringify({
-          type: "message",
-          payload: { message, roomId },
-        } as WSSend),
+          type: "chat-message",
+          payload: { message, userId: auth.user.userId },
+        }),
       );
     }
   };
@@ -34,16 +41,19 @@ export default function Page() {
 
     ws.current.send(
       JSON.stringify({
-        type: "create-room",
+        type: "create-room-payload",
         payload: {
           id: room,
           isPublic: true,
-          ownerId: "40a1a18d-687e-4aa1-95b9-7772bdc7c750",
-          members: new Set(),
+          ownerId: null,
+          members: [
+            "40a1a18d-687e-4aa1-95b9-7772bdc7c750",
+            "b76f48d3-692a-4eb3-990a-9374b648fb19",
+          ],
         },
-      } ),
+      }),
     );
-  }
+  };
 
   const handleJoinRoom = () => {
     if (!roomRef.current || !ws.current) return;
@@ -60,7 +70,9 @@ export default function Page() {
   };
 
   useEffect(() => {
-    ws.current = new WebSocket(process.env.NEXT_PUBLIC_WEBSOCKET_URL!);
+    ws.current = new WebSocket(
+      process.env.NEXT_PUBLIC_WEBSOCKET_URL || "ws://localhost:8080",
+    );
 
     let interval: NodeJS.Timeout;
 
@@ -68,7 +80,7 @@ export default function Page() {
       if (!ws.current) return;
 
       ws.current.onopen = () => {
-        console.log("Connected");
+        console.log("[WS] Connected");
         interval = setInterval(() => {
           if (ws.current?.readyState === WebSocket.OPEN) {
             ws.current.send(
@@ -91,8 +103,13 @@ export default function Page() {
             console.log(data.payload);
 
             break;
-          case "message":
-            setMessages((prev) => [...prev, payload.message]);
+          case "chat-message-result":
+            if(payload.success) {
+              setMessages((prev) => [...prev, payload.message]);
+            }
+            break;
+          case "create-room-result":
+            if (payload.success) setRoomId(payload.roomId);
             break;
 
           default:
@@ -121,6 +138,7 @@ export default function Page() {
       <div>
         <Input ref={roomRef} placeholder="join or create room" />
         <Button onClick={handleCreateRoom}>create room</Button>
+        <Button onClick={handleJoinRoom}>join room</Button>
       </div>
       {roomId && (
         <Card>
@@ -133,9 +151,7 @@ export default function Page() {
           </Card>
         </Card>
       )}
-      <p>
-        generate uuid: {crypto.randomUUID()}
-      </p>
+      <p></p>
     </div>
   );
 }

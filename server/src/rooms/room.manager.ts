@@ -25,17 +25,17 @@ export function leaveRoom(ws: WebSocket, room: RoomType) {
 
 export function createRoom(
   id: string,
-  ownerId: string,
+  ownerId: string | null,
   isPublic = false,
-  members?: Set<string>,
+  members: string[],
 ) {
   if (rooms.has(id)) return;
 
   const room = RoomSchema.safeParse({
     id,
-    ownerId,
+    ownerId: ownerId || null,
     isPublic,
-    members: members || new Set(),
+    members: new Set(members),
     sockets: new Set(),
   });
 

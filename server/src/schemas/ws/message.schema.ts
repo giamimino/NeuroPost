@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import z from "zod";
-import { RoomSchema } from "./room.schema.js";
+import { RoomCreatePayloadSchema, RoomMessageSchema, RoomSchema } from "./room.schema.js";
 import { ERRORS } from "../../constants/errors.js";
 
 export const MessageSchema = z.discriminatedUnion("type", [
@@ -9,6 +9,14 @@ export const MessageSchema = z.discriminatedUnion("type", [
     payload: z.object({
       message: z.string().min(1),
       userId: z.uuid(),
+    }),
+  }),
+
+  z.object({
+    type: z.literal("chat-message-result"),
+    payload: z.object({
+      success: z.boolean(),
+      message: z.string(),
     }),
   }),
 
@@ -67,14 +75,19 @@ export const MessageSchema = z.discriminatedUnion("type", [
   }),
 
   z.object({
+    type: z.literal("create-room-payload"),
+    payload: RoomCreatePayloadSchema,
+  }),
+
+  z.object({
     type: z.literal("create-room"),
-    payload: RoomSchema.pick({
+    payload: RoomMessageSchema.pick({
       id: true,
       ownerId: true,
       isPublic: true,
       members: true,
       sockets: true,
-    }),
+    }).partial({ members: true }),
   }),
 
   z.object({
