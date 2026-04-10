@@ -1,5 +1,5 @@
-import { WebSocket } from "ws";
+import { WS } from "../types/ws.types.js";
 
-export function heartBeat(this: WebSocket) {
-  (this as any).isAlive = true;
+export function heartBeat(this: WS) {
+  this.isAlive = true;
 }

@@ -1,7 +1,9 @@
+import z from "zod";
 import { RoomType } from "../types/room.js";
 import { UserType } from "../types/user.js";
 import { rooms } from "../ws/rooms.js";
 import type WebSocket from "ws";
+import { RoomSchema } from "../schemas/ws/room.schema.js";
 
 export function getRoom(room: string) {
   return rooms.get(room);
@@ -23,21 +25,23 @@ export function leaveRoom(ws: WebSocket, room: RoomType) {
 
 export function createRoom(
   id: string,
-  ownerId: string,
+  ownerId: string | null,
   isPublic = false,
-  members?: string[],
+  members: string[],
 ) {
   if (rooms.has(id)) return;
 
-  const room: RoomType = {
+  const room = RoomSchema.safeParse({
     id,
-    ownerId,
+    ownerId: ownerId || null,
     isPublic,
-    members: new Set(members || [ownerId]),
+    members: new Set(members),
     sockets: new Set(),
-  };
+  });
 
-  rooms.set(id, room);
+  if (room.error || !room.data) return;
 
-  return room;
+  rooms.set(id, room.data);
+
+  return room.data;
 }

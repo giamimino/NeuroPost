@@ -35,4 +35,8 @@ export const ERRORS = {
     title: "Room not found",
     description: "The requested room was not found.",
   },
+  INVALID_MESSAGE_TYPE: {
+    title: "Invalid message type",
+    description: "The provided message type is invalid.",
+  },
 };

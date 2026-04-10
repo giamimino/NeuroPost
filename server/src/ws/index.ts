@@ -1,5 +1,6 @@
 import { WebSocketServer } from "ws";
 import { handleConnection } from "./connections.js";
+import { WS } from "../types/ws.types.js";
 
 export function createWebSocketServer(port: number) {
   const wss = new WebSocketServer({
@@ -27,14 +28,14 @@ export function createWebSocketServer(port: number) {
   });
 
   const interval = setInterval(() => {
-    wss.clients.forEach((client) => {
-      if ((client as any).isAlive === false) {
+    wss.clients.forEach((client: WS) => {
+      if (client.isAlive === false) {
         console.log("terminate");
 
         return client.terminate();
       }
 
-      (client as any).isAlive = false;
+      client.isAlive = false;
 
       client.ping();
     });

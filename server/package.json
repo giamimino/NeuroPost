@@ -22,7 +22,8 @@
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.3",
     "tsconfig-paths": "^4.2.0",
-    "ws": "^8.19.0"
+    "ws": "^8.19.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
