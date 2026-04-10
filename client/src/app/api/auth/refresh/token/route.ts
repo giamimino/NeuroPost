@@ -75,7 +75,7 @@ export async function POST(req: Request) {
       sameSite: "strict",
       path: "/",
     });
-    
+
     return res;
   } catch (err) {
     console.log(err);

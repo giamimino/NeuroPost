@@ -198,7 +198,10 @@ const FriendsPage = () => {
                   url: "/api/friends?limit=20",
                   request: ApiConfig.get,
                 }
-              : { url: "/api/pending-friends?limit=20", request: ApiConfig.get };
+              : {
+                  url: "/api/pending-friends?limit=20",
+                  request: ApiConfig.get,
+                };
 
         const res = await apiFetch(config.url, config.request);
         const data = await res?.json();

@@ -4,15 +4,16 @@ export type WSSend =
   | {
       type: "join-room";
       payload: {
-        roomId: string
-      }
+        roomId: string;
+      };
     }
   | {
       type: "message";
       payload: {
-        message: string,
-        roomId: string
-      }
-    } | {
-      type: "ping"
+        message: string;
+        roomId: string;
+      };
+    }
+  | {
+      type: "ping";
     };

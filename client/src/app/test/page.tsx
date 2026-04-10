@@ -89,7 +89,7 @@ export default function Page() {
       };
     };
 
-    connect()
+    connect();
 
     return () => {
       clearInterval(interval);
