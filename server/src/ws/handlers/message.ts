@@ -6,7 +6,10 @@ import {
   joinRoom,
   leaveRoom,
 } from "../../rooms/room.manager.js";
-import { MessageSchema, validateMessage } from "../../schemas/ws/message.schema.js";
+import {
+  MessageSchema,
+  validateMessage,
+} from "../../schemas/ws/message.schema.js";
 import { RoomType } from "../../types/room.js";
 import WebSocket from "ws";
 
@@ -55,10 +58,8 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
       });
 
       if (data.error || !data.data) return;
-      
-      ws.send(
-        JSON.stringify(data.data),
-      );
+
+      ws.send(JSON.stringify(data.data));
 
       break;
     }
@@ -75,15 +76,17 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
       leaveRoom(ws, room);
       (ws as any).roomId = null;
 
-      ws.send(
-        JSON.stringify({
-          type: "leave-room-result",
-          payload: {
-            success: true,
-            roomId,
-          },
-        }),
-      );
+      const result = MessageSchema.safeParse({
+        type: "leave-room-result",
+        payload: {
+          success: true,
+          roomId,
+        },
+      });
+
+      if (!result.data || result.error) return;
+
+      ws.send(JSON.stringify(result.data));
       break;
     }
     case "join-room": {
@@ -118,14 +121,18 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
       joinRoom(ws, room);
       (ws as any).roomId = roomId;
 
+      const result = MessageSchema.safeParse({
+        type: "join-room-result",
+        payload: {
+          success: true,
+          roomId,
+        },
+      });
+
+      if (!result.data || result.error) return;
+
       ws.send(
-        JSON.stringify({
-          type: "join-room-result",
-          payload: {
-            success: true,
-            roomId,
-          },
-        }),
+        JSON.stringify(result.data),
       );
       break;
     }
@@ -147,14 +154,18 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
         );
       }
 
+      const result = MessageSchema.safeParse({
+        type: "create-room-result",
+        payload: {
+          success: true,
+          roomId: room.id,
+        },
+      });
+
+      if (!result.data || result.error) return;
+
       ws.send(
-        JSON.stringify({
-          type: "create-room-result",
-          payload: {
-            success: true,
-            roomId: room.id,
-          },
-        }),
+        JSON.stringify(result.data),
       );
     }
     default:

@@ -5,6 +5,7 @@ import { ORIGINS } from "../constants/ws.js";
 import { checkAuth } from "../lib/auth.js";
 import { rateLimit } from "../middlewares/rateLimit.js";
 import { heartBeat } from "../utils/heartBeat.js";
+import { UserSchema } from "../schemas/user.schema.js";
 
 export function handleConnection(ws: WebSocket, req: IncomingMessage) {
   // * origin check <===============>
@@ -19,11 +20,16 @@ export function handleConnection(ws: WebSocket, req: IncomingMessage) {
   const auth = checkAuth(ws, req); // * AUTH CHECK <=================>
   if (!auth) return;
 
-  (ws as any).auth = auth;
+  const result = UserSchema.safeParse(auth);
+  if(result.error || !result.data || result.data.status !== "active") {
+    ws.terminate();
+    return;
+  }
+
+  (ws as any).auth = result.data;
 
   const ip = ((req.headers["x-forwarded-for"] as string)?.split(",")[0] ||
     req.socket.remoteAddress) as string;
-  console.log(ip);
 
   ws.on("message", (raw) => {
     const res = rateLimit(ws, ip);

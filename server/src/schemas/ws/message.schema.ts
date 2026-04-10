@@ -34,6 +34,14 @@ export const MessageSchema = z.discriminatedUnion("type", [
   }),
 
   z.object({
+    type: z.literal("leave-room-result"),
+    payload: z.object({
+      success: z.boolean(),
+      roomId: z.string(),
+    }),
+  }),
+
+  z.object({
     type: z.literal("join-room"),
     payload: z.object({
       roomId: z.string(),
