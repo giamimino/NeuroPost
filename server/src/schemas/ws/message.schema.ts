@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import z, { success } from "zod";
+import z from "zod";
 import { RoomSchema } from "./room.schema.js";
 import { ERRORS } from "../../constants/errors.js";
 
@@ -83,7 +83,7 @@ export const MessageSchema = z.discriminatedUnion("type", [
       success: z.boolean(),
       roomId: z.string(),
     }),
-  })
+  }),
 ]);
 
 export const validateMessage = (raw: WebSocket.RawData) => {

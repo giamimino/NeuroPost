@@ -12,8 +12,9 @@ import {
 } from "../../schemas/ws/message.schema.js";
 import { RoomType } from "../../types/room.js";
 import WebSocket from "ws";
+import { WS } from "../../types/ws.types.js";
 
-export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
+export function handleMessage(ws: WS, raw: WebSocket.RawData) {
   const validationResult = validateMessage(raw);
 
   if (validationResult.error || !validationResult.data) {
@@ -30,16 +31,16 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
   switch (type) {
     case "chat-message": {
       const { message } = payload;
-      if (!(ws as any).roomId) return;
+      if (!ws.roomId) return;
 
-      const room = getRoom((ws as any).roomId);
+      const room = getRoom(ws.roomId);
       if (!room) return;
 
       const data = MessageSchema.safeParse({
         type: "chat-message",
         payload: {
           message,
-          userId: (ws as any).user!.id,
+          userId: ws.auth?.userId,
         },
       });
 
@@ -65,7 +66,7 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
     }
 
     case "leave-room": {
-      const roomId = (ws as any).roomId;
+      const roomId = ws.roomId;
 
       if (!roomId) return;
 
@@ -74,7 +75,7 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
       if (!room) return;
 
       leaveRoom(ws, room);
-      (ws as any).roomId = null;
+      ws.roomId = null;
 
       const result = MessageSchema.safeParse({
         type: "leave-room-result",
@@ -107,7 +108,7 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
         );
       }
 
-      if (!(ws as any).user || !canJoinRoom((ws as any).user!, room)) {
+      if (!ws.auth || !canJoinRoom(ws.auth!, room)) {
         return ws.send(
           JSON.stringify({
             type: "error",
@@ -119,7 +120,7 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
       }
 
       joinRoom(ws, room);
-      (ws as any).roomId = roomId;
+      ws.roomId = roomId;
 
       const result = MessageSchema.safeParse({
         type: "join-room-result",
@@ -131,17 +132,15 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
 
       if (!result.data || result.error) return;
 
-      ws.send(
-        JSON.stringify(result.data),
-      );
+      ws.send(JSON.stringify(result.data));
       break;
     }
     case "create-room": {
       const { id, isPublic, members } = payload;
 
-      if (!id) return;
+      if (!id || !ws.auth?.userId) return;
 
-      const room = createRoom(id, (ws as any).user.id, isPublic, members);
+      const room = createRoom(id, ws.auth.userId, isPublic, members);
 
       if (!room) {
         return ws.send(
@@ -164,9 +163,9 @@ export function handleMessage(ws: WebSocket, raw: WebSocket.RawData) {
 
       if (!result.data || result.error) return;
 
-      ws.send(
-        JSON.stringify(result.data),
-      );
+      ws.send(JSON.stringify(result.data));
+
+      break;
     }
     default:
       ws.send(JSON.stringify({ error: ERRORS.INVALID_MESSAGE_TYPE }));

@@ -28,6 +28,23 @@ export default function Page() {
     }
   };
 
+  const handleCreateRoom = () => {
+    if (!roomRef.current || !ws.current) return;
+    const room = roomRef.current.value;
+
+    ws.current.send(
+      JSON.stringify({
+        type: "create-room",
+        payload: {
+          id: room,
+          isPublic: true,
+          ownerId: "40a1a18d-687e-4aa1-95b9-7772bdc7c750",
+          members: new Set(),
+        },
+      } ),
+    );
+  }
+
   const handleJoinRoom = () => {
     if (!roomRef.current || !ws.current) return;
     const room = roomRef.current.value;
@@ -54,7 +71,9 @@ export default function Page() {
         console.log("Connected");
         interval = setInterval(() => {
           if (ws.current?.readyState === WebSocket.OPEN) {
-            ws.current.send(JSON.stringify({ type: "ping" }));
+            ws.current.send(
+              JSON.stringify({ type: "ping", payload: { success: true } }),
+            );
           }
         }, 20000);
       };
@@ -89,7 +108,7 @@ export default function Page() {
       };
     };
 
-    connect()
+    connect();
 
     return () => {
       clearInterval(interval);
@@ -101,7 +120,7 @@ export default function Page() {
     <div className="pt-20">
       <div>
         <Input ref={roomRef} placeholder="join or create room" />
-        <Button onClick={handleJoinRoom}>Join</Button>
+        <Button onClick={handleCreateRoom}>create room</Button>
       </div>
       {roomId && (
         <Card>
@@ -114,6 +133,9 @@ export default function Page() {
           </Card>
         </Card>
       )}
+      <p>
+        generate uuid: {crypto.randomUUID()}
+      </p>
     </div>
   );
 }
