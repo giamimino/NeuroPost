@@ -77,7 +77,9 @@ export async function POST(
         description,
         sentAt: new Date(Date.now()),
       };
-      const type = (action === "accept" ? "FRIEND_ACCEPT" :  "FRIEND_DECLINE") as NotificationEnumType;
+      const type = (
+        action === "accept" ? "FRIEND_ACCEPT" : "FRIEND_DECLINE"
+      ) as NotificationEnumType;
 
       await sql.query(
         "INSERT INTO notifications (user_id, type, title, body) VALUES ($1, $2, $3, $4)",

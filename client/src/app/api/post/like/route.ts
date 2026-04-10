@@ -42,11 +42,9 @@ export async function POST(req: Request) {
       `SELECT value FROM user_settings WHERE user_id = $1 AND key = $2`,
       [post.author_id, SETTINGS_KEYS.NOTIFICATIONS_SETTINGS_KEYS.LIKES],
     );
-    const author_setting = authors_settings[0] || { value: 'true'};
+    const author_setting = authors_settings[0] || { value: "true" };
 
-    if (
-      author_setting.value === "true" ? true : false
-    ) {
+    if (author_setting.value === "true" ? true : false) {
       const title = NOTIFICATIONS_TEXT.NEW_LIKE.title;
       const description = `${payload.username} ${NOTIFICATIONS_TEXT.NEW_LIKE.description}`;
       const type = "NEW_LIKE";

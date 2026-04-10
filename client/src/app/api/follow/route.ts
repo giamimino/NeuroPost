@@ -43,13 +43,13 @@ export async function POST(req: Request) {
       [followId, SETTINGS_KEYS.NOTIFICATIONS_SETTINGS_KEYS.NEW_FOLLOWERS],
     );
 
-    const user_setting = user_settings[0] || { value: "true"};
+    const user_setting = user_settings[0] || { value: "true" };
 
     if (user_setting.value === "true" ? true : false) {
       const title = NOTIFICATIONS_TEXT.NEW_FOLLOWER.title;
       const description = `${payload.username} ${NOTIFICATIONS_TEXT.NEW_FOLLOWER.description}`;
-      const type = "NEW_FOLLOWER" as NotificationEnumType
-      const body = { description, username: payload.username}
+      const type = "NEW_FOLLOWER" as NotificationEnumType;
+      const body = { description, username: payload.username };
 
       await sql.query(
         `INSERT INTO notifications (user_id, type, title, body) VALUES ($1, $2, $3, $4)`,
@@ -62,7 +62,10 @@ export async function POST(req: Request) {
       [followId, payload.userId],
     );
 
-    return NextResponse.json({ ok: true, follow: follow[0], user_setting }, { status: 200 });
+    return NextResponse.json(
+      { ok: true, follow: follow[0], user_setting },
+      { status: 200 },
+    );
   } catch (err) {
     console.error(err);
     return NextResponse.json({ ok: false, message: "" }, { status: 500 });
