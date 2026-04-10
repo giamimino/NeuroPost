@@ -18,7 +18,7 @@ import { rooms } from "../rooms.js";
 export function handleMessage(ws: WS, raw: WebSocket.RawData) {
   const validationResult = validateMessage(raw);
   console.log(rooms.entries());
-  
+
   if (validationResult.error || !validationResult.data) {
     ws.send(
       JSON.stringify({

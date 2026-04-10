@@ -1,6 +1,10 @@
 import WebSocket from "ws";
 import z from "zod";
-import { RoomCreatePayloadSchema, RoomMessageSchema, RoomSchema } from "./room.schema.js";
+import {
+  RoomCreatePayloadSchema,
+  RoomMessageSchema,
+  RoomSchema,
+} from "./room.schema.js";
 import { ERRORS } from "../../constants/errors.js";
 
 export const MessageSchema = z.discriminatedUnion("type", [
