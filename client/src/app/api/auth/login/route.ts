@@ -42,11 +42,13 @@ export async function POST(req: Request) {
       user.username,
       user.status,
     );
-    const ip = getIP(req.headers)
+    const ip = getIP(req.headers);
     const key = `refresh:${user.id}:${ip}`;
     const exp = 60 * 60 * 24 * 7;
-  
-    await client.set(key, refreshToken, { expiration: { type: "EX", value: exp}})
+
+    await client.set(key, refreshToken, {
+      expiration: { type: "EX", value: exp },
+    });
 
     const res = NextResponse.json({ ok: true }, { status: 200 });
 

@@ -19,11 +19,10 @@ export default function Page() {
     const message = inputRef.current.value;
     if (!message.trim()) return;
 
-    const auth = await getAuthUser()
+    const auth = await getAuthUser();
     console.log(auth);
-    
 
-    if(auth.error) return;
+    if (auth.error) return;
 
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(
@@ -104,7 +103,7 @@ export default function Page() {
 
             break;
           case "chat-message-result":
-            if(payload.success) {
+            if (payload.success) {
               setMessages((prev) => [...prev, payload.message]);
             }
             break;
