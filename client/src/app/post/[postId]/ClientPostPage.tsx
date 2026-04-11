@@ -61,6 +61,10 @@ import {
   Comment,
   CommentsContainer,
 } from "@/components/common/CommentsContainer";
+import {
+  ContentToggle,
+  ContentToggleContainer,
+} from "@/components/ContentToggle";
 
 const ClientPostPage = ({
   params,
@@ -441,7 +445,10 @@ const ClientPostPage = ({
                                 ) : (
                                   <Skeleton className="h-8 w-8 rounded-full" />
                                 )}
-                                <Line orientation="vertical" className="mx-auto my-auto" />
+                                <Line
+                                  orientation="vertical"
+                                  className="mx-auto my-auto"
+                                />
                               </div>
                               <div className="flex flex-col gap-2">
                                 <div>
@@ -573,12 +580,21 @@ const ClientPostPage = ({
                                     <CardDescription className="text-[14px]">
                                       {c.content}
                                     </CardDescription>
-                                    <Button
-                                      variant={"ghost"}
-                                      className="w-fit cursor-pointer rounded-full px-3.5 py-0 text-xs"
-                                    >
-                                      Reply
-                                    </Button>
+                                    <ContentToggleContainer>
+                                      <ContentToggle className="flex flex-col gap-2">
+                                        <ContentToggle.Controller>
+                                          <Button
+                                            variant={"ghost"}
+                                            className="w-fit cursor-pointer rounded-full px-3.5 py-0 text-xs"
+                                          >
+                                            Reply
+                                          </Button>
+                                        </ContentToggle.Controller>
+                                        <ContentToggle.Content className="w-full">
+                                          <Input className="w-full" placeholder="Write a reply..." />
+                                        </ContentToggle.Content>
+                                      </ContentToggle>
+                                    </ContentToggleContainer>
                                   </CardContent>
                                 </div>
                                 {/* replies */}
