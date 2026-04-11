@@ -20,6 +20,7 @@ import {
   UserJoin,
 } from "@/types/neon";
 import {
+  ChevronDown,
   ClipboardIcon,
   Ellipsis,
   ExternalLink,
@@ -55,6 +56,11 @@ import {
 import { MediaValidator } from "@/utils/validator";
 import ActionButton from "@/components/action-button";
 import Video from "@/components/common/video";
+import { timeAgo } from "@/utils/functions/timeAgo";
+import {
+  Comment,
+  CommentsContainer,
+} from "@/components/common/CommentsContainer";
 
 const ClientPostPage = ({
   params,
@@ -84,8 +90,6 @@ const ClientPostPage = ({
   const commentInputRef = useRef<HTMLInputElement>(null);
   const shareUrlRef = useRef<HTMLDivElement>(null);
   const { addAlert } = useAlertStore();
-
-  console.log(post);
 
   const handleEditPost = async () => {
     if (!editing || !editableValuesRef.current || !post) return;
@@ -232,7 +236,9 @@ const ClientPostPage = ({
   const config = useMemo(() => {
     if (!post) return null;
 
-    return { url: `/api/post/comment?postId=${post.id}&limit=20` };
+    return {
+      url: `/api/post/comment?postId=${post.id}&limit=20&withProfile=true`,
+    };
   }, [post]);
 
   if (deleted)
@@ -415,110 +421,184 @@ const ClientPostPage = ({
                         user: CommentUserType;
                         role: "creator" | "guest";
                       })[],
-                    ) =>
-                      data.map((c) => (
-                        <Card
-                          key={`${c.id}-${c.post_id}`}
-                          className="rounded-none border-t-0 border-l-0 border-r-0 p-3 relative"
-                        >
-                          {c.role === "creator" && (
-                            <ToggleController
-                              animatePresence
-                              whatToShow={() => (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 10, scale: 0.5 }}
-                                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                                  exit={{ opacity: 0, y: 10 }}
-                                  className="absolute right-15 top-1/2 -translate-y-1/2"
-                                >
-                                  <Card className="p-3">
-                                    <CardContent className="p-0">
-                                      <ToggleController
-                                        animatePresence
-                                        whatToShow={({ handleShow }) => (
-                                          <motion.div
-                                            initial={{
-                                              opacity: 0,
-                                              y: 50,
-                                              scale: 0.75,
-                                            }}
-                                            animate={{
-                                              opacity: 1,
-                                              y: 0,
-                                              scale: 1,
-                                            }}
-                                            exit={{ opacity: 0, y: 10 }}
-                                            className="absolute top-1/2 -translate-y-1/2 -right-3/1 z-10 w-5/2"
-                                          >
-                                            <Card className="">
-                                              <CardHeader>
-                                                <CardDescription>
-                                                  Are you sure you want to
-                                                  delete this comment?
-                                                </CardDescription>
-                                              </CardHeader>
-                                              <CardContent className="flex gap-2.5">
-                                                <Button
-                                                  variant={"outline"}
-                                                  className="cursor-pointer"
-                                                  onClick={() =>
-                                                    handleDeleteComment({
-                                                      commentId: c.id,
-                                                    })
-                                                  }
-                                                >
-                                                  Yes
-                                                </Button>
-                                                <Button
-                                                  variant={"ghost"}
-                                                  className="cursor-pointer"
-                                                  onClick={
-                                                    handleShow
-                                                      ? () => handleShow(false)
-                                                      : undefined
-                                                  }
-                                                >
-                                                  cancel
-                                                </Button>
-                                              </CardContent>
-                                            </Card>
-                                          </motion.div>
-                                        )}
+                    ) => (
+                      <CommentsContainer>
+                        {data.map((c) => (
+                          <Comment
+                            key={`${c.id}-${c.post_id}`}
+                            className="flex flex-col gap-3 p-3 relative"
+                          >
+                            <div className="flex gap-3">
+                              <div className="relative">
+                                {c.user.profile_url ? (
+                                  <Image
+                                    src={c.user.profile_url}
+                                    width={40}
+                                    height={40}
+                                    alt="user-profile"
+                                    className="w-8 h-8 object-cover rounded-full"
+                                  />
+                                ) : (
+                                  <Skeleton className="h-8 w-8 rounded-full" />
+                                )}
+                                <Line orientation="vertical" className="mx-auto my-auto" />
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                <div>
+                                  {c.role === "creator" && (
+                                    <ToggleController
+                                      animatePresence
+                                      whatToShow={() => (
+                                        <motion.div
+                                          initial={{
+                                            opacity: 0,
+                                            y: 10,
+                                            scale: 0.5,
+                                          }}
+                                          animate={{
+                                            opacity: 1,
+                                            y: 0,
+                                            scale: 1,
+                                          }}
+                                          exit={{ opacity: 0, y: 10 }}
+                                          className="absolute right-15 top-1/2 -translate-y-1/2"
+                                        >
+                                          <Card className="p-3">
+                                            <CardContent className="p-0">
+                                              <ToggleController
+                                                animatePresence
+                                                whatToShow={({
+                                                  handleShow,
+                                                }) => (
+                                                  <motion.div
+                                                    initial={{
+                                                      opacity: 0,
+                                                      y: 50,
+                                                      scale: 0.75,
+                                                    }}
+                                                    animate={{
+                                                      opacity: 1,
+                                                      y: 0,
+                                                      scale: 1,
+                                                    }}
+                                                    exit={{ opacity: 0, y: 10 }}
+                                                    className="absolute top-1/2 -translate-y-1/2 -right-3/1 z-10 w-5/2"
+                                                  >
+                                                    <Card className="">
+                                                      <CardHeader>
+                                                        <CardDescription>
+                                                          Are you sure you want
+                                                          to delete this
+                                                          comment?
+                                                        </CardDescription>
+                                                      </CardHeader>
+                                                      <CardContent className="flex gap-2.5">
+                                                        <Button
+                                                          variant={"outline"}
+                                                          className="cursor-pointer"
+                                                          onClick={() =>
+                                                            handleDeleteComment(
+                                                              {
+                                                                commentId: c.id,
+                                                              },
+                                                            )
+                                                          }
+                                                        >
+                                                          Yes
+                                                        </Button>
+                                                        <Button
+                                                          variant={"ghost"}
+                                                          className="cursor-pointer"
+                                                          onClick={
+                                                            handleShow
+                                                              ? () =>
+                                                                  handleShow(
+                                                                    false,
+                                                                  )
+                                                              : undefined
+                                                          }
+                                                        >
+                                                          cancel
+                                                        </Button>
+                                                      </CardContent>
+                                                    </Card>
+                                                  </motion.div>
+                                                )}
+                                              >
+                                                {({ setShow }) => (
+                                                  <Button
+                                                    onClick={() =>
+                                                      setShow(true)
+                                                    }
+                                                    className="hover:text-red-600 cursor-pointer"
+                                                    variant={"outline"}
+                                                  >
+                                                    Delete
+                                                  </Button>
+                                                )}
+                                              </ToggleController>
+                                            </CardContent>
+                                          </Card>
+                                        </motion.div>
+                                      )}
+                                    >
+                                      {({ setShow }) => (
+                                        <Button
+                                          onClick={() =>
+                                            setShow((prev) => !prev)
+                                          }
+                                          className="w-fit cursor-pointer absolute top-1/2 -translate-y-1/2 right-5"
+                                          variant={"ghost"}
+                                          size={"sm"}
+                                        >
+                                          <Ellipsis />
+                                        </Button>
+                                      )}
+                                    </ToggleController>
+                                  )}
+                                  <CardContent className="flex flex-col gap-2 px-0">
+                                    <div className="flex items-center gap-2">
+                                      <CardTitle
+                                        className="text-lg cursor-pointer"
+                                        onClick={() =>
+                                          router.push(`/u/${c.user.username}`)
+                                        }
                                       >
-                                        {({ setShow }) => (
-                                          <Button
-                                            onClick={() => setShow(true)}
-                                            className="hover:text-red-600 cursor-pointer"
-                                            variant={"outline"}
-                                          >
-                                            Delete
-                                          </Button>
-                                        )}
-                                      </ToggleController>
-                                    </CardContent>
-                                  </Card>
-                                </motion.div>
-                              )}
-                            >
-                              {({ setShow }) => (
-                                <Button
-                                  onClick={() => setShow((prev) => !prev)}
-                                  className="w-fit cursor-pointer absolute top-1/2 -translate-y-1/2 right-5"
-                                  variant={"ghost"}
-                                  size={"sm"}
-                                >
-                                  <Ellipsis />
-                                </Button>
-                              )}
-                            </ToggleController>
-                          )}
-                          <CardContent className="flex flex-col gap-3 px-0">
-                            <CardTitle>{c.user.name}</CardTitle>
-                            <CardDescription>{c.content}</CardDescription>
-                          </CardContent>
-                        </Card>
-                      ))
-                    }
+                                        {c.user.name}
+                                      </CardTitle>
+                                      <CardDescription className="text-xs">
+                                        {timeAgo(new Date(c.created_at))}
+                                      </CardDescription>
+                                    </div>
+                                    <CardDescription className="text-[14px]">
+                                      {c.content}
+                                    </CardDescription>
+                                    <Button
+                                      variant={"ghost"}
+                                      className="w-fit cursor-pointer rounded-full px-3.5 py-0 text-xs"
+                                    >
+                                      Reply
+                                    </Button>
+                                  </CardContent>
+                                </div>
+                                {/* replies */}
+                                <Comment.ReplyToggle>
+                                  <Button
+                                    variant={"outline"}
+                                    className="cursor-pointer gap-3 flex items-center rounded-full"
+                                  >
+                                    <p>30 replies</p>
+                                    <div className="text-2xl scale-125">
+                                      <ChevronDown width={20} height={20} />
+                                    </div>
+                                  </Button>
+                                </Comment.ReplyToggle>
+                              </div>
+                            </div>
+                          </Comment>
+                        ))}
+                      </CommentsContainer>
+                    )}
                   </DataFetcher>
                 </CardContent>
               </Card>
