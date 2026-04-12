@@ -59,6 +59,7 @@ import Video from "@/components/common/video";
 import { timeAgo } from "@/utils/functions/timeAgo";
 import {
   Comment,
+  CommentPost,
   CommentsContainer,
 } from "@/components/common/CommentsContainer";
 import {
@@ -582,7 +583,7 @@ const ClientPostPage = ({
                                     </CardDescription>
                                     <ContentToggleContainer>
                                       <ContentToggle className="flex flex-col gap-2">
-                                        <ContentToggle.Controller>
+                                        <ContentToggle.Controller className="w-fit">
                                           <Button
                                             variant={"ghost"}
                                             className="w-fit cursor-pointer rounded-full px-3.5 py-0 text-xs"
@@ -591,7 +592,26 @@ const ClientPostPage = ({
                                           </Button>
                                         </ContentToggle.Controller>
                                         <ContentToggle.Content className="w-full">
-                                          <Input className="w-full" placeholder="Write a reply..." />
+                                          <CommentPost className="flex gap-3 items-center">
+                                            <CommentPost.Input
+                                              className="w-full"
+                                              placeholder="Write a reply..."
+                                            />
+                                            <ContentToggle.Trigger>
+                                              {({ close }) => (
+                                                <CommentPost.Button
+                                                  onSuccess={close}
+                                                >
+                                                  <Button
+                                                    variant={"outline"}
+                                                    className="cursor-pointer"
+                                                  >
+                                                    <Send />
+                                                  </Button>
+                                                </CommentPost.Button>
+                                              )}
+                                            </ContentToggle.Trigger>
+                                          </CommentPost>
                                         </ContentToggle.Content>
                                       </ContentToggle>
                                     </ContentToggleContainer>

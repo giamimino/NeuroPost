@@ -11,7 +11,15 @@ export interface CommentContextType {
 }
 
 export interface ContentContextType {
-  expanded: boolean,
+  expanded: boolean;
   toggleExpanded: () => void;
-  setExpanded: (value: boolean) => void
+  setExpanded: (value: boolean) => void;
+}
+
+export interface CommentPostContextType {
+  ref: React.RefObject<HTMLInputElement | null>;
+  status: "idle" | "loading" | "success";
+  setStatus: (
+    value: ThisParameterType.CommentPostContextType["status"],
+  ) => void;
 }

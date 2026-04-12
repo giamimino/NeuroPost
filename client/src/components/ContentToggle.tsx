@@ -57,14 +57,39 @@ const ContentToggleController = ({
   );
 };
 
+const ContentToggleTigger = ({
+  children,
+}: {
+  children: (controls: {
+    close: () => void;
+    open: () => void;
+  }) => React.ReactNode;
+}) => {
+  const { setExpanded } = useContentToggle();
+
+  return children({
+    close: () => setExpanded(false),
+    open: () => setExpanded(true),
+  });
+};
+
+ContentToggleTigger.displayName = "ContentToggle.Trigger";
+
 type ContentToggleCompound = React.FC<ContentToggleProps> & {
   Content: React.FC<ContentToggleProps>;
   Controller: React.FC<ContentToggleProps>;
+  Trigger: React.FC<{
+    children: (controls: {
+      close: () => void;
+      open: () => void;
+    }) => React.ReactNode;
+  }>;
 };
 
 const ContentToggle = Object.assign(ContentToggleBase, {
   Content,
   Controller: ContentToggleController,
+  Trigger: ContentToggleTigger,
 }) as ContentToggleCompound;
 
 export { ContentToggleContainer, ContentToggle };
