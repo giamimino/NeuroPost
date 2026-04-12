@@ -1,7 +1,7 @@
 import { ERRORS } from "@/constants/error-handling";
 import { getAuthUser } from "@/lib/auth";
 import { sql } from "@/lib/db";
-import { CommentReplyAPISchema } from "@/schemas/comment/reply.schema";
+import { CommentReplyAPISchema, CommentReplySchema } from "@/schemas/comment/reply.schema";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -38,7 +38,13 @@ export async function POST(req: Request) {
     const payload = auth.user;
 
     const comments = await sql.query(
-      `INSERT INTO comments (content, post_id, user_id, parent_id) VALUES ($1, $2, $3, $4) RETURNING *`,
+      `
+      WITH insert_comment AS 
+      (INSERT INTO comments (content, post_id, user_id, parent_id) VALUES ($1, $2, $3, $4) RETURNING *)
+      SELECT insert_comment.*, 
+      json_build_object('id', u.id, 'username', u.username, 'name', u.name, 'profile_url', u.profile_url) AS user
+      JOIN users u ON u.id = insert_comment.user_id
+      `,
       [content, post_id, payload.userId, comment_id],
     );
     const comment = comments[0];
@@ -49,7 +55,16 @@ export async function POST(req: Request) {
         { status: 500 },
       );
 
-    return NextResponse.json({ ok: true, comment }, { status: 200 });
+    const result = CommentReplySchema.safeParse(comment);
+
+    if(!result.success) {
+      console.error(result.error);
+      return NextResponse.json(
+        { ok: false, error: ERRORS.COMMENT_CREATION_FAILED}
+      )
+    }
+
+    return NextResponse.json({ ok: true, comment: result.data }, { status: 200 });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ ok: false, message: "" }, { status: 500 });
