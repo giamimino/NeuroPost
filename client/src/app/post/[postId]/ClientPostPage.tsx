@@ -72,6 +72,7 @@ import {
 } from "@/components/ContentToggle";
 import { UserCommentRoleType } from "@/types/global";
 import { CommentSchemaType } from "@/schemas/comment/comment.schema";
+import { CommentReplyAPIResSchema } from "@/schemas/comment/reply.schema";
 
 const ClientPostPage = ({
   params,
@@ -95,7 +96,6 @@ const ClientPostPage = ({
   const [comments, setComments] = useState<CommentSchemaType[]>([]);
   const [deleted, setDeleted] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [showComments, setShowComments] = useState(false);
   const [media, setMedia] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editableValuesRef = useRef<HTMLFormElement>(null);
@@ -181,7 +181,7 @@ const ClientPostPage = ({
     });
     const data = await res?.json();
     if (data.ok) {
-      // setComments((prev) => [data.comment, ...prev]);
+      setComments((prev) => [data.comment, ...prev]);
     } else {
       addAlert({
         id: crypto.randomUUID(),
@@ -227,6 +227,31 @@ const ClientPostPage = ({
     selection?.addRange(range);
   };
 
+  const handleFetchComments = async () => {
+    try {
+      if (!post) return;
+
+      const res = await apiFetch(`/api/post/comment?postId=${post.id}&limit=20`);
+      const data = await res?.json();
+
+      if (!data.ok && data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+      } else if (data.ok && data.comments) setComments(data.comments);
+    } catch (err) {
+      console.log(err);
+
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+    }
+  };
+
   // get post
   useEffect(() => {
     if (!postId) return;
@@ -242,16 +267,6 @@ const ClientPostPage = ({
       })
       .catch((err) => console.error(err));
   }, [postId]);
-
-  // get comments after success response from post fetch
-
-  const config = useMemo(() => {
-    if (!post) return null;
-
-    return {
-      url: `/api/post/comment?postId=${post.id}&limit=20&withProfile=true`,
-    };
-  }, [post]);
 
   if (deleted)
     return (
@@ -398,7 +413,7 @@ const ClientPostPage = ({
             )}
           </div>
           {/* comments */}
-          {showComments && config?.url && (
+          {comments.length > 0 && (
             <div className="w-full flex items-center justify-center">
               <Card className="w-full">
                 <CardHeader>
@@ -427,103 +442,102 @@ const ClientPostPage = ({
                   <Line className="mt-5" />
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3.5">
-                  <DataFetcher url={config?.url} targetKey="comments">
-                    {(data: CommentSchemaType[]) =>
-                      data.map((c) => (
-                        <CommentsContainer key={c.id}>
-                          <Comment className="flex flex-col gap-2.5">
-                            <div className="flex gap-2.5">
-                              <Comment.Profile>
-                                {typeof c.user.profile_url === "string" ? (
-                                  <Image
-                                    src={c.user.profile_url}
-                                    width={40}
-                                    height={40}
-                                    alt="user-profile"
-                                    className="w-8 h-8 object-cover rounded-full"
-                                  />
-                                ) : (
-                                  <Skeleton className="h-8 w-8 rounded-full" />
-                                )}
-                              </Comment.Profile>
-                              <div className="flex flex-col gap-1.5">
-                                <Comment.Header className="flex items-center gap-1.5">
-                                  <CardTitle
-                                    className="text-foreground cursor-pointer"
-                                    onClick={() =>
-                                      router.push(`/u/${c.user.username}`)
-                                    }
-                                  >
-                                    {c.user.name}
-                                  </CardTitle>
-                                  <CardDescription className="text-sm">
-                                    {timeAgo(new Date(c.created_at))}
-                                  </CardDescription>
-                                </Comment.Header>
-                                <Comment.Content>
-                                  <CardDescription>{c.content}</CardDescription>
-                                </Comment.Content>
-                                <ContentToggleContainer>
-                                  <ContentToggle.Controller className="w-fit">
-                                    <Button
-                                      variant={"ghost"}
-                                      size={"md"}
-                                      className="cursor-pointer rounded-xl text-xs"
-                                    >
-                                      Reply
-                                    </Button>
-                                  </ContentToggle.Controller>
-                                  <ContentToggle.Content>
-                                    <CommentPost
-                                      post_id={c.post_id}
-                                      comment_id={c.id}
-                                      className="flex gap-2.5 items-center"
-                                    >
-                                      <CommentPost.Input
-                                        className="px-2 py-1 text-xs"
-                                        placeholder="Write a reply..."
-                                      />
-                                      <CommentPost.Button onSuccess={() => {}}>
-                                        <Button
-                                          variant={"outline"}
-                                          className="cursor-pointer w-fit"
-                                        >
-                                          <Send />
-                                        </Button>
-                                      </CommentPost.Button>
-                                    </CommentPost>
-                                  </ContentToggle.Content>
-                                </ContentToggleContainer>
-                              </div>
-                            </div>
-                            {/* replies */}
-                            <Comment.Replies>
-                              <SkeletonReplyComment />
-                            </Comment.Replies>
-                            {c.replies_count > 0 && (
-                              <Comment.ReplyToggle className="w-fit">
-                                {({ status }) => (
-                                  <Button variant={"outline"} className="cursor-pointer rounded-lg">
-                                    {status ? (
-                                      <>
-                                        <p>Hide Replies</p>
-                                        <ChevronUp className="size-4" />
-                                      </>
-                                    ) : (
-                                      <>
-                                        <p>{c.replies_count} Replies</p>
-                                        <ChevronDown className="size-4" />
-                                      </>
-                                    )}
-                                  </Button>
-                                )}
-                              </Comment.ReplyToggle>
+                  {comments.map((c) => (
+                    <CommentsContainer key={c.id}>
+                      <Comment className="flex flex-col gap-2.5">
+                        <div className="flex gap-2.5">
+                          <Comment.Profile>
+                            {typeof c.user.profile_url === "string" ? (
+                              <Image
+                                src={c.user.profile_url}
+                                width={40}
+                                height={40}
+                                alt="user-profile"
+                                className="w-8 h-8 object-cover rounded-full"
+                              />
+                            ) : (
+                              <Skeleton className="h-8 w-8 rounded-full" />
                             )}
-                          </Comment>
-                        </CommentsContainer>
-                      ))
-                    }
-                  </DataFetcher>
+                          </Comment.Profile>
+                          <div className="flex flex-col gap-1.5">
+                            <Comment.Header className="flex items-center gap-1.5">
+                              <CardTitle
+                                className="text-foreground cursor-pointer"
+                                onClick={() =>
+                                  router.push(`/u/${c.user.username}`)
+                                }
+                              >
+                                {c.user.name}
+                              </CardTitle>
+                              <CardDescription className="text-sm">
+                                {timeAgo(new Date(c.created_at))}
+                              </CardDescription>
+                            </Comment.Header>
+                            <Comment.Content>
+                              <CardDescription>{c.content}</CardDescription>
+                            </Comment.Content>
+                            <ContentToggleContainer>
+                              <ContentToggle.Controller className="w-fit">
+                                <Button
+                                  variant={"ghost"}
+                                  size={"md"}
+                                  className="cursor-pointer rounded-xl text-xs"
+                                >
+                                  Reply
+                                </Button>
+                              </ContentToggle.Controller>
+                              <ContentToggle.Content>
+                                <CommentPost
+                                  post_id={c.post_id}
+                                  comment_id={c.id}
+                                  className="flex gap-2.5 items-center"
+                                >
+                                  <CommentPost.Input
+                                    className="px-2 py-1 text-xs"
+                                    placeholder="Write a reply..."
+                                  />
+                                  <CommentPost.Button onSuccess={() => {}}>
+                                    <Button
+                                      variant={"outline"}
+                                      className="cursor-pointer w-fit"
+                                    >
+                                      <Send />
+                                    </Button>
+                                  </CommentPost.Button>
+                                </CommentPost>
+                              </ContentToggle.Content>
+                            </ContentToggleContainer>
+                          </div>
+                        </div>
+                        {/* replies */}
+                        <Comment.Replies>
+                          <SkeletonReplyComment />
+                        </Comment.Replies>
+                        {c.replies_count > 0 && (
+                          <Comment.ReplyToggle className="w-fit">
+                            {({ status }) => (
+                              <Button
+                                variant={"outline"}
+                                className="cursor-pointer rounded-lg"
+                              >
+                                {status ? (
+                                  <>
+                                    <p>Hide Replies</p>
+                                    <ChevronUp className="size-4" />
+                                  </>
+                                ) : (
+                                  <>
+                                    <p>{c.replies_count} Replies</p>
+                                    <ChevronDown className="size-4" />
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </Comment.ReplyToggle>
+                        )}
+                      </Comment>
+                    </CommentsContainer>
+                  ))}
                 </CardContent>
               </Card>
             </div>
@@ -593,9 +607,15 @@ const ClientPostPage = ({
                 size={"icon-xs"}
                 className={`rounded-sm cursor-pointer`}
                 variant={"outline"}
-                onClick={() => setShowComments((prev) => !prev)}
+                onClick={async () => {
+                  if (comments.length === 0) {
+                    await handleFetchComments();
+                  }
+                }}
               >
-                <MessageCircle {...(showComments ? { fill: "#fff" } : {})} />
+                <MessageCircle
+                  {...(comments.length > 0 ? { fill: "#fff" } : {})}
+                />
               </Button>
               <ToggleController
                 whatToShow={({ handleShow }) => (
