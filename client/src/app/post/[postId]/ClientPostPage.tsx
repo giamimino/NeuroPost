@@ -66,6 +66,8 @@ import {
   ContentToggle,
   ContentToggleContainer,
 } from "@/components/ContentToggle";
+import { UserCommentRoleType } from "@/types/global";
+import { CommentSchemaType } from "@/schemas/comment/comment.schema";
 
 const ClientPostPage = ({
   params,
@@ -422,10 +424,7 @@ const ClientPostPage = ({
                 <CardContent className="flex flex-col gap-2.5">
                   <DataFetcher url={config?.url} targetKey="comments">
                     {(
-                      data: (CommentType & {
-                        user: CommentUserType;
-                        role: "creator" | "guest";
-                      })[],
+                      data: CommentSchemaType[],
                     ) => (
                       <CommentsContainer>
                         {data.map((c) => (

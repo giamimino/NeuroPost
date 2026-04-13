@@ -69,7 +69,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const { postId, limit, withProfile } = Object.fromEntries(
+    const { postId, limit } = Object.fromEntries(
       searchParams.entries(),
     );
 
@@ -92,16 +92,13 @@ export async function GET(req: Request) {
       );
     const payload = auth.user;
 
-    const comments = (await sql.query(
-      `SELECT c.*, json_build_object('id', u.id, 'name', u.name, 'username', u.username, 'profile_url', u.profile_url) as user FROM comments c 
-      JOIN users u ON u.id = c.user_id 
+    const comments = await sql.query(
+      `SELECT c.*, json_build_object('id', u.id, 'name', u.name, 'username', u.username, 'profile_url', u.profile_url) as user, COUNT(r.id) as replies_count FROM comments c 
+      JOIN users u ON u.id = c.user_id
+      LEFT JOIN comments r ON r.parent_id = c.id
       WHERE c.post_id = $1 AND c.parent_id IS NULL ORDER BY c.created_at DESC LIMIT $2`,
       [postId, Number(limit) || 20],
-    )) as (CommentType & { user: CommentUserType })[];
-    const commentItems = comments.map((comment) => ({
-      ...comment,
-      role: comment.user_id === payload.userId ? "creator" : "guest",
-    }));
+    );
 
     if (!comments)
       return NextResponse.json(
@@ -109,37 +106,32 @@ export async function GET(req: Request) {
         { status: 404 },
       );
 
-    let signedComments = null;
-    if (Boolean(withProfile) === true) {
-      const keys = comments.map((c) => c.user.profile_url || "");
+    const keys = comments.map((c) => c.user.profile_url || "");
 
-      const signedUrls = await Promise.all(
-        keys.map((key) => {
-          const command = new GetObjectCommand({
-            Bucket: "neuropost",
-            Key: key,
-          });
+    const signedUrls = await Promise.all(
+      keys.map((key) => {
+        const command = new GetObjectCommand({
+          Bucket: "neuropost",
+          Key: key,
+        });
 
-          return getSignedUrl(s3, command, { expiresIn: 5 * 60 });
-        }),
-      );
+        return getSignedUrl(s3, command, { expiresIn: 5 * 60 });
+      }),
+    );
 
-      signedComments = commentItems.map((c, i) => ({
-        ...c,
-        user: {
-          ...c.user,
-          profile_url: c.user.profile_url ? signedUrls[i] : "/user.jpg",
-        },
-      }));
-    }
+    const signedComments = comments.map((c, i) => ({
+      ...c,
+      user: {
+        ...c.user,
+        profile_url: c.user.profile_url ? signedUrls[i] : "/user.jpg",
+      },
+      role: c.user_id === payload.userId ? "creator" : "guest",
+    }));
 
     return NextResponse.json(
       {
         ok: true,
-        comments:
-          withProfile && signedComments && signedComments.length > 0
-            ? signedComments
-            : commentItems,
+        comments: signedComments
       },
       { status: 200 },
     );
