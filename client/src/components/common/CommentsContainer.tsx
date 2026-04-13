@@ -1,6 +1,5 @@
 import React, {
   DetailedHTMLProps,
-  HTMLAttributes,
   InputHTMLAttributes,
   useRef,
   useState,
@@ -14,7 +13,6 @@ import {
 } from "@/store/contexts/CommentCntext";
 import { Input } from "../ui/input";
 import { CommentPostContextType } from "@/types/context";
-import fakeFetch from "@/utils/functions/fakeFetch";
 import { Spinner } from "../ui/spinner";
 import { apiFetch } from "@/lib/apiFetch";
 import {
@@ -27,7 +25,6 @@ import { ERRORS } from "@/constants/error-handling";
 type CommentContainerProps = {
   className?: string;
   children: React.ReactNode;
-  defaultOpen?: boolean;
 };
 
 const CommentBase = ({ className, children }: CommentContainerProps) => {
@@ -65,7 +62,7 @@ const CommentsContainer = ({
   className,
   children,
   defaultOpen = false,
-}: CommentContainerProps) => {
+}: CommentContainerProps & { defaultOpen?: boolean}) => {
   const [open, setOpen] = useState(defaultOpen);
 
   const setOpenReplies = (value: boolean) => setOpen(value);

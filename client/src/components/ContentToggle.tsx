@@ -7,14 +7,13 @@ import React, { useState } from "react";
 
 type ContentToggleProps = {
   children: React.ReactNode;
-  defaultExpanded?: boolean;
   className?: string;
 };
 
 const ContentToggleContainer = ({
   children,
   defaultExpanded = false,
-}: ContentToggleProps) => {
+}: ContentToggleProps & { defaultExpanded?: boolean}) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   const value = {

@@ -1,7 +1,6 @@
 import { ERRORS } from "@/constants/error-handling";
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { CommentType, CommentUserType } from "@/types/neon";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3 } from "@/lib/aws-sdk";
