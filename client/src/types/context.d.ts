@@ -22,4 +22,6 @@ export interface CommentPostContextType {
   setStatus: (
     value: ThisParameterType.CommentPostContextType["status"],
   ) => void;
+  post_id: number;
+  comment_id: string;
 }

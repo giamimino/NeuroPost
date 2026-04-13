@@ -592,7 +592,11 @@ const ClientPostPage = ({
                                           </Button>
                                         </ContentToggle.Controller>
                                         <ContentToggle.Content className="w-full">
-                                          <CommentPost className="flex gap-3 items-center">
+                                          <CommentPost
+                                            post_id={c.post_id}
+                                            comment_id={c.id}
+                                            className="flex gap-3 items-center"
+                                          >
                                             <CommentPost.Input
                                               className="w-full"
                                               placeholder="Write a reply..."

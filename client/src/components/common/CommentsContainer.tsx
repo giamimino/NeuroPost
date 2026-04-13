@@ -16,6 +16,13 @@ import { Input } from "../ui/input";
 import { CommentPostContextType } from "@/types/context";
 import fakeFetch from "@/utils/functions/fakeFetch";
 import { Spinner } from "../ui/spinner";
+import { apiFetch } from "@/lib/apiFetch";
+import {
+  CommentReplyAPIResSchema,
+  CommentReplyAPISchema,
+} from "@/schemas/comment/reply.schema";
+import { useAlertStore } from "@/store/zustand/alertStore";
+import { ERRORS } from "@/constants/error-handling";
 
 type CommentContainerProps = {
   className?: string;
@@ -82,9 +89,13 @@ const CommentsContainer = ({
 const CommentPostContainer = ({
   children,
   className,
+  post_id,
+  comment_id,
 }: {
   children: React.ReactNode;
   className?: string;
+  post_id: number;
+  comment_id: string;
 }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [status, setStatus] =
@@ -94,6 +105,8 @@ const CommentPostContainer = ({
     ref: inputRef,
     status: status,
     setStatus: (value) => setStatus(value),
+    post_id,
+    comment_id,
   } as CommentPostContextType;
 
   return (
@@ -105,30 +118,64 @@ const CommentPostContainer = ({
 
 const CommentPostContainerButton = ({
   children,
-  onSuccess
+  onSuccess,
 }: {
   children: React.ReactNode;
-  onSuccess?: () => void
+  onSuccess?: () => void;
 }) => {
-  const { ref, setStatus, status } = useCommentPost();
+  const { ref, setStatus, status, comment_id, post_id } = useCommentPost();
+  const { addAlert } = useAlertStore();
 
   const handleClick = async () => {
     try {
       setStatus("loading");
+      const content = CommentReplyAPISchema.safeParse({
+        content: ref.current?.value,
+        comment_id,
+        post_id,
+      });
 
-      await fakeFetch();
-      if (ref.current) {
-        console.log(ref.current.value);
+      if (!content.success) {
+        const parsedErrors = content.error.issues.map((issue) =>
+          JSON.parse(issue.message),
+        );
+
+        parsedErrors.forEach((error) =>
+          addAlert({ ...error, type: "error", id: crypto.randomUUID() }),
+        );
+
+        return;
       }
-      
+
+      const res = await apiFetch("/api/post/comment/reply", {
+        method: "POST",
+        body: JSON.stringify(content.data),
+      });
+      const result = await res?.json();
+
+      const { data, success, error } =
+        CommentReplyAPIResSchema.safeParse(result);
+      if (!success) {
+        return addAlert({
+          ...ERRORS.COMMENT_CREATION_FAILED,
+          type: "error",
+          id: crypto.randomUUID(),
+        });
+      } else if (!data.ok && data.error) {
+        return addAlert({
+          ...data.error,
+          id: crypto.randomUUID(),
+          type: "error",
+        });
+      } else if (data.ok) {
+        return console.log(data);
+      }
       onSuccess?.();
     } catch (error) {
       setStatus("idle");
     } finally {
       setStatus("idle");
-    }
-    if (ref.current) {
-      console.log(ref.current.value);
+      if (ref.current) ref.current.value = "";
     }
   };
 
@@ -162,6 +209,8 @@ CommentPostContainerInput.displayName = "CommentPost.Input";
 type CommentPostCompound = React.FC<{
   children: React.ReactNode;
   className?: string;
+  post_id: number;
+  comment_id: string;
 }> & {
   Button: typeof CommentPostContainerButton;
   Input: typeof CommentPostContainerInput;

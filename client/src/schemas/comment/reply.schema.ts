@@ -1,5 +1,6 @@
 import { ERRORS } from "@/constants/error-handling";
 import { z } from "zod";
+import { ErrorSchema } from "../common/error.schema";
 
 export const CommentReplyAPISchema = z.object({
   content: z
@@ -15,18 +16,23 @@ export const CommentReplySchema = z.object({
   id: z.uuid(),
   content: z.string(),
   post_id: z.number(),
-  user_id: z.number(),
+  user_id: z.uuid(),
   parent_id: z.uuid(),
-  created_at: z
-    .string()
-    .datetime()
-    .transform((str) => new Date(str)),
+  created_at: z.string(),
   user: z.object({
     id: z.uuid(),
     name: z.string(),
-    profile_url: z.url(),
+    profile_url: z.string(),
     username: z.string(),
   }),
 });
 
 export type CommentReplyType = z.infer<typeof CommentReplySchema>;
+
+export const CommentReplyAPIResSchema = z.object({
+  ok: z.boolean(),
+  comment: CommentReplySchema.optional(),
+  error: ErrorSchema.optional(),
+});
+
+export type CommentReplyAPIResType = z.infer<typeof CommentReplyAPIResSchema>;
