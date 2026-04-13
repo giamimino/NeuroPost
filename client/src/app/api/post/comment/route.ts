@@ -94,7 +94,8 @@ export async function GET(req: Request) {
 
     const comments = (await sql.query(
       `SELECT c.*, json_build_object('id', u.id, 'name', u.name, 'username', u.username, 'profile_url', u.profile_url) as user FROM comments c 
-      JOIN users u ON u.id = c.user_id WHERE c.post_id = $1 ORDER BY c.created_at DESC LIMIT $2`,
+      JOIN users u ON u.id = c.user_id 
+      WHERE c.post_id = $1 AND c.parent_id IS NULL ORDER BY c.created_at DESC LIMIT $2`,
       [postId, Number(limit) || 20],
     )) as (CommentType & { user: CommentUserType })[];
     const commentItems = comments.map((comment) => ({
