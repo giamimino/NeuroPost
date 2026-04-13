@@ -19,7 +19,7 @@ export const CommentReplySchema = z.object({
   user_id: z.uuid(),
   parent_id: z.uuid(),
   role: z.enum(["creator", "guest"]),
-  created_at: z.string(),
+  created_at: z.date(),
   user: z.object({
     id: z.uuid(),
     name: z.string(),

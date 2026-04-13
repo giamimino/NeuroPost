@@ -10,7 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { SkeletonCard } from "@/components/ui/Skeleton-examples";
+import {
+  SkeletonCard,
+  SkeletonReplyComment,
+} from "@/components/ui/Skeleton-examples";
 import { ApiConfig } from "@/configs/api-configs";
 import {
   CommentType,
@@ -21,6 +24,7 @@ import {
 } from "@/types/neon";
 import {
   ChevronDown,
+  ChevronUp,
   ClipboardIcon,
   Ellipsis,
   ExternalLink,
@@ -88,6 +92,7 @@ const ClientPostPage = ({
     | null
   >(null);
   const [loading, setLoading] = useState(true);
+  const [comments, setComments] = useState<CommentSchemaType[]>([]);
   const [deleted, setDeleted] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -196,7 +201,7 @@ const ClientPostPage = ({
       const data = await res?.json();
 
       if (data.ok) {
-        // setComments((prev) => prev.filter((c) => c.id !== commentId));
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -421,20 +426,15 @@ const ClientPostPage = ({
                   </div>
                   <Line className="mt-5" />
                 </CardHeader>
-                <CardContent className="flex flex-col gap-2.5">
+                <CardContent className="flex flex-col gap-3.5">
                   <DataFetcher url={config?.url} targetKey="comments">
-                    {(
-                      data: CommentSchemaType[],
-                    ) => (
-                      <CommentsContainer>
-                        {data.map((c) => (
-                          <Comment
-                            key={`${c.id}-${c.post_id}`}
-                            className="flex flex-col gap-3 p-3 relative"
-                          >
-                            <div className="flex gap-3">
-                              <div className="relative">
-                                {c.user.profile_url ? (
+                    {(data: CommentSchemaType[]) =>
+                      data.map((c) => (
+                        <CommentsContainer key={c.id}>
+                          <Comment className="flex flex-col gap-2.5">
+                            <div className="flex gap-2.5">
+                              <Comment.Profile>
+                                {typeof c.user.profile_url === "string" ? (
                                   <Image
                                     src={c.user.profile_url}
                                     width={40}
@@ -445,199 +445,84 @@ const ClientPostPage = ({
                                 ) : (
                                   <Skeleton className="h-8 w-8 rounded-full" />
                                 )}
-                                <Line
-                                  orientation="vertical"
-                                  className="mx-auto my-auto"
-                                />
-                              </div>
-                              <div className="flex flex-col gap-2">
-                                <div>
-                                  {c.role === "creator" && (
-                                    <ToggleController
-                                      animatePresence
-                                      whatToShow={() => (
-                                        <motion.div
-                                          initial={{
-                                            opacity: 0,
-                                            y: 10,
-                                            scale: 0.5,
-                                          }}
-                                          animate={{
-                                            opacity: 1,
-                                            y: 0,
-                                            scale: 1,
-                                          }}
-                                          exit={{ opacity: 0, y: 10 }}
-                                          className="absolute right-15 top-1/2 -translate-y-1/2"
-                                        >
-                                          <Card className="p-3">
-                                            <CardContent className="p-0">
-                                              <ToggleController
-                                                animatePresence
-                                                whatToShow={({
-                                                  handleShow,
-                                                }) => (
-                                                  <motion.div
-                                                    initial={{
-                                                      opacity: 0,
-                                                      y: 50,
-                                                      scale: 0.75,
-                                                    }}
-                                                    animate={{
-                                                      opacity: 1,
-                                                      y: 0,
-                                                      scale: 1,
-                                                    }}
-                                                    exit={{ opacity: 0, y: 10 }}
-                                                    className="absolute top-1/2 -translate-y-1/2 -right-3/1 z-10 w-5/2"
-                                                  >
-                                                    <Card className="">
-                                                      <CardHeader>
-                                                        <CardDescription>
-                                                          Are you sure you want
-                                                          to delete this
-                                                          comment?
-                                                        </CardDescription>
-                                                      </CardHeader>
-                                                      <CardContent className="flex gap-2.5">
-                                                        <Button
-                                                          variant={"outline"}
-                                                          className="cursor-pointer"
-                                                          onClick={() =>
-                                                            handleDeleteComment(
-                                                              {
-                                                                commentId: c.id,
-                                                              },
-                                                            )
-                                                          }
-                                                        >
-                                                          Yes
-                                                        </Button>
-                                                        <Button
-                                                          variant={"ghost"}
-                                                          className="cursor-pointer"
-                                                          onClick={
-                                                            handleShow
-                                                              ? () =>
-                                                                  handleShow(
-                                                                    false,
-                                                                  )
-                                                              : undefined
-                                                          }
-                                                        >
-                                                          cancel
-                                                        </Button>
-                                                      </CardContent>
-                                                    </Card>
-                                                  </motion.div>
-                                                )}
-                                              >
-                                                {({ setShow }) => (
-                                                  <Button
-                                                    onClick={() =>
-                                                      setShow(true)
-                                                    }
-                                                    className="hover:text-red-600 cursor-pointer"
-                                                    variant={"outline"}
-                                                  >
-                                                    Delete
-                                                  </Button>
-                                                )}
-                                              </ToggleController>
-                                            </CardContent>
-                                          </Card>
-                                        </motion.div>
-                                      )}
-                                    >
-                                      {({ setShow }) => (
-                                        <Button
-                                          onClick={() =>
-                                            setShow((prev) => !prev)
-                                          }
-                                          className="w-fit cursor-pointer absolute top-1/2 -translate-y-1/2 right-5"
-                                          variant={"ghost"}
-                                          size={"sm"}
-                                        >
-                                          <Ellipsis />
-                                        </Button>
-                                      )}
-                                    </ToggleController>
-                                  )}
-                                  <CardContent className="flex flex-col gap-2 px-0">
-                                    <div className="flex items-center gap-2">
-                                      <CardTitle
-                                        className="text-lg cursor-pointer"
-                                        onClick={() =>
-                                          router.push(`/u/${c.user.username}`)
-                                        }
-                                      >
-                                        {c.user.name}
-                                      </CardTitle>
-                                      <CardDescription className="text-xs">
-                                        {timeAgo(new Date(c.created_at))}
-                                      </CardDescription>
-                                    </div>
-                                    <CardDescription className="text-[14px]">
-                                      {c.content}
-                                    </CardDescription>
-                                    <ContentToggleContainer>
-                                      <ContentToggle className="flex flex-col gap-2">
-                                        <ContentToggle.Controller className="w-fit">
-                                          <Button
-                                            variant={"ghost"}
-                                            className="w-fit cursor-pointer rounded-full px-3.5 py-0 text-xs"
-                                          >
-                                            Reply
-                                          </Button>
-                                        </ContentToggle.Controller>
-                                        <ContentToggle.Content className="w-full">
-                                          <CommentPost
-                                            post_id={c.post_id}
-                                            comment_id={c.id}
-                                            className="flex gap-3 items-center"
-                                          >
-                                            <CommentPost.Input
-                                              className="w-full"
-                                              placeholder="Write a reply..."
-                                            />
-                                            <ContentToggle.Trigger>
-                                              {({ close }) => (
-                                                <CommentPost.Button
-                                                  onSuccess={close}
-                                                >
-                                                  <Button
-                                                    variant={"outline"}
-                                                    className="cursor-pointer"
-                                                  >
-                                                    <Send />
-                                                  </Button>
-                                                </CommentPost.Button>
-                                              )}
-                                            </ContentToggle.Trigger>
-                                          </CommentPost>
-                                        </ContentToggle.Content>
-                                      </ContentToggle>
-                                    </ContentToggleContainer>
-                                  </CardContent>
-                                </div>
-                                {/* replies */}
-                                <Comment.ReplyToggle>
-                                  <Button
-                                    variant={"outline"}
-                                    className="cursor-pointer gap-3 flex items-center rounded-full"
+                              </Comment.Profile>
+                              <div className="flex flex-col gap-1.5">
+                                <Comment.Header className="flex items-center gap-1.5">
+                                  <CardTitle
+                                    className="text-foreground cursor-pointer"
+                                    onClick={() =>
+                                      router.push(`/u/${c.user.username}`)
+                                    }
                                   >
-                                    <p>30 replies</p>
-                                    <div className="text-2xl scale-125">
-                                      <ChevronDown width={20} height={20} />
-                                    </div>
-                                  </Button>
-                                </Comment.ReplyToggle>
+                                    {c.user.name}
+                                  </CardTitle>
+                                  <CardDescription className="text-sm">
+                                    {timeAgo(new Date(c.created_at))}
+                                  </CardDescription>
+                                </Comment.Header>
+                                <Comment.Content>
+                                  <CardDescription>{c.content}</CardDescription>
+                                </Comment.Content>
+                                <ContentToggleContainer>
+                                  <ContentToggle.Controller className="w-fit">
+                                    <Button
+                                      variant={"ghost"}
+                                      size={"md"}
+                                      className="cursor-pointer rounded-xl text-xs"
+                                    >
+                                      Reply
+                                    </Button>
+                                  </ContentToggle.Controller>
+                                  <ContentToggle.Content>
+                                    <CommentPost
+                                      post_id={c.post_id}
+                                      comment_id={c.id}
+                                      className="flex gap-2.5 items-center"
+                                    >
+                                      <CommentPost.Input
+                                        className="px-2 py-1 text-xs"
+                                        placeholder="Write a reply..."
+                                      />
+                                      <CommentPost.Button onSuccess={() => {}}>
+                                        <Button
+                                          variant={"outline"}
+                                          className="cursor-pointer w-fit"
+                                        >
+                                          <Send />
+                                        </Button>
+                                      </CommentPost.Button>
+                                    </CommentPost>
+                                  </ContentToggle.Content>
+                                </ContentToggleContainer>
                               </div>
                             </div>
+                            {/* replies */}
+                            <Comment.Replies>
+                              <SkeletonReplyComment />
+                            </Comment.Replies>
+                            {c.replies_count > 0 && (
+                              <Comment.ReplyToggle className="w-fit">
+                                {({ status }) => (
+                                  <Button variant={"outline"} className="cursor-pointer rounded-lg">
+                                    {status ? (
+                                      <>
+                                        <p>Hide Replies</p>
+                                        <ChevronUp className="size-4" />
+                                      </>
+                                    ) : (
+                                      <>
+                                        <p>{c.replies_count} Replies</p>
+                                        <ChevronDown className="size-4" />
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                              </Comment.ReplyToggle>
+                            )}
                           </Comment>
-                        ))}
-                      </CommentsContainer>
-                    )}
+                        </CommentsContainer>
+                      ))
+                    }
                   </DataFetcher>
                 </CardContent>
               </Card>

@@ -96,7 +96,7 @@ export async function GET(req: Request) {
       `SELECT c.*, json_build_object('id', u.id, 'name', u.name, 'username', u.username, 'profile_url', u.profile_url) as user, COUNT(r.id) as replies_count FROM comments c 
       JOIN users u ON u.id = c.user_id
       LEFT JOIN comments r ON r.parent_id = c.id
-      WHERE c.post_id = $1 AND c.parent_id IS NULL ORDER BY c.created_at DESC LIMIT $2`,
+      WHERE c.post_id = $1 AND c.parent_id IS NULL GROUP BY c.id, u.id ORDER BY c.created_at DESC LIMIT $2`,
       [postId, Number(limit) || 20],
     );
 

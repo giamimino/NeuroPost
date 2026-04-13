@@ -170,6 +170,18 @@ function SkeletonUser() {
   );
 }
 
+function SkeletonReplyComment({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex gap-2.5 w-full", className)}>
+      <Skeleton className="w-10 h-10 rounded-full" />
+      <div className="flex flex-col gap-2.5 w-full">
+        <Skeleton className="w-1/4 h-5" />
+        <Skeleton className="w-3/4 h-10" />
+      </div>
+    </div>
+  );
+}
+
 export {
   SkeletonCard,
   SkeletonPost,
@@ -183,4 +195,5 @@ export {
   SkeletonFriendRequest,
   SkeletonFriendRequests,
   SkeletonUser,
+  SkeletonReplyComment,
 };

@@ -77,8 +77,8 @@ export async function POST(req: Request) {
       user: {
         ...comment.user,
         profile_url: comment.user.profile_url ? signedUrl : "/user.jpg",
-        role: comment.user_id === payload.userId ? "creator" : "guest",
       },
+      role: comment.user_id === payload.userId ? "creator" : "guest",
     };
 
     const result = CommentReplySchema.safeParse(signedComment);
@@ -159,8 +159,8 @@ export async function GET(req: Request) {
       user: {
         ...c.user,
         profile_url: c.user.profile_url ? signedUrls[i] : "/user.jpg",
-        role: c.user_id === payload.userId ? "creator" : "guest",
       },
+      role: c.user_id === payload.userId ? "creator" : "guest",
     }));
 
     return NextResponse.json(

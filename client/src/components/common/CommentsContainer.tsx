@@ -39,12 +39,12 @@ const CommentCard = ({ className, children }: CommentContainerProps) => {
 };
 CommentCard.displayName = "Comment.Card";
 
-const CommentReplyToggle = ({ className, children }: CommentContainerProps) => {
-  const { setToggleReplies } = useComment();
+const CommentReplyToggle = ({ className, children }: { className?: string, children: ({status}: {status: boolean}) => React.ReactNode }) => {
+  const { openReplies, setToggleReplies } = useComment();
 
   return (
     <div className={className} onClick={setToggleReplies}>
-      {children}
+      {children({ status: openReplies })}
     </div>
   );
 };
@@ -206,6 +206,21 @@ const CommentPostContainerInput = ({
 
 CommentPostContainerInput.displayName = "CommentPost.Input";
 
+const CommentHeader = ({ className, children }: CommentContainerProps) => {
+  return <div className={className}>{children}</div>;
+};
+CommentHeader.displayName = "Comment.Header";
+
+const CommentContent = ({ className, children }: CommentContainerProps) => {
+  return <div className={className}>{children}</div>;
+};
+CommentContent.displayName = "Comment.Content";
+
+const CommentProfile = ({ className, children }: CommentContainerProps) => {
+  return <div className={className}>{children}</div>;
+};
+CommentProfile.displayName = "Comment.Profile";
+
 type CommentPostCompound = React.FC<{
   children: React.ReactNode;
   className?: string;
@@ -225,12 +240,18 @@ type CommentCompound = React.FC<CommentContainerProps> & {
   Replies: typeof CommentReplies;
   ReplyToggle: typeof CommentReplyToggle;
   Card: typeof CommentCard;
+  Header: typeof CommentHeader;
+  Content: typeof CommentContent;
+  Profile: typeof CommentProfile;
 };
 
 const Comment = Object.assign(CommentBase, {
   Replies: CommentReplies,
   ReplyToggle: CommentReplyToggle,
   Card: CommentCard,
+  Header: CommentHeader,
+  Content: CommentContent,
+  Profile: CommentProfile,
 }) as CommentCompound;
 
 export { Comment, CommentsContainer, CommentPost };
