@@ -4,7 +4,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Card, CardDescription } from "../ui/card";
+import { Card, CardDescription, CardTitle } from "../ui/card";
 import {
   CommentContext,
   CommentPostContext,
@@ -26,6 +26,15 @@ import { Children, GenericStatus } from "@/types/global";
 import { ErrorType } from "@/schemas/common/error.schema";
 import useReplies from "@/hook/useReplies";
 import { SkeletonReplyComment } from "../ui/Skeleton-examples";
+import { ChevronDown, ChevronUp, Send } from "lucide-react";
+import { Button } from "../ui/button";
+import { ContentToggle, ContentToggleContainer } from "../ContentToggle";
+import { timeAgo } from "@/utils/functions/timeAgo";
+import Image from "next/image";
+import { Skeleton } from "../ui/skeleton";
+import { useRouter } from "next/navigation";
+import { RepliesCache } from "@/lib/cache/replies.cache";
+import { useContentToggle } from "@/store/contexts/ContentToggle.context";
 
 type CommentContainerProps = {
   className?: string;
@@ -67,11 +76,108 @@ const CommentReplies = ({
 }) => {
   const { openReplies } = useComment();
   const { status, data } = useReplies(comment_id, openReplies);
-  console.log(status);
+  const router = useRouter();
 
   return (
     <div className={className} hidden={!openReplies}>
       {status === "loading" && <SkeletonReplyComment />}
+      {status === "success" &&
+        data?.map((c: CommentReplyType) => (
+          <CommentContainer key={c.id}>
+            <Comment className="flex flex-col gap-2.5">
+              <div className="flex gap-2.5">
+                <Comment.Profile>
+                  {typeof c.user.profile_url === "string" ? (
+                    <Image
+                      src={c.user.profile_url}
+                      width={40}
+                      height={40}
+                      alt="user-profile"
+                      className="w-8 h-8 object-cover rounded-full"
+                    />
+                  ) : (
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                  )}
+                </Comment.Profile>
+                <div className="flex flex-col gap-1.5">
+                  <Comment.Header className="flex items-center gap-1.5">
+                    <CardTitle
+                      className="text-foreground cursor-pointer"
+                      onClick={() => router.push(`/u/${c.user.username}`)}
+                    >
+                      {c.user.name}
+                    </CardTitle>
+                    <CardDescription className="text-sm">
+                      {timeAgo(new Date(c.created_at))}
+                    </CardDescription>
+                  </Comment.Header>
+                  <Comment.Content>
+                    <CardDescription>{c.content}</CardDescription>
+                  </Comment.Content>
+                  <ContentToggleContainer>
+                    <ContentToggle.Controller className="w-fit">
+                      <Button
+                        variant={"ghost"}
+                        size={"md"}
+                        className="cursor-pointer rounded-xl text-xs"
+                      >
+                        Reply
+                      </Button>
+                    </ContentToggle.Controller>
+                    <ContentToggle.Content>
+                      <CommentPost
+                        post_id={c.post_id}
+                        comment_id={c.id}
+                        className="flex gap-2.5 items-center"
+                      >
+                        <CommentPost.Input
+                          className="px-2 py-1 text-xs"
+                          placeholder="Write a reply..."
+                        />
+                        <CommentPost.Button onSuccess={() => {}}>
+                          <Button
+                            variant={"outline"}
+                            className="cursor-pointer w-fit"
+                          >
+                            <Send />
+                          </Button>
+                        </CommentPost.Button>
+                      </CommentPost>
+                    </ContentToggle.Content>
+                  </ContentToggleContainer>
+                </div>
+              </div>
+              {/* replies */}
+              <Comment.Replies
+                className="ml-10 flex flex-col gap-2"
+                comment_id={c.id}
+              />
+
+              {c.replies_count > 0 && (
+                <Comment.ReplyToggle className="w-fit">
+                  {({ status }) => (
+                    <Button
+                      variant={"outline"}
+                      className="cursor-pointer rounded-lg"
+                    >
+                      {status ? (
+                        <>
+                          <p>Hide Replies</p>
+                          <ChevronUp className="size-4" />
+                        </>
+                      ) : (
+                        <>
+                          <p>{c.replies_count} Replies</p>
+                          <ChevronDown className="size-4" />
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </Comment.ReplyToggle>
+              )}
+            </Comment>
+          </CommentContainer>
+        ))}
     </div>
   );
 };
@@ -141,6 +247,8 @@ const CommentPostContainerButton = ({
 }) => {
   const { ref, setStatus, status, comment_id, post_id } = useCommentPost();
   const { addAlert } = useAlertStore();
+  const { setOpenReplies } = useComment();
+  const { setExpanded } = useContentToggle()
 
   const handleClick = async () => {
     try {
@@ -169,22 +277,34 @@ const CommentPostContainerButton = ({
       });
       const result = await res?.json();
 
-      const { data, success, error } =
-        CommentReplyAPIResSchema.safeParse(result);
-      if (!success) {
+      const parsed = CommentReplyAPIResSchema.safeParse(result);
+      if (!parsed.success || !parsed.data.ok) {
         return addAlert({
-          ...ERRORS.COMMENT_CREATION_FAILED,
-          type: "error",
-          id: crypto.randomUUID(),
-        });
-      } else if (!data.ok && data.error) {
-        return addAlert({
-          ...data.error,
+          ...(parsed.data?.error || ERRORS.COMMENT_CREATION_FAILED),
           id: crypto.randomUUID(),
           type: "error",
         });
-      } else if (data.ok) {
-        return console.log(data);
+      } else if (parsed.success && parsed.data.ok) {
+        const comment = parsed.data.comment;
+
+        if (!comment) {
+          addAlert({
+            id: crypto.randomUUID(),
+            type: "error",
+            ...ERRORS.GENERIC_ERROR,
+          });
+          return;
+        }
+
+        const cacheKey = comment.parent_id || comment_id;
+        const existing = RepliesCache.get(cacheKey);
+
+        if (existing) {
+          existing.add(comment)
+        }
+
+        setOpenReplies(true);
+        setExpanded(false)
       }
       onSuccess?.();
     } catch (error) {

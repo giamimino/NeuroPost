@@ -6,6 +6,7 @@ import {
   CommentReplyAPISchema,
   CommentReplyArrSchema,
   CommentReplySchema,
+  CommentReplyType,
 } from "@/schemas/comment/reply.schema";
 import { isUuid } from "@/schemas/common/uuid.schema";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
@@ -80,7 +81,9 @@ export async function POST(req: Request) {
         profile_url: comment.user.profile_url ? signedUrl : "/user.jpg",
       },
       role: comment.user_id === payload.userId ? "creator" : "guest",
-    };
+      created_at: String(comment.created_at),
+      replies_count: 0
+    } as CommentReplyType;
 
     const result = CommentReplySchema.safeParse(signedComment);
 
@@ -138,8 +141,12 @@ export async function GET(req: Request) {
 
     const comments = await sql.query(
       `SELECT c.*, 
-      json_build_object('id', u.id, 'username', u.username, 'name', u.name, 'profile_url', u.profile_url) AS user
-      FROM comments c JOIN users u ON u.id = c.user_id WHERE parent_id = $1 LIMIT $2`,
+      json_build_object('id', u.id, 'username', u.username, 'name', u.name, 'profile_url', u.profile_url) AS user,
+      COUNT(r.id) AS replies_count
+      FROM comments c 
+      JOIN users u ON u.id = c.user_id 
+      LEFT JOIN comments r ON r.parent_id = c.id
+      WHERE c.parent_id = $1 GROUP BY c.id, u.id LIMIT $2`,
       [comment_id, Number(limit) || 20],
     );
 
@@ -163,15 +170,19 @@ export async function GET(req: Request) {
       },
       role: c.user_id === payload.userId ? "creator" : "guest",
       created_at: String(c.created_at),
-    }));
+      replies_count: Number(c.replies_count)
+    }) as CommentReplyType);
 
     const parsed = CommentReplyArrSchema.safeParse(signedComments);
-
+    
+    console.log(parsed);
     if (!parsed.success)
       return NextResponse.json(
         { ok: false, error: ERRORS.GENERIC_ERROR },
         { status: 400 },
       );
+
+      
 
     return NextResponse.json(
       { ok: true, comments: parsed.data },

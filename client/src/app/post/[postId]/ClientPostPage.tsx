@@ -512,7 +512,7 @@ const ClientPostPage = ({
                           </div>
                         </div>
                         {/* replies */}
-                        <Comment.Replies comment_id={c.id} />
+                        <Comment.Replies className="ml-10 flex flex-col gap-2" comment_id={c.id} />
                         {c.replies_count > 0 && (
                           <Comment.ReplyToggle className="w-fit">
                             {({ status }) => (

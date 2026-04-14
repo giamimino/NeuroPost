@@ -17,19 +17,21 @@ export default function useReplies(commentId: string, enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
 
-    const checkCache = async () => {
-      const cahcedReplies = RepliesCache.get(commentId);
-      if (cahcedReplies) {
+    const cachedReplies = RepliesCache.get(commentId);
+    const checkCache = () => {
+      if (cachedReplies) {
         setStatus("success");
-        const replies = Array.from(cahcedReplies);
+        const replies = Array.from(cachedReplies);
         setData(replies);
-        return;
+        return true;
       }
+      return false
     }
     checkCache()
 
     const fetchReplies = async () => {
       try {
+        if(cachedReplies) return
         setStatus("loading");
 
         const res = await apiFetch(

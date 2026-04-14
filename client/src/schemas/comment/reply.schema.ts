@@ -20,6 +20,7 @@ export const CommentReplySchema = z.object({
   parent_id: z.uuid(),
   role: z.enum(["creator", "guest"]),
   created_at: z.string(),
+  replies_count: z.number(),
   user: z.object({
     id: z.uuid(),
     name: z.string(),
