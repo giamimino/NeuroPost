@@ -13,7 +13,7 @@ type ContentToggleProps = {
 const ContentToggleContainer = ({
   children,
   defaultExpanded = false,
-}: ContentToggleProps & { defaultExpanded?: boolean}) => {
+}: ContentToggleProps & { defaultExpanded?: boolean }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   const value = {

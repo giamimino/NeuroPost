@@ -14,7 +14,7 @@ export const CommentSchema = z.object({
     name: z.string(),
     profile_url: z.string(),
     username: z.string(),
-  })
-})
+  }),
+});
 
-export type CommentSchemaType = z.infer<typeof CommentSchema>
+export type CommentSchemaType = z.infer<typeof CommentSchema>;

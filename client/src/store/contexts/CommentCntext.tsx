@@ -19,6 +19,8 @@ export const CommentPostContext = createContext<CommentPostContextType | null>(
 export const useCommentPost = () => {
   const ctx = useContext(CommentPostContext);
   if (!ctx)
-    throw new Error("CommentPost components must be used within CommentPostContext");
+    throw new Error(
+      "CommentPost components must be used within CommentPostContext",
+    );
   return ctx;
-}
+};

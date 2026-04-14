@@ -24,7 +24,7 @@ export default function useReplies(commentId: string, enabled: boolean) {
       setData(replies);
       return;
     }
-    
+
     const fetchReplies = async () => {
       try {
         setStatus("loading");
@@ -35,7 +35,7 @@ export default function useReplies(commentId: string, enabled: boolean) {
         const data = await res?.json();
 
         const parsed = CommentReplyApiGetResSchema.safeParse(data);
-        
+
         if (!parsed.success || !parsed.data.ok) {
           addAlert({
             id: crypto.randomUUID(),
@@ -46,7 +46,6 @@ export default function useReplies(commentId: string, enabled: boolean) {
         }
 
         const replies = parsed.data.comments;
-        
 
         if (!replies)
           return addAlert({
@@ -69,8 +68,8 @@ export default function useReplies(commentId: string, enabled: boolean) {
       }
     };
 
-    fetchReplies()
+    fetchReplies();
   }, [commentId, enabled]);
 
-  return { data, status }
+  return { data, status };
 }

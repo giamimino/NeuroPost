@@ -68,9 +68,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const { postId, limit } = Object.fromEntries(
-      searchParams.entries(),
-    );
+    const { postId, limit } = Object.fromEntries(searchParams.entries());
 
     if (!postId || !Number(postId))
       return NextResponse.json(
@@ -130,7 +128,7 @@ export async function GET(req: Request) {
     return NextResponse.json(
       {
         ok: true,
-        comments: signedComments
+        comments: signedComments,
       },
       { status: 200 },
     );

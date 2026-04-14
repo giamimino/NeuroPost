@@ -1,3 +1,3 @@
 import z from "zod";
 
-export const isUuid = z.uuid()
+export const isUuid = z.uuid();

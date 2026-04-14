@@ -45,5 +45,5 @@ export type CommentReplyArrType = z.infer<typeof CommentReplyArrSchema>;
 export const CommentReplyApiGetResSchema = z.object({
   ok: z.boolean(),
   comments: CommentReplyArrSchema.optional(),
-  error: ErrorSchema.optional()
-})
+  error: ErrorSchema.optional(),
+});

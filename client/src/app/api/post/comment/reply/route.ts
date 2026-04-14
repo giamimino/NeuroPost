@@ -162,17 +162,17 @@ export async function GET(req: Request) {
         profile_url: c.user.profile_url ? signedUrls[i] : "/user.jpg",
       },
       role: c.user_id === payload.userId ? "creator" : "guest",
-      created_at: String(c.created_at)
+      created_at: String(c.created_at),
     }));
 
     const parsed = CommentReplyArrSchema.safeParse(signedComments);
-    
+
     if (!parsed.success)
       return NextResponse.json(
         { ok: false, error: ERRORS.GENERIC_ERROR },
         { status: 400 },
       );
-      
+
     return NextResponse.json(
       { ok: true, comments: parsed.data },
       { status: 200 },

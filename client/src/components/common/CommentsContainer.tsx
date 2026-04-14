@@ -58,11 +58,17 @@ const CommentReplyToggle = ({
 };
 CommentReplyToggle.displayName = "Comment.ReplyToggle";
 
-const CommentReplies = ({ className, comment_id }: { className?: string, comment_id: string}) => {
+const CommentReplies = ({
+  className,
+  comment_id,
+}: {
+  className?: string;
+  comment_id: string;
+}) => {
   const { openReplies } = useComment();
-  const { status, data } = useReplies(comment_id, openReplies)
+  const { status, data } = useReplies(comment_id, openReplies);
   console.log(status);
-  
+
   return (
     <div className={className} hidden={!openReplies}>
       {status === "loading" && <SkeletonReplyComment />}

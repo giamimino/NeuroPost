@@ -231,7 +231,9 @@ const ClientPostPage = ({
     try {
       if (!post) return;
 
-      const res = await apiFetch(`/api/post/comment?postId=${post.id}&limit=20`);
+      const res = await apiFetch(
+        `/api/post/comment?postId=${post.id}&limit=20`,
+      );
       const data = await res?.json();
 
       if (!data.ok && data.error) {

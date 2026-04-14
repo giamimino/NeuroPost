@@ -7,6 +7,9 @@ export const ContentToggleContext = createContext<ContentContextType | null>(
 
 export const useContentToggle = () => {
   const ctx = useContext(ContentToggleContext);
-  if(!ctx) throw new Error("useContentToggle must be used within a ContentToggleProvider");
+  if (!ctx)
+    throw new Error(
+      "useContentToggle must be used within a ContentToggleProvider",
+    );
   return ctx;
-}
+};

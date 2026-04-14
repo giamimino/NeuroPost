@@ -22,4 +22,4 @@ export type UserStatsType = Record<string, number>;
 
 export type UserCommentRoleType = "creator" | "guest";
 
-export type GenericStatus = "idle" | "loading" | "success" | "error"
+export type GenericStatus = "idle" | "loading" | "success" | "error";
