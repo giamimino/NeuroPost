@@ -19,7 +19,7 @@ export const CommentReplySchema = z.object({
   user_id: z.uuid(),
   parent_id: z.uuid(),
   role: z.enum(["creator", "guest"]),
-  created_at: z.date(),
+  created_at: z.string(),
   user: z.object({
     id: z.uuid(),
     name: z.string(),
@@ -37,3 +37,13 @@ export const CommentReplyAPIResSchema = z.object({
 });
 
 export type CommentReplyAPIResType = z.infer<typeof CommentReplyAPIResSchema>;
+
+export const CommentReplyArrSchema = z.array(CommentReplySchema);
+
+export type CommentReplyArrType = z.infer<typeof CommentReplyArrSchema>;
+
+export const CommentReplyApiGetResSchema = z.object({
+  ok: z.boolean(),
+  comments: CommentReplyArrSchema.optional(),
+  error: ErrorSchema.optional()
+})

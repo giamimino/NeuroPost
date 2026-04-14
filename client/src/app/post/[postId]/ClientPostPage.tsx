@@ -64,7 +64,7 @@ import { timeAgo } from "@/utils/functions/timeAgo";
 import {
   Comment,
   CommentPost,
-  CommentsContainer,
+  CommentContainer,
 } from "@/components/common/CommentsContainer";
 import {
   ContentToggle,
@@ -443,7 +443,7 @@ const ClientPostPage = ({
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3.5">
                   {comments.map((c) => (
-                    <CommentsContainer key={c.id}>
+                    <CommentContainer key={c.id}>
                       <Comment className="flex flex-col gap-2.5">
                         <div className="flex gap-2.5">
                           <Comment.Profile>
@@ -510,9 +510,7 @@ const ClientPostPage = ({
                           </div>
                         </div>
                         {/* replies */}
-                        <Comment.Replies>
-                          <SkeletonReplyComment />
-                        </Comment.Replies>
+                        <Comment.Replies comment_id={c.id} />
                         {c.replies_count > 0 && (
                           <Comment.ReplyToggle className="w-fit">
                             {({ status }) => (
@@ -536,7 +534,7 @@ const ClientPostPage = ({
                           </Comment.ReplyToggle>
                         )}
                       </Comment>
-                    </CommentsContainer>
+                    </CommentContainer>
                   ))}
                 </CardContent>
               </Card>

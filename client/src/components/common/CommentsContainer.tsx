@@ -18,9 +18,14 @@ import { apiFetch } from "@/lib/apiFetch";
 import {
   CommentReplyAPIResSchema,
   CommentReplyAPISchema,
+  CommentReplyType,
 } from "@/schemas/comment/reply.schema";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { ERRORS } from "@/constants/error-handling";
+import { Children, GenericStatus } from "@/types/global";
+import { ErrorType } from "@/schemas/common/error.schema";
+import useReplies from "@/hook/useReplies";
+import { SkeletonReplyComment } from "../ui/Skeleton-examples";
 
 type CommentContainerProps = {
   className?: string;
@@ -36,7 +41,13 @@ const CommentCard = ({ className, children }: CommentContainerProps) => {
 };
 CommentCard.displayName = "Comment.Card";
 
-const CommentReplyToggle = ({ className, children }: { className?: string, children: ({status}: {status: boolean}) => React.ReactNode }) => {
+const CommentReplyToggle = ({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ({ status }: { status: boolean }) => React.ReactNode;
+}) => {
   const { openReplies, setToggleReplies } = useComment();
 
   return (
@@ -47,22 +58,24 @@ const CommentReplyToggle = ({ className, children }: { className?: string, child
 };
 CommentReplyToggle.displayName = "Comment.ReplyToggle";
 
-const CommentReplies = ({ className, children }: CommentContainerProps) => {
+const CommentReplies = ({ className, comment_id }: { className?: string, comment_id: string}) => {
   const { openReplies } = useComment();
-
+  const { status, data } = useReplies(comment_id, openReplies)
+  console.log(status);
+  
   return (
     <div className={className} hidden={!openReplies}>
-      {children}
+      {status === "loading" && <SkeletonReplyComment />}
     </div>
   );
 };
 CommentReplies.displayName = "Comment.Replies";
 
-const CommentsContainer = ({
+const CommentContainer = ({
   className,
   children,
   defaultOpen = false,
-}: CommentContainerProps & { defaultOpen?: boolean}) => {
+}: CommentContainerProps & { defaultOpen?: boolean }) => {
   const [open, setOpen] = useState(defaultOpen);
 
   const setOpenReplies = (value: boolean) => setOpen(value);
@@ -251,4 +264,4 @@ const Comment = Object.assign(CommentBase, {
   Profile: CommentProfile,
 }) as CommentCompound;
 
-export { Comment, CommentsContainer, CommentPost };
+export { Comment, CommentContainer, CommentPost };

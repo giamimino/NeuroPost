@@ -4,6 +4,7 @@ import { s3 } from "@/lib/aws-sdk";
 import { sql } from "@/lib/db";
 import {
   CommentReplyAPISchema,
+  CommentReplyArrSchema,
   CommentReplySchema,
 } from "@/schemas/comment/reply.schema";
 import { isUuid } from "@/schemas/common/uuid.schema";
@@ -138,7 +139,7 @@ export async function GET(req: Request) {
     const comments = await sql.query(
       `SELECT c.*, 
       json_build_object('id', u.id, 'username', u.username, 'name', u.name, 'profile_url', u.profile_url) AS user
-      FROM commments JOIN users u ON u.id = c.user_id WHERE parent_id = $1 LIMIT $2`,
+      FROM comments c JOIN users u ON u.id = c.user_id WHERE parent_id = $1 LIMIT $2`,
       [comment_id, Number(limit) || 20],
     );
 
@@ -161,10 +162,19 @@ export async function GET(req: Request) {
         profile_url: c.user.profile_url ? signedUrls[i] : "/user.jpg",
       },
       role: c.user_id === payload.userId ? "creator" : "guest",
+      created_at: String(c.created_at)
     }));
 
+    const parsed = CommentReplyArrSchema.safeParse(signedComments);
+    
+    if (!parsed.success)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.GENERIC_ERROR },
+        { status: 400 },
+      );
+      
     return NextResponse.json(
-      { ok: true, comments: signedComments },
+      { ok: true, comments: parsed.data },
       { status: 200 },
     );
   } catch (err) {
