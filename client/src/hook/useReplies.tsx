@@ -17,13 +17,16 @@ export default function useReplies(commentId: string, enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
 
-    const cahcedReplies = RepliesCache.get(commentId);
-    if (cahcedReplies) {
-      setStatus("success");
-      const replies = Array.from(cahcedReplies);
-      setData(replies);
-      return;
+    const checkCache = async () => {
+      const cahcedReplies = RepliesCache.get(commentId);
+      if (cahcedReplies) {
+        setStatus("success");
+        const replies = Array.from(cahcedReplies);
+        setData(replies);
+        return;
+      }
     }
+    checkCache()
 
     const fetchReplies = async () => {
       try {
