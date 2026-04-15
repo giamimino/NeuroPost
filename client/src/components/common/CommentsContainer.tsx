@@ -22,8 +22,6 @@ import {
 } from "@/schemas/comment/reply.schema";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { ERRORS } from "@/constants/error-handling";
-import { Children, GenericStatus } from "@/types/global";
-import { ErrorType } from "@/schemas/common/error.schema";
 import useReplies from "@/hook/useReplies";
 import { SkeletonReplyComment } from "../ui/Skeleton-examples";
 import { ChevronDown, ChevronUp, Send } from "lucide-react";
@@ -75,7 +73,7 @@ const CommentReplies = ({
   comment_id: string;
 }) => {
   const { openReplies } = useComment();
-  const { status, data } = useReplies(comment_id, openReplies);
+  const { status, data } = useReplies(comment_id, openReplies, true);
   const router = useRouter();
 
   return (
@@ -307,7 +305,7 @@ const CommentPostContainerButton = ({
         setExpanded(false)
       }
       onSuccess?.();
-    } catch (error) {
+    } catch {
       setStatus("idle");
     } finally {
       setStatus("idle");

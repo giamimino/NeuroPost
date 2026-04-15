@@ -9,7 +9,7 @@ import { useAlertStore } from "@/store/zustand/alertStore";
 import { GenericStatus } from "@/types/global";
 import { useEffect, useState } from "react";
 
-export default function useReplies(commentId: string, enabled: boolean) {
+export default function useReplies(commentId: string, enabled: boolean, cached: boolean) {
   const [status, setStatus] = useState<GenericStatus>("idle");
   const [data, setData] = useState<CommentReplyType[] | null>(null);
   const { addAlert } = useAlertStore();
@@ -19,6 +19,7 @@ export default function useReplies(commentId: string, enabled: boolean) {
 
     const cachedReplies = RepliesCache.get(commentId);
     const checkCache = () => {
+      if(!cached) return;
       if (cachedReplies) {
         setStatus("success");
         const replies = Array.from(cachedReplies);
@@ -31,7 +32,7 @@ export default function useReplies(commentId: string, enabled: boolean) {
 
     const fetchReplies = async () => {
       try {
-        if(cachedReplies) return
+        if(cachedReplies && enabled) return
         setStatus("loading");
 
         const res = await apiFetch(
@@ -74,7 +75,7 @@ export default function useReplies(commentId: string, enabled: boolean) {
     };
 
     fetchReplies();
-  }, [commentId, enabled]);
+  }, [commentId, enabled, cached]);
 
   return { data, status };
 }

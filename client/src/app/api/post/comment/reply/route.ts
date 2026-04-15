@@ -175,14 +175,11 @@ export async function GET(req: Request) {
 
     const parsed = CommentReplyArrSchema.safeParse(signedComments);
     
-    console.log(parsed);
     if (!parsed.success)
       return NextResponse.json(
         { ok: false, error: ERRORS.GENERIC_ERROR },
         { status: 400 },
       );
-
-      
 
     return NextResponse.json(
       { ok: true, comments: parsed.data },

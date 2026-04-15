@@ -57,7 +57,7 @@ const VerifyClient = () => {
           addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
         }
       });
-  }, [isToken]);
+  }, [isToken, addAlert]);
 
   return (
     <div className="pt-20 flex justify-center">

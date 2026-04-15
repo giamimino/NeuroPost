@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { auth, getAuthUser } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth";
 import { WSSend } from "@/types/ws";
 import { useEffect, useRef, useState } from "react";
 
