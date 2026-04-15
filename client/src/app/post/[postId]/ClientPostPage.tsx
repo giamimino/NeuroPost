@@ -101,7 +101,13 @@ const ClientPostPage = ({
   const editableValuesRef = useRef<HTMLFormElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const shareUrlRef = useRef<HTMLDivElement>(null);
+  const [commentsCursor, setCommentsCursor] = useState<{
+    created_at: string;
+    id: string;
+  } | null>(null);
   const { addAlert } = useAlertStore();
+  const tickingRef = useRef(false);
+  const reachedRef = useRef(false);
 
   const handleEditPost = async () => {
     if (!editing || !editableValuesRef.current || !post) return;
@@ -229,11 +235,20 @@ const ClientPostPage = ({
 
   const handleFetchComments = async () => {
     try {
-      if (!post) return;
+      if (!post || tickingRef.current || reachedRef.current) return;
 
-      const res = await apiFetch(
-        `/api/post/comment?postId=${post.id}&limit=20`,
-      );
+      tickingRef.current = true;
+
+      const params = new URLSearchParams({
+        postId: post.id.toString(),
+        limit: String(10),
+      });
+
+      if (commentsCursor) {
+        params.append("cursorCreatedAt", commentsCursor.created_at);
+        params.append("cursorId", commentsCursor.id);
+      }
+      const res = await apiFetch(`/api/post/comment?${params}`);
       const data = await res?.json();
 
       if (!data.ok && data.error) {
@@ -242,7 +257,15 @@ const ClientPostPage = ({
           type: "error",
           ...data.error,
         });
-      } else if (data.ok && data.comments) setComments(data.comments);
+      } else if (data.ok && data.comments) {
+        setComments((prev) => [...prev, ...data.comments]);
+        if (data.nextCursor) {
+          setCommentsCursor(data.nextCursor);
+        }
+        if (data.comments.length < 10) {
+          reachedRef.current = true;
+        }
+      }
     } catch (err) {
       console.log(err);
 
@@ -251,6 +274,8 @@ const ClientPostPage = ({
         type: "error",
         ...ERRORS.GENERIC_ERROR,
       });
+    } finally {
+      tickingRef.current = false;
     }
   };
 
@@ -269,6 +294,28 @@ const ClientPostPage = ({
       })
       .catch((err) => console.error(err));
   }, [postId]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollCLient = document.documentElement.clientHeight;
+      const target = 0.85;
+
+      if (scrollTop + scrollCLient >= scrollHeight * target) {
+        console.log("reached");
+        (async () => {
+          await handleFetchComments();
+        })();
+      }
+    };
+
+    console.log("s");
+
+    window.addEventListener("scroll", onScroll);
+
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   if (deleted)
     return (
@@ -512,7 +559,10 @@ const ClientPostPage = ({
                           </div>
                         </div>
                         {/* replies */}
-                        <Comment.Replies className="ml-10 flex flex-col gap-2" comment_id={c.id} />
+                        <Comment.Replies
+                          className="ml-10 flex flex-col gap-2"
+                          comment_id={c.id}
+                        />
                         {c.replies_count > 0 && (
                           <Comment.ReplyToggle className="w-fit">
                             {({ status }) => (

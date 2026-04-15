@@ -68,7 +68,9 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const { postId, limit } = Object.fromEntries(searchParams.entries());
+    const { postId, limit, cursorCreatedAt, cursorId } = Object.fromEntries(
+      searchParams.entries(),
+    );
 
     if (!postId || !Number(postId))
       return NextResponse.json(
@@ -91,12 +93,26 @@ export async function GET(req: Request) {
 
     const comments = await sql.query(
       `SELECT c.*, 
-      json_build_object('id', u.id, 'name', u.name, 'username', u.username, 'profile_url', u.profile_url) as user, 
-      COUNT(r.id) as replies_count FROM comments c 
+      json_build_object(
+        'id', u.id, 
+        'name', u.name, 
+        'username', u.username, 
+        'profile_url', u.profile_url
+      ) as user, 
+      COUNT(r.id) as replies_count 
+      FROM comments c 
       JOIN users u ON u.id = c.user_id
       LEFT JOIN comments r ON r.parent_id = c.id
-      WHERE c.post_id = $1 AND c.parent_id IS NULL GROUP BY c.id, u.id ORDER BY c.created_at DESC LIMIT $2`,
-      [postId, Number(limit) || 20],
+      WHERE c.post_id = $1 
+        AND c.parent_id IS NULL
+        AND (
+          $3::timestamptz IS NULL
+          OR c.created_at < $3
+          OR (c.created_at = $3 AND c.id < $4)
+        )
+      GROUP BY c.id, u.id 
+      ORDER BY c.created_at DESC, c.id DESC LIMIT $2`,
+      [postId, Number(limit) || 20, cursorCreatedAt || null, cursorId || null],
     );
 
     if (!comments)
@@ -118,7 +134,7 @@ export async function GET(req: Request) {
       }),
     );
 
-    const signedComments = comments.map((c, i) => ({
+    const signedComments: any[] = comments.map((c, i) => ({
       ...c,
       user: {
         ...c.user,
@@ -127,10 +143,13 @@ export async function GET(req: Request) {
       role: c.user_id === payload.userId ? "creator" : "guest",
     }));
 
+    const last = signedComments[signedComments.length - 1];
+
     return NextResponse.json(
       {
         ok: true,
         comments: signedComments,
+        nextCursor: last ? { created_at: last.created_at, id: last.id } : null,
       },
       { status: 200 },
     );
