@@ -14,4 +14,13 @@ export const UsernameSchema = z
   .string()
   .min(3, JSON.stringify(ERRORS.USERNAME_TOO_SMALL))
   .max(20, JSON.stringify(ERRORS.USERNAME_TOO_LARGE))
-  .regex(/^[A-Za-z_-]+$/, JSON.stringify(ERRORS.USERNAME_IS_WRONG));
+  .regex(/^[A-Za-z._-]+$/, JSON.stringify(ERRORS.USERNAME_IS_WRONG));
+
+export const JWTUserPayloadSchema = z.object({
+  userId: z.uuid(),
+  username: UsernameSchema,
+  status: z.enum(["active", "inactive"]),
+
+  iat: z.number(),
+  exp: z.number()
+})
