@@ -233,14 +233,14 @@ const ClientPostPage = ({
     selection?.addRange(range);
   };
 
-  const handleFetchComments = async () => {
+  const handleFetchComments = async (postId: number) => {
     try {
-      if (!post || tickingRef.current || reachedRef.current) return;
-
+      if (tickingRef.current || reachedRef.current) return;
+      
       tickingRef.current = true;
 
       const params = new URLSearchParams({
-        postId: post.id.toString(),
+        postId: postId.toString(),
         limit: String(10),
       });
 
@@ -261,21 +261,20 @@ const ClientPostPage = ({
         setComments((prev) => [...prev, ...data.comments]);
         if (data.nextCursor) {
           setCommentsCursor(data.nextCursor);
+        } else {
+          reachedRef.current = true
         }
         if (data.comments.length < 10) {
           reachedRef.current = true;
         }
       }
+      tickingRef.current = false;
     } catch (err) {
-      console.log(err);
-
       addAlert({
         id: crypto.randomUUID(),
         type: "error",
         ...ERRORS.GENERIC_ERROR,
       });
-    } finally {
-      tickingRef.current = false;
     }
   };
 
@@ -296,6 +295,7 @@ const ClientPostPage = ({
   }, [postId]);
 
   useEffect(() => {
+    if(!post) return
     const onScroll = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
@@ -303,19 +303,14 @@ const ClientPostPage = ({
       const target = 0.85;
 
       if (scrollTop + scrollCLient >= scrollHeight * target) {
-        console.log("reached");
-        (async () => {
-          await handleFetchComments();
-        })();
+          handleFetchComments(post.id);
       }
     };
-
-    console.log("s");
 
     window.addEventListener("scroll", onScroll);
 
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [post]);
 
   if (deleted)
     return (
@@ -658,8 +653,8 @@ const ClientPostPage = ({
                 className={`rounded-sm cursor-pointer`}
                 variant={"outline"}
                 onClick={async () => {
-                  if (comments.length === 0) {
-                    await handleFetchComments();
+                  if (comments.length === 0 && post) {
+                    await handleFetchComments(post.id);
                   }
                 }}
               >
