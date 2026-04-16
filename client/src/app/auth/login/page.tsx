@@ -3,6 +3,7 @@ import BlurWrapper from "@/components/BlurWrapper";
 import DefaultInput from "@/components/common/DefaultInput";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
+import { LoginSchema } from "@/schemas/auth/login.schema";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -20,6 +21,17 @@ const LoginPage = () => {
       const email = (formData.get("email") as string) || "";
       const password = (formData.get("password") as string) || "";
 
+      const parsed = LoginSchema.safeParse({ email, password })
+      if(!parsed.success) {
+        const message = JSON.parse(parsed.error.issues[0].message)
+
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...message
+        })
+        return;
+      }
       const url = "/api/auth/login";
       const res = await fetch(url, {
         ...ApiConfig.post,
