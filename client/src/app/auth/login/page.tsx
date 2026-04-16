@@ -35,7 +35,7 @@ const LoginPage = () => {
       const url = "/api/auth/login";
       const res = await fetch(url, {
         ...ApiConfig.post,
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(parsed.data),
       });
       const data = await res?.json();
       console.log(data);
