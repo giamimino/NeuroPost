@@ -27,6 +27,7 @@ import {
   ChevronUp,
   ClipboardIcon,
   Ellipsis,
+  EllipsisVertical,
   ExternalLink,
   Heart,
   MessageCircle,
@@ -52,7 +53,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import DefaultTextarea from "@/components/common/DefaultTextarea";
-import DataFetcher from "@/components/data-fetcher";
 import {
   ALLOWED_IMAGE_TYPES,
   ALLOWED_VIDEO_TYPES,
@@ -70,9 +70,7 @@ import {
   ContentToggle,
   ContentToggleContainer,
 } from "@/components/ContentToggle";
-import { UserCommentRoleType } from "@/types/global";
 import { CommentSchemaType } from "@/schemas/comment/comment.schema";
-import { CommentReplyAPIResSchema } from "@/schemas/comment/reply.schema";
 
 const ClientPostPage = ({
   params,
@@ -236,7 +234,7 @@ const ClientPostPage = ({
   const handleFetchComments = async (postId: number) => {
     try {
       if (tickingRef.current || reachedRef.current) return;
-      
+
       tickingRef.current = true;
 
       const params = new URLSearchParams({
@@ -262,7 +260,7 @@ const ClientPostPage = ({
         if (data.nextCursor) {
           setCommentsCursor(data.nextCursor);
         } else {
-          reachedRef.current = true
+          reachedRef.current = true;
         }
         if (data.comments.length < 10) {
           reachedRef.current = true;
@@ -295,7 +293,7 @@ const ClientPostPage = ({
   }, [postId]);
 
   useEffect(() => {
-    if(!post) return
+    if (!post) return;
     const onScroll = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
@@ -303,7 +301,7 @@ const ClientPostPage = ({
       const target = 0.85;
 
       if (scrollTop + scrollCLient >= scrollHeight * target) {
-          handleFetchComments(post.id);
+        handleFetchComments(post.id);
       }
     };
 
@@ -489,69 +487,127 @@ const ClientPostPage = ({
                   {comments.map((c) => (
                     <CommentContainer key={c.id}>
                       <Comment className="flex flex-col gap-2.5">
-                        <div className="flex gap-2.5">
-                          <Comment.Profile>
-                            {typeof c.user.profile_url === "string" ? (
-                              <Image
-                                src={c.user.profile_url}
-                                width={40}
-                                height={40}
-                                alt="user-profile"
-                                className="w-8 h-8 object-cover rounded-full"
-                              />
-                            ) : (
-                              <Skeleton className="h-8 w-8 rounded-full" />
-                            )}
-                          </Comment.Profile>
-                          <div className="flex flex-col gap-1.5">
-                            <Comment.Header className="flex items-center gap-1.5">
-                              <CardTitle
-                                className="text-foreground cursor-pointer"
-                                onClick={() =>
-                                  router.push(`/u/${c.user.username}`)
-                                }
-                              >
-                                {c.user.name}
-                              </CardTitle>
-                              <CardDescription className="text-sm">
-                                {timeAgo(new Date(c.created_at))}
-                              </CardDescription>
-                            </Comment.Header>
-                            <Comment.Content>
-                              <CardDescription>{c.content}</CardDescription>
-                            </Comment.Content>
-                            <ContentToggleContainer>
-                              <ContentToggle.Controller className="w-fit">
+                        <div className="flex justify-between items-center">
+                          <div className="flex gap-2.5">
+                            <Comment.Profile>
+                              {typeof c.user.profile_url === "string" ? (
+                                <Image
+                                  src={c.user.profile_url}
+                                  width={40}
+                                  height={40}
+                                  alt="user-profile"
+                                  className="w-8 h-8 object-cover rounded-full"
+                                />
+                              ) : (
+                                <Skeleton className="h-8 w-8 rounded-full" />
+                              )}
+                            </Comment.Profile>
+                            <div className="flex flex-col gap-1.5">
+                              <Comment.Header className="flex items-center gap-1.5">
+                                <CardTitle
+                                  className="text-foreground cursor-pointer"
+                                  onClick={() =>
+                                    router.push(`/u/${c.user.username}`)
+                                  }
+                                >
+                                  {c.user.name}
+                                </CardTitle>
+                                <CardDescription className="text-sm">
+                                  {timeAgo(new Date(c.created_at))}
+                                </CardDescription>
+                              </Comment.Header>
+                              <Comment.Content>
+                                <CardDescription>{c.content}</CardDescription>
+                              </Comment.Content>
+                              <ContentToggleContainer>
+                                <ContentToggle.Controller className="w-fit">
+                                  <Button
+                                    variant={"ghost"}
+                                    size={"md"}
+                                    className="cursor-pointer rounded-xl text-xs"
+                                  >
+                                    Reply
+                                  </Button>
+                                </ContentToggle.Controller>
+                                <ContentToggle.Content>
+                                  <CommentPost
+                                    post_id={c.post_id}
+                                    comment_id={c.id}
+                                    className="flex gap-2.5 items-center"
+                                  >
+                                    <CommentPost.Input
+                                      className="px-2 py-1 text-xs"
+                                      placeholder="Write a reply..."
+                                    />
+                                    <CommentPost.Button onSuccess={() => {}}>
+                                      <Button
+                                        variant={"outline"}
+                                        className="cursor-pointer w-fit"
+                                      >
+                                        <Send />
+                                      </Button>
+                                    </CommentPost.Button>
+                                  </CommentPost>
+                                </ContentToggle.Content>
+                              </ContentToggleContainer>
+                            </div>
+                          </div>
+                          {c.role === "creator" && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
                                 <Button
                                   variant={"ghost"}
-                                  size={"md"}
-                                  className="cursor-pointer rounded-xl text-xs"
+                                  size={"sm"}
+                                  className="cursor-pointer"
                                 >
-                                  Reply
+                                  <Ellipsis />
                                 </Button>
-                              </ContentToggle.Controller>
-                              <ContentToggle.Content>
-                                <CommentPost
-                                  post_id={c.post_id}
-                                  comment_id={c.id}
-                                  className="flex gap-2.5 items-center"
-                                >
-                                  <CommentPost.Input
-                                    className="px-2 py-1 text-xs"
-                                    placeholder="Write a reply..."
-                                  />
-                                  <CommentPost.Button onSuccess={() => {}}>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
                                     <Button
-                                      variant={"outline"}
-                                      className="cursor-pointer w-fit"
+                                      variant={"none"}
+                                      className="w-full cursor-pointer border border-destructive text-destructive bg-destructive/4 hover:bg-destructive/10"
                                     >
-                                      <Send />
+                                      Delete
                                     </Button>
-                                  </CommentPost.Button>
-                                </CommentPost>
-                              </ContentToggle.Content>
-                            </ContentToggleContainer>
-                          </div>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    <div className="flex gap-3 flex-col p-3">
+                                      <CardDescription>
+                                        Are you sure you want to delete this
+                                        comment?
+                                      </CardDescription>
+                                      <div className="flex gap-3">
+                                        <DropdownMenuItem className="focus:bg-transparent focus:text-inherit p-0">
+                                          <Button
+                                            onClick={() =>
+                                              handleDeleteComment({
+                                                commentId: c.id,
+                                              })
+                                            }
+                                            variant={"none"}
+                                            className="w-full cursor-pointer border border-destructive text-destructive bg-destructive/4 hover:bg-destructive/10"
+                                          >
+                                            Delete
+                                          </Button>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="focus:bg-transparent focus:text-inherit p-0">
+                                          <Button
+                                            variant={"ghost"}
+                                            className="cursor-pointer"
+                                          >
+                                            cancel
+                                          </Button>
+                                        </DropdownMenuItem>
+                                      </div>
+                                    </div>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </div>
                         {/* replies */}
                         <Comment.Replies
