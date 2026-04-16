@@ -9,3 +9,9 @@ export const PasswordValidatorSchema = z
   .regex(/[A-Z]/, JSON.stringify(ERRORS.PASSWORD_NO_UPPERCASE))
   .regex(/[0-9]/, JSON.stringify(ERRORS.PASSWORD_NO_NUMBER))
   .regex(/[^a-zA-Z0-9]/, JSON.stringify(ERRORS.PASSWORD_NO_SPECIAL_CHAR));
+
+export const UsernameSchema = z
+  .string()
+  .min(3, JSON.stringify(ERRORS.USERNAME_TOO_SMALL))
+  .max(20, JSON.stringify(ERRORS.USERNAME_TOO_LARGE))
+  .regex(/^[A-Za-z_-]+$/, JSON.stringify(ERRORS.USERNAME_IS_WRONG));

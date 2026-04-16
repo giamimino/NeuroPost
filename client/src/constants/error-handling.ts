@@ -147,6 +147,21 @@ export const ERRORS = {
     description: "This username is already taken. Please choose another one.",
   },
 
+  USERNAME_TOO_SMALL: {
+    title: "Username Too Short",
+    description: "Username must be at least 3 characters long.",
+  },
+
+  USERNAME_TOO_LARGE: {
+    title: "Username Too Long",
+    description: "Username cannot exceed 20 characters.",
+  },
+
+  USERNAME_IS_WRONG: {
+    title: "Invalid Username",
+    description: "Username may only contain letters, underscores, and hyphens.",
+  },
+
   PASSWORD_TOO_WEAK: {
     title: "Weak Password",
     description: "Your password must be stronger and contain more characters.",

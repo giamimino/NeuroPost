@@ -4,6 +4,7 @@ import DefaultInput from "@/components/common/DefaultInput";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
+import { RegisterSchema } from "@/schemas/auth/register.schema";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -12,7 +13,7 @@ const RegisterPage = () => {
   const router = useRouter();
   const { addAlert } = useAlertStore();
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     try {
       e.preventDefault();
 
@@ -22,10 +23,23 @@ const RegisterPage = () => {
       const email = formData.get("email") as string;
       const password = formData.get("password") as string;
 
+      const parsedBody = RegisterSchema.safeParse({ username, email, password })
+      if(!parsedBody.success) {
+        const message = JSON.parse(parsedBody.error.issues[0].message)
+
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...message
+        })
+
+        return;
+      }
+
       const url = "/api/auth/register";
       const res = await apiFetch(url, {
         ...ApiConfig.post,
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify(parsedBody.data),
       });
       const data = await res?.json();
 
@@ -52,7 +66,7 @@ const RegisterPage = () => {
               Log in to access posting and commenting.
             </p>
           </div>
-          <form onSubmit={handleLogin} className="flex flex-col gap-6">
+          <form onSubmit={handleRegister} className="flex flex-col gap-6">
             <div className="flex flex-col gap-4.5">
               <DefaultInput
                 name="username"
