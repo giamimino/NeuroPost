@@ -77,5 +77,5 @@ export default function useReplies(commentId: string, enabled: boolean, cached: 
     fetchReplies();
   }, [commentId, enabled, cached]);
 
-  return { data, status };
+  return { data, status, setData };
 }

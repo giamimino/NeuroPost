@@ -7,7 +7,7 @@ async function getPost(id: number) {
     cache: "no-store",
   });
 
-  return await res.json();
+  return await res?.json();
 }
 
 export async function generateMetadata({

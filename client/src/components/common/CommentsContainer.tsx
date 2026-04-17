@@ -24,7 +24,7 @@ import { useAlertStore } from "@/store/zustand/alertStore";
 import { ERRORS } from "@/constants/error-handling";
 import useReplies from "@/hook/useReplies";
 import { SkeletonReplyComment } from "../ui/Skeleton-examples";
-import { ChevronDown, ChevronUp, Send } from "lucide-react";
+import { ChevronDown, ChevronUp, Ellipsis, Send } from "lucide-react";
 import { Button } from "../ui/button";
 import { ContentToggle, ContentToggleContainer } from "../ContentToggle";
 import { timeAgo } from "@/utils/functions/timeAgo";
@@ -33,6 +33,13 @@ import { Skeleton } from "../ui/skeleton";
 import { useRouter } from "next/navigation";
 import { RepliesCache } from "@/lib/cache/replies.cache";
 import { useContentToggle } from "@/store/contexts/ContentToggle.context";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { ApiConfig } from "@/configs/api-configs";
 
 type CommentContainerProps = {
   className?: string;
@@ -73,8 +80,41 @@ const CommentReplies = ({
   comment_id: string;
 }) => {
   const { openReplies } = useComment();
-  const { status, data } = useReplies(comment_id, openReplies, true);
+  const { status, data, setData } = useReplies(comment_id, openReplies, true);
   const router = useRouter();
+  const { addAlert } = useAlertStore();
+
+  const handleDeleteComment = async ({ commentId, parentId }: { commentId: string, parentId: string }) => {
+    try {
+      const url = `/api/post/comment/${commentId}`;
+      const res = await apiFetch(url, { method: ApiConfig.delete.method });
+      const data = await res?.json();
+
+      if (data.ok) {
+        setData((prev) =>
+          prev ? prev.filter((c) => c.id !== commentId) : prev,
+        );
+        const cachedReplies = RepliesCache.get(parentId)
+        if(cachedReplies) {
+          for(const item of cachedReplies) {
+            if(item.id === commentId) {
+              cachedReplies.delete(item)
+              break;
+            }
+          }
+        }
+      } else if (data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+          duration: 3 * 1000,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className={className} hidden={!openReplies}>
@@ -83,67 +123,125 @@ const CommentReplies = ({
         data?.map((c: CommentReplyType) => (
           <CommentContainer key={c.id}>
             <Comment className="flex flex-col gap-2.5">
-              <div className="flex gap-2.5">
-                <Comment.Profile>
-                  {typeof c.user.profile_url === "string" ? (
-                    <Image
-                      src={c.user.profile_url}
-                      width={40}
-                      height={40}
-                      alt="user-profile"
-                      className="w-8 h-8 object-cover rounded-full"
-                    />
-                  ) : (
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                  )}
-                </Comment.Profile>
-                <div className="flex flex-col gap-1.5">
-                  <Comment.Header className="flex items-center gap-1.5">
-                    <CardTitle
-                      className="text-foreground cursor-pointer"
-                      onClick={() => router.push(`/u/${c.user.username}`)}
-                    >
-                      {c.user.name}
-                    </CardTitle>
-                    <CardDescription className="text-sm">
-                      {timeAgo(new Date(c.created_at))}
-                    </CardDescription>
-                  </Comment.Header>
-                  <Comment.Content>
-                    <CardDescription>{c.content}</CardDescription>
-                  </Comment.Content>
-                  <ContentToggleContainer>
-                    <ContentToggle.Controller className="w-fit">
+              <div className="flex justify-between items-center">
+                <div className="flex gap-2.5">
+                  <Comment.Profile>
+                    {typeof c.user.profile_url === "string" ? (
+                      <Image
+                        src={c.user.profile_url}
+                        width={40}
+                        height={40}
+                        alt="user-profile"
+                        className="w-8 h-8 object-cover rounded-full"
+                      />
+                    ) : (
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                    )}
+                  </Comment.Profile>
+                  <div className="flex flex-col gap-1.5">
+                    <Comment.Header className="flex items-center gap-1.5">
+                      <CardTitle
+                        className="text-foreground cursor-pointer"
+                        onClick={() => router.push(`/u/${c.user.username}`)}
+                      >
+                        {c.user.name}
+                      </CardTitle>
+                      <CardDescription className="text-sm">
+                        {timeAgo(new Date(c.created_at))}
+                      </CardDescription>
+                    </Comment.Header>
+                    <Comment.Content>
+                      <CardDescription>{c.content}</CardDescription>
+                    </Comment.Content>
+                    <ContentToggleContainer>
+                      <ContentToggle.Controller className="w-fit">
+                        <Button
+                          variant={"ghost"}
+                          size={"md"}
+                          className="cursor-pointer rounded-xl text-xs"
+                        >
+                          Reply
+                        </Button>
+                      </ContentToggle.Controller>
+                      <ContentToggle.Content>
+                        <CommentPost
+                          post_id={c.post_id}
+                          comment_id={c.id}
+                          className="flex gap-2.5 items-center"
+                        >
+                          <CommentPost.Input
+                            className="px-2 py-1 text-xs"
+                            placeholder="Write a reply..."
+                          />
+                          <CommentPost.Button onSuccess={() => {}}>
+                            <Button
+                              variant={"outline"}
+                              className="cursor-pointer w-fit"
+                            >
+                              <Send />
+                            </Button>
+                          </CommentPost.Button>
+                        </CommentPost>
+                      </ContentToggle.Content>
+                    </ContentToggleContainer>
+                  </div>
+                </div>
+                {c.role === "creator" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button
                         variant={"ghost"}
-                        size={"md"}
-                        className="cursor-pointer rounded-xl text-xs"
+                        size={"sm"}
+                        className="cursor-pointer"
                       >
-                        Reply
+                        <Ellipsis />
                       </Button>
-                    </ContentToggle.Controller>
-                    <ContentToggle.Content>
-                      <CommentPost
-                        post_id={c.post_id}
-                        comment_id={c.id}
-                        className="flex gap-2.5 items-center"
-                      >
-                        <CommentPost.Input
-                          className="px-2 py-1 text-xs"
-                          placeholder="Write a reply..."
-                        />
-                        <CommentPost.Button onSuccess={() => {}}>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
                           <Button
-                            variant={"outline"}
-                            className="cursor-pointer w-fit"
+                            variant={"none"}
+                            className="w-full cursor-pointer border border-destructive text-destructive bg-destructive/4 hover:bg-destructive/10"
                           >
-                            <Send />
+                            Delete
                           </Button>
-                        </CommentPost.Button>
-                      </CommentPost>
-                    </ContentToggle.Content>
-                  </ContentToggleContainer>
-                </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <div className="flex gap-3 flex-col p-3">
+                            <CardDescription>
+                              Are you sure you want to delete this comment?
+                            </CardDescription>
+                            <div className="flex gap-3">
+                              <DropdownMenuItem className="focus:bg-transparent focus:text-inherit p-0">
+                                <Button
+                                  onClick={() =>
+                                    handleDeleteComment({
+                                      commentId: c.id,
+                                      parentId: c.parent_id,
+                                    })
+                                  }
+                                  variant={"none"}
+                                  className="w-full cursor-pointer border border-destructive text-destructive bg-destructive/4 hover:bg-destructive/10"
+                                >
+                                  Delete
+                                </Button>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="focus:bg-transparent focus:text-inherit p-0">
+                                <Button
+                                  variant={"ghost"}
+                                  className="cursor-pointer"
+                                >
+                                  cancel
+                                </Button>
+                              </DropdownMenuItem>
+                            </div>
+                          </div>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
               {/* replies */}
               <Comment.Replies
@@ -246,7 +344,7 @@ const CommentPostContainerButton = ({
   const { ref, setStatus, status, comment_id, post_id } = useCommentPost();
   const { addAlert } = useAlertStore();
   const { setOpenReplies } = useComment();
-  const { setExpanded } = useContentToggle()
+  const { setExpanded } = useContentToggle();
 
   const handleClick = async () => {
     try {
@@ -298,11 +396,11 @@ const CommentPostContainerButton = ({
         const existing = RepliesCache.get(cacheKey);
 
         if (existing) {
-          existing.add(comment)
+          existing.add(comment);
         }
 
         setOpenReplies(true);
-        setExpanded(false)
+        setExpanded(false);
       }
       onSuccess?.();
     } catch {
