@@ -37,7 +37,14 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import React, { use, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { apiFetch } from "@/lib/apiFetch";
 import { Input } from "@/components/ui/input";
 import Line from "@/components/ui/Line";
@@ -99,13 +106,14 @@ const ClientPostPage = ({
   const editableValuesRef = useRef<HTMLFormElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const shareUrlRef = useRef<HTMLDivElement>(null);
-  const [commentsCursor, setCommentsCursor] = useState<{
+  const commentsCursorRef = useRef<{
     created_at: string;
     id: string;
   } | null>(null);
   const { addAlert } = useAlertStore();
-  const tickingRef = useRef(false);
+  const loadingRef = useRef(false);
   const reachedRef = useRef(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   const handleEditPost = async () => {
     if (!editing || !editableValuesRef.current || !post) return;
@@ -231,50 +239,58 @@ const ClientPostPage = ({
     selection?.addRange(range);
   };
 
-  const handleFetchComments = async (postId: number) => {
-    try {
-      if (tickingRef.current || reachedRef.current) return;
+  const handleFetchComments = useCallback(
+    async (postId: number) => {
+      try {
+        if (loadingRef.current || reachedRef.current) return;
+        loadingRef.current = true;
 
-      tickingRef.current = true;
+        const params = new URLSearchParams({
+          postId: postId.toString(),
+          limit: String(10),
+          ...(commentsCursorRef.current
+            ? {
+                cursorCreatedAt: commentsCursorRef.current.created_at,
+                cursorId: commentsCursorRef.current.id,
+              }
+            : {}),
+        });
 
-      const params = new URLSearchParams({
-        postId: postId.toString(),
-        limit: String(10),
-      });
+        const res = await apiFetch(`/api/post/comment?${params}`);
+        const data = await res?.json();
 
-      if (commentsCursor) {
-        params.append("cursorCreatedAt", commentsCursor.created_at);
-        params.append("cursorId", commentsCursor.id);
-      }
-      const res = await apiFetch(`/api/post/comment?${params}`);
-      const data = await res?.json();
+        if (!data.ok && data.error) {
+          addAlert({
+            id: crypto.randomUUID(),
+            type: "error",
+            ...data.error,
+          });
+        } else if (data.ok && data.comments) {
+          setComments((prev) => [...prev, ...data.comments]);
+          console.log(data);
+          const isLastPage = !data.nextCursor || data.comments.length < 10;
 
-      if (!data.ok && data.error) {
+          if (isLastPage) {
+            reachedRef.current = true;
+          } else if (data.nextCursor?.id && data.nextCursor?.created_at) {
+            commentsCursorRef.current = data.nextCursor;
+          }
+        }
+      } catch (err) {
         addAlert({
           id: crypto.randomUUID(),
           type: "error",
-          ...data.error,
+          ...ERRORS.GENERIC_ERROR,
         });
-      } else if (data.ok && data.comments) {
-        setComments((prev) => [...prev, ...data.comments]);
-        if (data.nextCursor) {
-          setCommentsCursor(data.nextCursor);
-        } else {
-          reachedRef.current = true;
-        }
-        if (data.comments.length < 10) {
-          reachedRef.current = true;
-        }
+      } finally {
+        loadingRef.current = false
       }
-      tickingRef.current = false;
-    } catch (err) {
-      addAlert({
-        id: crypto.randomUUID(),
-        type: "error",
-        ...ERRORS.GENERIC_ERROR,
-      });
-    }
-  };
+    },
+    [],
+  );
+
+  console.log(comments.length);
+  
 
   // get post
   useEffect(() => {
@@ -294,21 +310,30 @@ const ClientPostPage = ({
 
   useEffect(() => {
     if (!post) return;
-    const onScroll = () => {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const scrollCLient = document.documentElement.clientHeight;
-      const target = 0.85;
 
-      if (scrollTop + scrollCLient >= scrollHeight * target) {
-        handleFetchComments(post.id);
+    const target = loadMoreRef.current
+    if(!target) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if(entry.isIntersecting) {
+          if(reachedRef.current || loadingRef.current) return
+
+          handleFetchComments(post.id)
+        }
+      },
+      {
+        root: null,
+        rootMargin: "200px",
+        threshold: 0
       }
-    };
+    )
 
-    window.addEventListener("scroll", onScroll);
+    observer.observe(target)
 
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [post]);
+
+    return () => observer.disconnect()
+  }, [post?.id, handleFetchComments]);
 
   if (deleted)
     return (
@@ -489,7 +514,7 @@ const ClientPostPage = ({
                       <Comment className="flex flex-col gap-2.5">
                         <div className="flex justify-between items-center">
                           <div className="flex gap-2.5">
-                            <Comment.Profile>
+                            <Comment.Profile className="w-8 h-8">
                               {typeof c.user.profile_url === "string" ? (
                                 <Image
                                   src={c.user.profile_url}
@@ -497,6 +522,10 @@ const ClientPostPage = ({
                                   height={40}
                                   alt="user-profile"
                                   className="w-8 h-8 object-cover rounded-full"
+                                  style={{
+                                    width: 32, 
+                                    height: 32
+                                  }}
                                 />
                               ) : (
                                 <Skeleton className="h-8 w-8 rounded-full" />
@@ -517,7 +546,7 @@ const ClientPostPage = ({
                                 </CardDescription>
                               </Comment.Header>
                               <Comment.Content>
-                                <CardDescription>{c.content}</CardDescription>
+                                <CardDescription className="text-wrap w-full max-w-100">{c.content}</CardDescription>
                               </Comment.Content>
                               <ContentToggleContainer>
                                 <ContentToggle.Controller className="w-fit">
@@ -643,6 +672,7 @@ const ClientPostPage = ({
               </Card>
             </div>
           )}
+          <div ref={loadMoreRef} />
         </div>
 
         {/* settings, likes, comments and etc  */}
