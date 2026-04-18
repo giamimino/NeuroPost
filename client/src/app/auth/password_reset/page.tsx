@@ -12,11 +12,11 @@ export default function PasswordResetConfrimationPage() {
   const emailInputRef = useRef<HTMLInputElement>(null);
   const { addAlert } = useAlertStore();
 
-  const handleSendPasswordReset = () => {
+  const handleSendPasswordReset = async () => {
     try {
       const parsedEmail = z
         .email(JSON.stringify(ERRORS.EMAIL_REQUIRED))
-        .safeParse(emailInputRef);
+        .safeParse(emailInputRef.current?.value);
       if(!parsedEmail.success) {
         const message = JSON.parse(parsedEmail.error.issues[0].message)
 
@@ -28,6 +28,8 @@ export default function PasswordResetConfrimationPage() {
       }
 
       const email = parsedEmail.data
+
+
     } catch (error) {
       addAlert({
         id: crypto.randomUUID(),
@@ -58,7 +60,7 @@ export default function PasswordResetConfrimationPage() {
               placeholder="Enter your email address"
             />
           </div>
-          <Button variant={"outline"} className="cursor-pointer">
+          <Button onClick={handleSendPasswordReset} variant={"outline"} className="cursor-pointer">
             Send password reset email
           </Button>
         </BlurWrapper>

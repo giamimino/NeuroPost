@@ -446,4 +446,8 @@ export const ERRORS = {
     title: "Internal Server Error",
     description: "An unexpected error occurred. Please try again later.",
   },
+  PASSWORD_RESET_ACC_INACTIVE: {
+    title: "Account Inactive",
+    description: "Your account is inactive. Please verify your email or contact support to reset your password.",
+  }
 } as const;
