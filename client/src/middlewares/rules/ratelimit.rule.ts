@@ -1,0 +1,20 @@
+
+
+export const RateLimitRules = [
+  { match: /^\/api\/auth/, limit: 3 },
+  { match: /^\/api\/follow/, limit: 3 },
+  { match: /^\/api\/friend-request/, limit: 10 },
+  { match: /^\/api\/pending-friends/, limit: 10 },
+  { match: /^\/api\/friends/, limit: 7 },
+  { match: /^\/api\/index/, limit: 30 },
+  { match: /^\/api\/notifications/, limit: 30 },
+  { match: /^\/api\/post/, limit: 10 },
+  { match: /^\/api\/r2/, limit: 20 },
+  { match: /^\/api\/redis/, limit: 5 },
+  { match: /^\/api\/redis/, limit: 5 },
+  { match: /^\/api\/search/, limit: 13 },
+  { match: /^\/api\/send/, limit: 2 },
+  { match: /^\/api\/send\/password_reset\/check/, limit: 12 },
+  { match: /^\/api\/tags/, limit: 10 },
+  { match: /^\/api\/user/, limit: 7 },
+];

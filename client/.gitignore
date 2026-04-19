@@ -40,7 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-
+src/app/component_preview
 # personal things
 
 dublicateDates.js

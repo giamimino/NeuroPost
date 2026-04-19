@@ -88,9 +88,9 @@ const LoginPage = () => {
                   Remember me
                 </p>
               </label>
-              <p className="font-semibold font-plusJakartaSans underline cursor-pointer text-xs">
+              <button type="button" onClick={() => router.push("/auth/password_reset")} className="font-semibold font-plusJakartaSans hover:underline cursor-pointer text-xs">
                 Forgot Password?
-              </p>
+              </button>
             </div>
             <button
               type="submit"

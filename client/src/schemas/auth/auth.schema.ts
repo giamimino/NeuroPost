@@ -16,11 +16,15 @@ export const UsernameSchema = z
   .max(20, JSON.stringify(ERRORS.USERNAME_TOO_LARGE))
   .regex(/^[A-Za-z._-]+$/, JSON.stringify(ERRORS.USERNAME_IS_WRONG));
 
+export const EmailInObjectSchema = z.object({
+  email: z.email(JSON.stringify(ERRORS.EMAIL_REQUIRED)),
+});
+
 export const JWTUserPayloadSchema = z.object({
   userId: z.uuid(),
   username: UsernameSchema,
   status: z.enum(["active", "inactive"]),
 
   iat: z.number(),
-  exp: z.number()
-})
+  exp: z.number(),
+});
