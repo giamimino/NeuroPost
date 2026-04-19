@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { NOTIFICATIONS_TEXT } from "@/constants/notifications";
 import { getAuthUser } from "@/lib/auth";
+import { SETTINGS_KEYS } from "@/constants/settings-keys";
+import { NotificationEnumType } from "@/types/enums";
 
 export async function POST(
   req: Request,
@@ -13,8 +15,6 @@ export async function POST(
 
     const body = await req.json();
     const { action } = body;
-
-    console.log(requestId, action);
 
     if (!requestId || !["accept", "reject"].includes(action))
       return NextResponse.json(
@@ -56,7 +56,17 @@ export async function POST(
         { status: 403 },
       );
 
-    if (Boolean(withNotif) === true) {
+    const user_settings = await sql.query(
+      `
+      SELECT value FROM user_settings WHERE user_id = $1 AND key = $2`,
+      [
+        friend_request.requester_id,
+        SETTINGS_KEYS.NOTIFICATIONS_SETTINGS_KEYS.FRIEND_ACCEPTS,
+      ],
+    );
+    const user_setting = user_settings[0] || { value: true };
+
+    if (user_setting.value) {
       const key =
         action === "accept"
           ? "FRIEND_REQUEST_ACCEPTED"
@@ -67,7 +77,9 @@ export async function POST(
         description,
         sentAt: new Date(Date.now()),
       };
-      const type = "FRIEND_REQUEST";
+      const type = (
+        action === "accept" ? "FRIEND_ACCEPT" : "FRIEND_DECLINE"
+      ) as NotificationEnumType;
 
       await sql.query(
         "INSERT INTO notifications (user_id, type, title, body) VALUES ($1, $2, $3, $4)",

@@ -6,29 +6,18 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3 } from "@/lib/aws-sdk";
 import { getAuthUser } from "@/lib/auth";
+import { SETTINGS_KEYS } from "@/constants/settings-keys";
+import { NeonDbError } from "@neondatabase/serverless";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { receiverId }: { receiverId: string } = body;
-    const { searchParams } = new URL(req.url);
-    const { withNotif } = Object.fromEntries(searchParams.entries());
 
     if (!receiverId)
       return NextResponse.json(
         { ok: false, error: ERRORS.GENERIC_ERROR },
         { status: 400 },
-      );
-
-    const checkReceiver = await sql.query(
-      "SELECT id, username FROM users WHERE id = $1",
-      [receiverId],
-    );
-
-    if (checkReceiver.length === 0)
-      return NextResponse.json(
-        { ok: false, error: ERRORS.USER_NOT_FOUND },
-        { status: 404 },
       );
 
     const auth = await getAuthUser();
@@ -43,6 +32,17 @@ export async function POST(req: Request) {
         { status: 423 },
       );
     const payload = auth.user;
+
+    const checkReceiver = await sql.query(
+      "SELECT id, username FROM users WHERE id = $1",
+      [receiverId],
+    );
+
+    if (checkReceiver.length === 0)
+      return NextResponse.json(
+        { ok: false, error: ERRORS.USER_NOT_FOUND },
+        { status: 404 },
+      );
 
     if (payload.userId === receiverId)
       return NextResponse.json(
@@ -61,7 +61,16 @@ export async function POST(req: Request) {
         { status: 520 },
       );
 
-    if (Boolean(withNotif) == true) {
+    const user_settings = await sql.query(
+      `SELECT value FROM user_settings WHERE user_id = $1 AND key = $2`,
+      [
+        friend_request.id,
+        SETTINGS_KEYS.NOTIFICATIONS_SETTINGS_KEYS.FRIEND_REQUESTS,
+      ],
+    );
+    const user_settting = user_settings[0] || { value: true };
+
+    if (user_settting.value === true) {
       const title = NOTIFICATIONS_TEXT.FRIEND_REQUEST.title;
       const description = `${checkReceiver[0].username} ${NOTIFICATIONS_TEXT.FRIEND_REQUEST.description}`;
       const body = {
@@ -83,8 +92,18 @@ export async function POST(req: Request) {
       { status: 200 },
     );
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ ok: false, message: "" }, { status: 500 });
+    if (err instanceof NeonDbError && err.code === "23505") {
+      if (err.constraint === "friend_request_unique") {
+        return NextResponse.json({
+          ok: false,
+          error: ERRORS.REQUEST_ALREADY_SENT,
+        });
+      }
+    }
+    return NextResponse.json(
+      { ok: false, error: ERRORS.INTERNAL_SERVER_ERROR },
+      { status: 500 },
+    );
   }
 }
 

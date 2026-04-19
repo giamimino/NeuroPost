@@ -8,12 +8,16 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const { type, limit } = Object.fromEntries(searchParams.entries());
-    const ALLOWED_NOTIFICATION_TYPES: NotificationEnumType[] = [
+    const ALLOWED_NOTIFICATION_TYPES: (NotificationEnumType | "ALL")[] = [
       "FRIEND_REQUEST",
       "NEW_FOLLOWER",
       "NEW_MESSAGE",
       "NEW_POST",
+      "NEW_LIKE",
       "SYSTEM",
+      "ALL",
+      "FRIEND_ACCEPT",
+      "FRIEND_DECLINE",
     ];
 
     if (
@@ -39,10 +43,18 @@ export async function GET(req: Request) {
       );
     const payload = auth.user;
 
-    const notifications = await sql.query(
-      `SELECT * FROM notifications WHERE user_id = $1 AND type = $2 LIMIT $3`,
-      [payload.userId, type.toUpperCase(), Number(limit) || 20],
-    );
+    let notifications;
+    if (type.toUpperCase() === "ALL") {
+      notifications = await sql.query(
+        `SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`,
+        [payload.userId, Number(limit) || 20],
+      );
+    } else {
+      notifications = await sql.query(
+        `SELECT * FROM notifications WHERE user_id = $1 AND type = $2 LIMIT $3`,
+        [payload.userId, type.toUpperCase(), Number(limit) || 20],
+      );
+    }
 
     return NextResponse.json({ ok: true, notifications }, { status: 200 });
   } catch (err) {

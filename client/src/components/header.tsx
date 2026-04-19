@@ -48,7 +48,7 @@ const Header = () => {
   }, [show]);
   return (
     <header
-      className={`w-full px-12 flex justify-center items-center py-3 fixed top-0 left-0 z-99 transition-all duration-300`}
+      className={`w-full px-12 flex justify-center items-center py-3 fixed top-0 left-0 transition-all duration-300`}
     >
       <motion.div
         initial={{ opacity: 0, y: "-100%" }}
@@ -56,7 +56,7 @@ const Header = () => {
         transition={{ stiffness: 80, type: "spring", damping: 20 }}
         layout
         className={`flex gap-4 items-center px-5 py-2.5 dark:bg-card
-       rounded-full border-input ring ring-ring/80`}
+       rounded-full border-input ring ring-ring/80 z-99`}
       >
         {pages.map((page) => (
           <div
@@ -144,8 +144,8 @@ const ProfileNavigation = () => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-2.5">
-      <div className="hidden max-xs:block">
+    <div className="flex flex-col gap-2.5 w-fit">
+      <div className="hidden max-xs:block w-fit">
         <Button
           onClick={() => setShow((prev) => !prev)}
           variant={"none"}
