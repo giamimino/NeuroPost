@@ -4,36 +4,20 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import Line from "@/components/ui/Line";
 import { monthsShort } from "@/constants/months";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
-import { CommentType, Post } from "@/types/neon";
-import clsx from "clsx";
-import { Heart, MessageCircle } from "lucide-react";
+import { CommentType } from "@/types/neon";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
-
-const ActivitySections = [
-  { label: "Likes", icon: <Heart width={15} /> },
-  {
-    label: "Comments",
-    icon: <MessageCircle width={15} className="-scale-x-100" />,
-  },
-];
+import React, { useEffect, useState } from "react";
 
 const ProfileSavesPage = () => {
   const [comments, setComments] = useState<CommentType[]>([]);
   const router = useRouter();
   const { addAlert } = useAlertStore();
-
-  const handleViewPost = (id: number) => {
-    router.push(`/post/${id}`);
-  };
 
   useEffect(() => {
     const url = `/api/user/comments`;
