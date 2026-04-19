@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-import { Menu } from "lucide-react";
+import { Heart, Menu, MessageCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Card, CardHeader, CardTitle } from "./ui/card";
+import Line from "./ui/Line";
+import clsx from "clsx";
 
 const pages = [
   { label: "Home", url: "/", type: "router" },
@@ -207,4 +209,46 @@ const ProfileNavigation = () => {
   );
 };
 
-export { Header, ProfileNavigation };
+const ActivitySections = [
+  { label: "Likes", icon: <Heart width={15} />, url: "/profile/saves/likes" },
+  {
+    label: "Comments",
+    icon: <MessageCircle width={15} className="-scale-x-100" />,
+    url: "/profile/saves/comments",
+  },
+];
+
+const SavesHeader = () => {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  return (
+    <CardHeader className="gap-0">
+      <div className="flex gap-5 justify-center">
+        {ActivitySections.map((item) => (
+          <div
+            key={`${item.label}`}
+            className={`
+                    flex font-plusJakartaSans uppercase tracking-wider text-xs items-center font-medium flex-1 justify-center
+                  `}
+          >
+            <button
+              className={clsx(
+                "flex gap-2.5 items-center cursor-pointer hover:opacity-80 border-b pb-1.5",
+                "transition duration-300 ease-initial border-transparent",
+                pathname === item.url ? "border-white" : "opacity-60",
+              )}
+              onClick={() => router.push(item.url)}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          </div>
+        ))}
+      </div>
+      <Line />
+    </CardHeader>
+  );
+};
+
+export { Header, ProfileNavigation, SavesHeader };
