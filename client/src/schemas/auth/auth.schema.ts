@@ -14,7 +14,7 @@ export const UsernameSchema = z
   .string()
   .min(3, JSON.stringify(ERRORS.USERNAME_TOO_SMALL))
   .max(20, JSON.stringify(ERRORS.USERNAME_TOO_LARGE))
-  .regex(/^[A-Za-z._-]+$/, JSON.stringify(ERRORS.USERNAME_IS_WRONG));
+  .regex(/^[A-Za-z0-9._-]+$/, JSON.stringify(ERRORS.USERNAME_IS_WRONG));
 
 export const EmailInObjectSchema = z.object({
   email: z.email(JSON.stringify(ERRORS.EMAIL_REQUIRED)),
