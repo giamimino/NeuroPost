@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/card";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
-import { Post } from "@/types/neon";
+import { PostMedia } from "@/types/neon";
+import clsx from "clsx";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const ProfileLikesPage = () => {
-  const [likes, setLikes] = useState<Post[]>([]);
+  const [likes, setLikes] = useState<PostMedia[]>([]);
   const router = useRouter();
   const { addAlert } = useAlertStore();
 
@@ -30,6 +32,7 @@ const ProfileLikesPage = () => {
       .then((data) => {
         if (data.ok) {
           setLikes(data.likes);
+          console.log(data);
         } else if (data.error) {
           addAlert({
             id: crypto.randomUUID(),
@@ -43,33 +46,56 @@ const ProfileLikesPage = () => {
 
   return (
     <div className="">
-      <CardContent className="grid gap-6 grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1 justify-center">
-        {likes.map((item) => (
-          <Card
-            className="gap-0 pb-0  overflow-hidden justify-between"
-            key={item.id}
-          >
-            <CardHeader>
-              <CardTitle>{item.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className=" line-clamp-3">
-                {item.description}
-              </CardDescription>
-            </CardContent>
-            <CardFooter>
-              <div className="py-2 w-full">
-                <Button
-                  variant={"outline"}
-                  className="w-full cursor-pointer"
-                  onClick={() => handleViewPost(item.id)}
-                >
-                  View
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
+      <CardContent className="grid gap-6 grid-cols-4 max-lg:grid-cols-2 max-sm:grid-cols-1 justify-center">
+        {likes
+          .sort((a, b) => {
+            return (
+              (b.media?.mediaUrl && b.media.type === "image" ? 1 : 0) -
+              (a.media?.mediaUrl && a.media.type === "image" ? 1 : 0)
+            );
+          })
+          .map((item) => (
+            <Card
+              className={clsx(
+                "gap-0 pb-0 overflow-hidden justify-between",
+                item.media.mediaUrl && item.media.type === "image" && "pt-0",
+              )}
+              key={item.id}
+            >
+              {item.media.mediaUrl && item.media.type === "image" && (
+                <div className="pb-3">
+                  <Image
+                    src={item.media.mediaUrl}
+                    alt={item.title}
+                    width={720}
+                    height={360}
+                    className="object-cover max-h-90"
+                  />
+                </div>
+              )}
+              <CardHeader>
+                <CardTitle>{item.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="justify-self-start">
+                {!item.media.mediaUrl || item.media.type !== "image" && (
+                  <CardDescription className="line-clamp-4">
+                    {item.description}
+                  </CardDescription>
+                )}
+              </CardContent>
+              <CardFooter>
+                <div className="py-2 w-full">
+                  <Button
+                    variant={"outline"}
+                    className="w-full cursor-pointer"
+                    onClick={() => handleViewPost(item.id)}
+                  >
+                    View
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          ))}
       </CardContent>
     </div>
   );
