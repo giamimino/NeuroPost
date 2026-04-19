@@ -1,10 +1,13 @@
 "use client";
+import ActionButton from "@/components/action-button";
 import BlurWrapper from "@/components/BlurWrapper";
 import { Button } from "@/components/ui/button";
 import { CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { useAlertStore } from "@/store/zustand/alertStore";
+import fakeFetch from "@/utils/functions/fakeFetch";
 import React, { useRef } from "react";
 import z from "zod";
 
@@ -17,25 +20,28 @@ export default function PasswordResetConfrimationPage() {
       const parsedEmail = z
         .email(JSON.stringify(ERRORS.EMAIL_REQUIRED))
         .safeParse(emailInputRef.current?.value);
-      if(!parsedEmail.success) {
-        const message = JSON.parse(parsedEmail.error.issues[0].message)
-
-        addAlert({
-          id: crypto.randomUUID(),
-          type: "error",
-          ...message
-        })
+      if (!parsedEmail.success) {
+        const message = JSON.parse(parsedEmail.error.issues[0].message);
+        return { error: message };
       }
 
-      const email = parsedEmail.data
+      const email = parsedEmail.data;
 
-
-    } catch (error) {
-      addAlert({
-        id: crypto.randomUUID(),
-        type: "error",
-        ...ERRORS.GENERIC_ERROR,
+      const res = await fetch("/api/send/password_reset", {
+        ...ApiConfig.post,
+        body: JSON.stringify({ email }),
       });
+      const data = await res.json()
+
+      if(!data.ok) {
+        return { error: data.error}
+      }
+
+      return data
+    } catch (error) {
+      console.log(error);
+      
+      return { error: ERRORS.GENERIC_ERROR };
     }
   };
 
@@ -60,9 +66,13 @@ export default function PasswordResetConfrimationPage() {
               placeholder="Enter your email address"
             />
           </div>
-          <Button onClick={handleSendPasswordReset} variant={"outline"} className="cursor-pointer">
+          <ActionButton
+            onAction={handleSendPasswordReset}
+            variant={"outline"}
+            className="cursor-pointer"
+          >
             Send password reset email
-          </Button>
+          </ActionButton>
         </BlurWrapper>
       </div>
     </div>
