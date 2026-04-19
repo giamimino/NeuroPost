@@ -1,5 +1,7 @@
 "use client";
+import ActionButton from "@/components/action-button";
 import BlurWrapper from "@/components/BlurWrapper";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,10 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
+import { PasswordValidatorSchema } from "@/schemas/auth/auth.schema";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { use, useEffect, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 
 export default function ForgotPasswordPage({
   params,
@@ -24,7 +27,49 @@ export default function ForgotPasswordPage({
   const [user, setUser] = useState<{ username: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const { addAlert } = useAlertStore();
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const passwordConfrimInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  const handlePasswordChange = async () => {
+    try {
+      const password = passwordInputRef.current?.value;
+      const confrimPassword = passwordConfrimInputRef.current?.value;
+
+      if (!password || !confrimPassword) {
+
+        return { error: ERRORS.REQUIRED_FIELDS };
+      }
+
+      const parsedPassword = PasswordValidatorSchema.safeParse(password);
+
+      if (!parsedPassword.success) {
+        const message = JSON.parse(parsedPassword.error.issues[0].message);
+
+        return { error: message};
+      }
+
+      const $password = parsedPassword.data;
+
+      if ($password !== confrimPassword) {
+        return { error: ERRORS.PASSWORDS_DO_NOT_MATCH }
+      }
+
+      const res = await fetch("/api/send/password_reset", {
+        ...ApiConfig.put,
+        body: JSON.stringify({ password: $password }),
+      });
+      const data = await res.json();
+
+      if (!data.ok) {
+        return { error: data.error }
+      }
+
+      return { data }
+    } catch {
+      return { error: ERRORS.GENERIC_ERROR }
+    }
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -98,21 +143,34 @@ export default function ForgotPasswordPage({
           </div>
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3">
-              <label htmlFor="password" className="text-[14px] font-semibold">
+              <label
+                htmlFor="password-field"
+                className="text-[14px] font-semibold"
+              >
                 Password
               </label>
-              <Input id="password" />
+              <Input ref={passwordInputRef} id="password-field" />
             </div>
             <div className="flex flex-col gap-3">
               <label
-                htmlFor="confirm-password"
+                htmlFor="confirm-password-field"
                 className="text-[14px] font-semibold"
               >
                 Confirm password
               </label>
-              <Input id="confirm-password" />
+              <Input
+                ref={passwordConfrimInputRef}
+                id="confirm-password-field"
+              />
             </div>
           </div>
+          <ActionButton
+          onSuccess={() => router.push("/auth/login")}
+            onAction={handlePasswordChange}
+            className="cursor-pointer py-5 font-medium"
+          >
+            Change password
+          </ActionButton>
         </BlurWrapper>
       </div>
     </div>
