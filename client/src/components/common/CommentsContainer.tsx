@@ -84,7 +84,13 @@ const CommentReplies = ({
   const router = useRouter();
   const { addAlert } = useAlertStore();
 
-  const handleDeleteComment = async ({ commentId, parentId }: { commentId: string, parentId: string }) => {
+  const handleDeleteComment = async ({
+    commentId,
+    parentId,
+  }: {
+    commentId: string;
+    parentId: string;
+  }) => {
     try {
       const url = `/api/post/comment/${commentId}`;
       const res = await apiFetch(url, { method: ApiConfig.delete.method });
@@ -94,11 +100,11 @@ const CommentReplies = ({
         setData((prev) =>
           prev ? prev.filter((c) => c.id !== commentId) : prev,
         );
-        const cachedReplies = RepliesCache.get(parentId)
-        if(cachedReplies) {
-          for(const item of cachedReplies) {
-            if(item.id === commentId) {
-              cachedReplies.delete(item)
+        const cachedReplies = RepliesCache.get(parentId);
+        if (cachedReplies) {
+          for (const item of cachedReplies) {
+            if (item.id === commentId) {
+              cachedReplies.delete(item);
               break;
             }
           }

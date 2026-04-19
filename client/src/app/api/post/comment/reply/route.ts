@@ -82,7 +82,7 @@ export async function POST(req: Request) {
       },
       role: comment.user_id === payload.userId ? "creator" : "guest",
       created_at: String(comment.created_at),
-      replies_count: 0
+      replies_count: 0,
     } as CommentReplyType;
 
     const result = CommentReplySchema.safeParse(signedComment);
@@ -162,19 +162,22 @@ export async function GET(req: Request) {
       }),
     );
 
-    const signedComments = comments.map((c, i) => ({
-      ...c,
-      user: {
-        ...c.user,
-        profile_url: c.user.profile_url ? signedUrls[i] : "/user.jpg",
-      },
-      role: c.user_id === payload.userId ? "creator" : "guest",
-      created_at: String(c.created_at),
-      replies_count: Number(c.replies_count)
-    }) as CommentReplyType);
+    const signedComments = comments.map(
+      (c, i) =>
+        ({
+          ...c,
+          user: {
+            ...c.user,
+            profile_url: c.user.profile_url ? signedUrls[i] : "/user.jpg",
+          },
+          role: c.user_id === payload.userId ? "creator" : "guest",
+          created_at: String(c.created_at),
+          replies_count: Number(c.replies_count),
+        }) as CommentReplyType,
+    );
 
     const parsed = CommentReplyArrSchema.safeParse(signedComments);
-    
+
     if (!parsed.success)
       return NextResponse.json(
         { ok: false, error: ERRORS.GENERIC_ERROR },

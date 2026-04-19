@@ -106,7 +106,7 @@ const ClientPostPage = ({
   const { addAlert } = useAlertStore();
   const loadingRef = useRef(false);
   const reachedRef = useRef(false);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const handleEditPost = async () => {
     if (!editing || !editableValuesRef.current || !post) return;
@@ -232,58 +232,54 @@ const ClientPostPage = ({
     selection?.addRange(range);
   };
 
-  const handleFetchComments = useCallback(
-    async (postId: number) => {
-      try {
-        if (loadingRef.current || reachedRef.current) return;
-        loadingRef.current = true;
+  const handleFetchComments = useCallback(async (postId: number) => {
+    try {
+      if (loadingRef.current || reachedRef.current) return;
+      loadingRef.current = true;
 
-        const params = new URLSearchParams({
-          postId: postId.toString(),
-          limit: String(10),
-          ...(commentsCursorRef.current
-            ? {
-                cursorCreatedAt: commentsCursorRef.current.created_at,
-                cursorId: commentsCursorRef.current.id,
-              }
-            : {}),
-        });
+      const params = new URLSearchParams({
+        postId: postId.toString(),
+        limit: String(10),
+        ...(commentsCursorRef.current
+          ? {
+              cursorCreatedAt: commentsCursorRef.current.created_at,
+              cursorId: commentsCursorRef.current.id,
+            }
+          : {}),
+      });
 
-        const res = await apiFetch(`/api/post/comment?${params}`);
-        const data = await res?.json();
+      const res = await apiFetch(`/api/post/comment?${params}`);
+      const data = await res?.json();
 
-        if (!data.ok && data.error) {
-          addAlert({
-            id: crypto.randomUUID(),
-            type: "error",
-            ...data.error,
-          });
-        } else if (data.ok && data.comments) {
-          setComments((prev) => [...prev, ...data.comments]);
-          console.log(data);
-          const isLastPage = !data.nextCursor || data.comments.length < 10;
-
-          if (isLastPage) {
-            reachedRef.current = true;
-          } else if (data.nextCursor?.id && data.nextCursor?.created_at) {
-            commentsCursorRef.current = data.nextCursor;
-          }
-        }
-      } catch (err) {
+      if (!data.ok && data.error) {
         addAlert({
           id: crypto.randomUUID(),
           type: "error",
-          ...ERRORS.GENERIC_ERROR,
+          ...data.error,
         });
-      } finally {
-        loadingRef.current = false
+      } else if (data.ok && data.comments) {
+        setComments((prev) => [...prev, ...data.comments]);
+        console.log(data);
+        const isLastPage = !data.nextCursor || data.comments.length < 10;
+
+        if (isLastPage) {
+          reachedRef.current = true;
+        } else if (data.nextCursor?.id && data.nextCursor?.created_at) {
+          commentsCursorRef.current = data.nextCursor;
+        }
       }
-    },
-    [],
-  );
+    } catch (err) {
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+    } finally {
+      loadingRef.current = false;
+    }
+  }, []);
 
   console.log(comments.length);
-  
 
   // get post
   useEffect(() => {
@@ -304,28 +300,27 @@ const ClientPostPage = ({
   useEffect(() => {
     if (!post) return;
 
-    const target = loadMoreRef.current
-    if(!target) return
+    const target = loadMoreRef.current;
+    if (!target) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if(entry.isIntersecting) {
-          if(reachedRef.current || loadingRef.current) return
+        if (entry.isIntersecting) {
+          if (reachedRef.current || loadingRef.current) return;
 
-          handleFetchComments(post.id)
+          handleFetchComments(post.id);
         }
       },
       {
         root: null,
         rootMargin: "200px",
-        threshold: 0
-      }
-    )
+        threshold: 0,
+      },
+    );
 
-    observer.observe(target)
+    observer.observe(target);
 
-
-    return () => observer.disconnect()
+    return () => observer.disconnect();
   }, [post?.id, handleFetchComments]);
 
   if (deleted)
@@ -516,8 +511,8 @@ const ClientPostPage = ({
                                   alt="user-profile"
                                   className="w-8 h-8 object-cover rounded-full"
                                   style={{
-                                    width: 32, 
-                                    height: 32
+                                    width: 32,
+                                    height: 32,
                                   }}
                                 />
                               ) : (
@@ -539,7 +534,9 @@ const ClientPostPage = ({
                                 </CardDescription>
                               </Comment.Header>
                               <Comment.Content>
-                                <CardDescription className="text-wrap w-full max-w-100">{c.content}</CardDescription>
+                                <CardDescription className="text-wrap w-full max-w-100">
+                                  {c.content}
+                                </CardDescription>
                               </Comment.Content>
                               <ContentToggleContainer>
                                 <ContentToggle.Controller className="w-fit">
