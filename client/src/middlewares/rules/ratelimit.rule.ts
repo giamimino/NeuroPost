@@ -15,4 +15,5 @@ export const RateLimitRules = [
   { match: /^\/api\/send\/password_reset\/check/, limit: 12 },
   { match: /^\/api\/tags/, limit: 10 },
   { match: /^\/api\/user/, limit: 7 },
+  { match: /^\/api\/cron-jobs/, limit: 1 },
 ];
