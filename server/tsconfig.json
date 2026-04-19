@@ -1,21 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "target": "ES2020",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "strict": true,
-    "verbatimModuleSyntax": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
-    "rootDir": "src",
-    "paths": {
-      "@/*": ["src/*"],
-      "$/*": ["src/features/*"]
-    },
     "types": ["node"],
-    "sourceMap": true,
     "outDir": "dist"
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "src/generated"]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }

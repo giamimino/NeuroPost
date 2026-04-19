@@ -10,7 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { SkeletonCard } from "@/components/ui/Skeleton-examples";
+import {
+  SkeletonCard,
+  SkeletonReplyComment,
+} from "@/components/ui/Skeleton-examples";
 import { ApiConfig } from "@/configs/api-configs";
 import {
   CommentType,
@@ -20,8 +23,11 @@ import {
   UserJoin,
 } from "@/types/neon";
 import {
+  ChevronDown,
+  ChevronUp,
   ClipboardIcon,
   Ellipsis,
+  EllipsisVertical,
   ExternalLink,
   Heart,
   MessageCircle,
@@ -30,8 +36,15 @@ import {
   XIcon,
 } from "lucide-react";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import React, { use, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import React, {
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { apiFetch } from "@/lib/apiFetch";
 import { Input } from "@/components/ui/input";
 import Line from "@/components/ui/Line";
@@ -47,7 +60,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import DefaultTextarea from "@/components/common/DefaultTextarea";
-import DataFetcher from "@/components/data-fetcher";
 import {
   ALLOWED_IMAGE_TYPES,
   ALLOWED_VIDEO_TYPES,
@@ -55,6 +67,17 @@ import {
 import { MediaValidator } from "@/utils/validator";
 import ActionButton from "@/components/action-button";
 import Video from "@/components/common/video";
+import { timeAgo } from "@/utils/functions/timeAgo";
+import {
+  Comment,
+  CommentPost,
+  CommentContainer,
+} from "@/components/common/CommentsContainer";
+import {
+  ContentToggle,
+  ContentToggleContainer,
+} from "@/components/ContentToggle";
+import { CommentSchemaType } from "@/schemas/comment/comment.schema";
 
 const ClientPostPage = ({
   params,
@@ -75,17 +98,22 @@ const ClientPostPage = ({
     | null
   >(null);
   const [loading, setLoading] = useState(true);
+  const [comments, setComments] = useState<CommentSchemaType[]>([]);
   const [deleted, setDeleted] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [showComments, setShowComments] = useState(false);
   const [media, setMedia] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editableValuesRef = useRef<HTMLFormElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const shareUrlRef = useRef<HTMLDivElement>(null);
+  const commentsCursorRef = useRef<{
+    created_at: string;
+    id: string;
+  } | null>(null);
   const { addAlert } = useAlertStore();
-
-  console.log(post);
+  const loadingRef = useRef(false);
+  const reachedRef = useRef(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const handleEditPost = async () => {
     if (!editing || !editableValuesRef.current || !post) return;
@@ -165,7 +193,7 @@ const ClientPostPage = ({
     });
     const data = await res?.json();
     if (data.ok) {
-      // setComments((prev) => [data.comment, ...prev]);
+      setComments((prev) => [data.comment, ...prev]);
     } else {
       addAlert({
         id: crypto.randomUUID(),
@@ -185,7 +213,7 @@ const ClientPostPage = ({
       const data = await res?.json();
 
       if (data.ok) {
-        // setComments((prev) => prev.filter((c) => c.id !== commentId));
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -211,6 +239,55 @@ const ClientPostPage = ({
     selection?.addRange(range);
   };
 
+  const handleFetchComments = useCallback(async (postId: number) => {
+    try {
+      if (loadingRef.current || reachedRef.current) return;
+      loadingRef.current = true;
+
+      const params = new URLSearchParams({
+        postId: postId.toString(),
+        limit: String(10),
+        ...(commentsCursorRef.current
+          ? {
+              cursorCreatedAt: commentsCursorRef.current.created_at,
+              cursorId: commentsCursorRef.current.id,
+            }
+          : {}),
+      });
+
+      const res = await apiFetch(`/api/post/comment?${params}`);
+      const data = await res?.json();
+
+      if (!data.ok && data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+      } else if (data.ok && data.comments) {
+        setComments((prev) => [...prev, ...data.comments]);
+        console.log(data);
+        const isLastPage = !data.nextCursor || data.comments.length < 10;
+
+        if (isLastPage) {
+          reachedRef.current = true;
+        } else if (data.nextCursor?.id && data.nextCursor?.created_at) {
+          commentsCursorRef.current = data.nextCursor;
+        }
+      }
+    } catch (err) {
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+    } finally {
+      loadingRef.current = false;
+    }
+  }, []);
+
+  console.log(comments.length);
+
   // get post
   useEffect(() => {
     if (!postId) return;
@@ -227,13 +304,31 @@ const ClientPostPage = ({
       .catch((err) => console.error(err));
   }, [postId]);
 
-  // get comments after success response from post fetch
+  useEffect(() => {
+    if (!post) return;
 
-  const config = useMemo(() => {
-    if (!post) return null;
+    const target = loadMoreRef.current;
+    if (!target) return;
 
-    return { url: `/api/post/comment?postId=${post.id}&limit=20` };
-  }, [post]);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (reachedRef.current || loadingRef.current) return;
+
+          handleFetchComments(post.id);
+        }
+      },
+      {
+        root: null,
+        rootMargin: "200px",
+        threshold: 0,
+      },
+    );
+
+    observer.observe(target);
+
+    return () => observer.disconnect();
+  }, [post?.id, handleFetchComments]);
 
   if (deleted)
     return (
@@ -380,7 +475,7 @@ const ClientPostPage = ({
             )}
           </div>
           {/* comments */}
-          {showComments && config?.url && (
+          {comments.length > 0 && (
             <div className="w-full flex items-center justify-center">
               <Card className="w-full">
                 <CardHeader>
@@ -408,122 +503,173 @@ const ClientPostPage = ({
                   </div>
                   <Line className="mt-5" />
                 </CardHeader>
-                <CardContent className="flex flex-col gap-2.5">
-                  <DataFetcher url={config?.url} targetKey="comments">
-                    {(
-                      data: (CommentType & {
-                        user: CommentUserType;
-                        role: "creator" | "guest";
-                      })[],
-                    ) =>
-                      data.map((c) => (
-                        <Card
-                          key={`${c.id}-${c.post_id}`}
-                          className="rounded-none border-t-0 border-l-0 border-r-0 p-3 relative"
-                        >
-                          {c.role === "creator" && (
-                            <ToggleController
-                              animatePresence
-                              whatToShow={() => (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 10, scale: 0.5 }}
-                                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                                  exit={{ opacity: 0, y: 10 }}
-                                  className="absolute right-15 top-1/2 -translate-y-1/2"
-                                >
-                                  <Card className="p-3">
-                                    <CardContent className="p-0">
-                                      <ToggleController
-                                        animatePresence
-                                        whatToShow={({ handleShow }) => (
-                                          <motion.div
-                                            initial={{
-                                              opacity: 0,
-                                              y: 50,
-                                              scale: 0.75,
-                                            }}
-                                            animate={{
-                                              opacity: 1,
-                                              y: 0,
-                                              scale: 1,
-                                            }}
-                                            exit={{ opacity: 0, y: 10 }}
-                                            className="absolute top-1/2 -translate-y-1/2 -right-3/1 z-10 w-5/2"
-                                          >
-                                            <Card className="">
-                                              <CardHeader>
-                                                <CardDescription>
-                                                  Are you sure you want to
-                                                  delete this comment?
-                                                </CardDescription>
-                                              </CardHeader>
-                                              <CardContent className="flex gap-2.5">
-                                                <Button
-                                                  variant={"outline"}
-                                                  className="cursor-pointer"
-                                                  onClick={() =>
-                                                    handleDeleteComment({
-                                                      commentId: c.id,
-                                                    })
-                                                  }
-                                                >
-                                                  Yes
-                                                </Button>
-                                                <Button
-                                                  variant={"ghost"}
-                                                  className="cursor-pointer"
-                                                  onClick={
-                                                    handleShow
-                                                      ? () => handleShow(false)
-                                                      : undefined
-                                                  }
-                                                >
-                                                  cancel
-                                                </Button>
-                                              </CardContent>
-                                            </Card>
-                                          </motion.div>
-                                        )}
-                                      >
-                                        {({ setShow }) => (
-                                          <Button
-                                            onClick={() => setShow(true)}
-                                            className="hover:text-red-600 cursor-pointer"
-                                            variant={"outline"}
-                                          >
-                                            Delete
-                                          </Button>
-                                        )}
-                                      </ToggleController>
-                                    </CardContent>
-                                  </Card>
-                                </motion.div>
+                <CardContent className="flex flex-col gap-3.5">
+                  {comments.map((c) => (
+                    <CommentContainer key={c.id}>
+                      <Comment className="flex flex-col gap-2.5">
+                        <div className="flex justify-between items-center">
+                          <div className="flex gap-2.5">
+                            <Comment.Profile className="w-8 h-8">
+                              {typeof c.user.profile_url === "string" ? (
+                                <Image
+                                  src={c.user.profile_url}
+                                  width={40}
+                                  height={40}
+                                  alt="user-profile"
+                                  className="w-8 h-8 object-cover rounded-full"
+                                  style={{
+                                    width: 32,
+                                    height: 32,
+                                  }}
+                                />
+                              ) : (
+                                <Skeleton className="h-8 w-8 rounded-full" />
                               )}
-                            >
-                              {({ setShow }) => (
+                            </Comment.Profile>
+                            <div className="flex flex-col gap-1.5">
+                              <Comment.Header className="flex items-center gap-1.5">
+                                <CardTitle
+                                  className="text-foreground cursor-pointer"
+                                  onClick={() =>
+                                    router.push(`/u/${c.user.username}`)
+                                  }
+                                >
+                                  {c.user.name}
+                                </CardTitle>
+                                <CardDescription className="text-sm">
+                                  {timeAgo(new Date(c.created_at))}
+                                </CardDescription>
+                              </Comment.Header>
+                              <Comment.Content>
+                                <CardDescription className="text-wrap w-full max-w-100">
+                                  {c.content}
+                                </CardDescription>
+                              </Comment.Content>
+                              <ContentToggleContainer>
+                                <ContentToggle.Controller className="w-fit">
+                                  <Button
+                                    variant={"ghost"}
+                                    size={"md"}
+                                    className="cursor-pointer rounded-xl text-xs"
+                                  >
+                                    Reply
+                                  </Button>
+                                </ContentToggle.Controller>
+                                <ContentToggle.Content>
+                                  <CommentPost
+                                    post_id={c.post_id}
+                                    comment_id={c.id}
+                                    className="flex gap-2.5 items-center"
+                                  >
+                                    <CommentPost.Input
+                                      className="px-2 py-1 text-xs"
+                                      placeholder="Write a reply..."
+                                    />
+                                    <CommentPost.Button onSuccess={() => {}}>
+                                      <Button
+                                        variant={"outline"}
+                                        className="cursor-pointer w-fit"
+                                      >
+                                        <Send />
+                                      </Button>
+                                    </CommentPost.Button>
+                                  </CommentPost>
+                                </ContentToggle.Content>
+                              </ContentToggleContainer>
+                            </div>
+                          </div>
+                          {c.role === "creator" && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
                                 <Button
-                                  onClick={() => setShow((prev) => !prev)}
-                                  className="w-fit cursor-pointer absolute top-1/2 -translate-y-1/2 right-5"
                                   variant={"ghost"}
                                   size={"sm"}
+                                  className="cursor-pointer"
                                 >
                                   <Ellipsis />
                                 </Button>
-                              )}
-                            </ToggleController>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant={"none"}
+                                      className="w-full cursor-pointer border border-destructive text-destructive bg-destructive/4 hover:bg-destructive/10"
+                                    >
+                                      Delete
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    <div className="flex gap-3 flex-col p-3 w-75">
+                                      <CardDescription>
+                                        Are you sure you want to delete this
+                                        comment?
+                                      </CardDescription>
+                                      <div className="flex gap-3">
+                                        <DropdownMenuItem className="focus:bg-transparent focus:text-inherit p-0">
+                                          <Button
+                                            onClick={() =>
+                                              handleDeleteComment({
+                                                commentId: c.id,
+                                              })
+                                            }
+                                            variant={"none"}
+                                            className="w-full cursor-pointer border border-destructive text-destructive bg-destructive/4 hover:bg-destructive/10"
+                                          >
+                                            Delete
+                                          </Button>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="focus:bg-transparent focus:text-inherit p-0">
+                                          <Button
+                                            variant={"ghost"}
+                                            className="cursor-pointer"
+                                          >
+                                            cancel
+                                          </Button>
+                                        </DropdownMenuItem>
+                                      </div>
+                                    </div>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           )}
-                          <CardContent className="flex flex-col gap-3 px-0">
-                            <CardTitle>{c.user.name}</CardTitle>
-                            <CardDescription>{c.content}</CardDescription>
-                          </CardContent>
-                        </Card>
-                      ))
-                    }
-                  </DataFetcher>
+                        </div>
+                        {/* replies */}
+                        <Comment.Replies
+                          className="ml-10 flex flex-col gap-2"
+                          comment_id={c.id}
+                        />
+                        {c.replies_count > 0 && (
+                          <Comment.ReplyToggle className="w-fit">
+                            {({ status }) => (
+                              <Button
+                                variant={"outline"}
+                                className="cursor-pointer rounded-lg"
+                              >
+                                {status ? (
+                                  <>
+                                    <p>Hide Replies</p>
+                                    <ChevronUp className="size-4" />
+                                  </>
+                                ) : (
+                                  <>
+                                    <p>{c.replies_count} Replies</p>
+                                    <ChevronDown className="size-4" />
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </Comment.ReplyToggle>
+                        )}
+                      </Comment>
+                    </CommentContainer>
+                  ))}
                 </CardContent>
               </Card>
             </div>
           )}
+          <div ref={loadMoreRef} />
         </div>
 
         {/* settings, likes, comments and etc  */}
@@ -589,9 +735,15 @@ const ClientPostPage = ({
                 size={"icon-xs"}
                 className={`rounded-sm cursor-pointer`}
                 variant={"outline"}
-                onClick={() => setShowComments((prev) => !prev)}
+                onClick={async () => {
+                  if (comments.length === 0 && post) {
+                    await handleFetchComments(post.id);
+                  }
+                }}
               >
-                <MessageCircle {...(showComments ? { fill: "#fff" } : {})} />
+                <MessageCircle
+                  {...(comments.length > 0 ? { fill: "#fff" } : {})}
+                />
               </Button>
               <ToggleController
                 whatToShow={({ handleShow }) => (

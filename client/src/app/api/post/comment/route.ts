@@ -1,7 +1,6 @@
 import { ERRORS } from "@/constants/error-handling";
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { CommentType, CommentUserType } from "@/types/neon";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3 } from "@/lib/aws-sdk";
@@ -69,7 +68,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const { postId, limit, withProfile } = Object.fromEntries(
+    const { postId, limit, cursorCreatedAt, cursorId } = Object.fromEntries(
       searchParams.entries(),
     );
 
@@ -92,15 +91,29 @@ export async function GET(req: Request) {
       );
     const payload = auth.user;
 
-    const comments = (await sql.query(
-      `SELECT c.*, json_build_object('id', u.id, 'name', u.name, 'username', u.username, 'profile_url', u.profile_url) as user FROM comments c 
-      JOIN users u ON u.id = c.user_id WHERE c.post_id = $1 ORDER BY c.created_at DESC LIMIT $2`,
-      [postId, Number(limit) || 20],
-    )) as (CommentType & { user: CommentUserType })[];
-    const commentItems = comments.map((comment) => ({
-      ...comment,
-      role: comment.user_id === payload.userId ? "creator" : "guest",
-    }));
+    const comments = await sql.query(
+      `SELECT c.*, 
+      json_build_object(
+        'id', u.id, 
+        'name', u.name, 
+        'username', u.username, 
+        'profile_url', u.profile_url
+      ) as user, 
+      COUNT(r.id) as replies_count 
+      FROM comments c 
+      JOIN users u ON u.id = c.user_id
+      LEFT JOIN comments r ON r.parent_id = c.id
+      WHERE c.post_id = $1 
+        AND c.parent_id IS NULL
+        AND (
+          $3::timestamptz IS NULL
+          OR c.created_at < $3
+          OR (c.created_at = $3 AND c.id < $4)
+        )
+      GROUP BY c.id, u.id 
+      ORDER BY c.created_at DESC, c.id DESC LIMIT $2`,
+      [postId, Number(limit) || 20, cursorCreatedAt || null, cursorId || null],
+    );
 
     if (!comments)
       return NextResponse.json(
@@ -108,37 +121,35 @@ export async function GET(req: Request) {
         { status: 404 },
       );
 
-    let signedComments = null;
-    if (Boolean(withProfile) === true) {
-      const keys = comments.map((c) => c.user.profile_url || "");
+    const keys = comments.map((c) => c.user.profile_url || "");
 
-      const signedUrls = await Promise.all(
-        keys.map((key) => {
-          const command = new GetObjectCommand({
-            Bucket: "neuropost",
-            Key: key,
-          });
+    const signedUrls = await Promise.all(
+      keys.map((key) => {
+        const command = new GetObjectCommand({
+          Bucket: "neuropost",
+          Key: key,
+        });
 
-          return getSignedUrl(s3, command, { expiresIn: 5 * 60 });
-        }),
-      );
+        return getSignedUrl(s3, command, { expiresIn: 5 * 60 });
+      }),
+    );
 
-      signedComments = commentItems.map((c, i) => ({
-        ...c,
-        user: {
-          ...c.user,
-          profile_url: c.user.profile_url ? signedUrls[i] : "/user.jpg",
-        },
-      }));
-    }
+    const signedComments: any[] = comments.map((c, i) => ({
+      ...c,
+      user: {
+        ...c.user,
+        profile_url: c.user.profile_url ? signedUrls[i] : "/user.jpg",
+      },
+      role: c.user_id === payload.userId ? "creator" : "guest",
+    }));
+
+    const last = signedComments[signedComments.length - 1];
 
     return NextResponse.json(
       {
         ok: true,
-        comments:
-          withProfile && signedComments && signedComments.length > 0
-            ? signedComments
-            : commentItems,
+        comments: signedComments,
+        nextCursor: last ? { created_at: last.created_at, id: last.id } : null,
       },
       { status: 200 },
     );

@@ -3,25 +3,33 @@ import bcrypt from "bcrypt";
 import { sql } from "@/lib/db";
 import { createAccessToken, createRefreshToken } from "@/lib/jwt";
 import { ERRORS } from "@/constants/error-handling";
-import { PasswordValidator } from "@/utils/validator";
 import { NeonDbError } from "@neondatabase/serverless";
+import { getIP } from "@/utils/getIp";
+import client from "@/lib/client";
+import { RegisterSchema } from "@/schemas/auth/register.schema";
 
 export async function POST(req: Request) {
   try {
-    const { username, email, password } = await req.json();
+    const body = await req.json();
 
-    if (!username?.trim() || !email?.trim() || !password?.trim())
-      return NextResponse.json(
-        { ok: false, error: ERRORS.REQUIRED_FIELDS },
-        { status: 422 },
-      );
+    const parsedBody = RegisterSchema.safeParse(body);
 
-    const validPassword = PasswordValidator(password);
-    if (validPassword.error)
-      return NextResponse.json(
-        { ok: false, error: validPassword.error },
-        { status: 422 },
-      );
+    if (!parsedBody.success) {
+      try {
+        const message = JSON.parse(parsedBody.error.issues[0].message);
+        return NextResponse.json(
+          { ok: false, error: message },
+          { status: 400 },
+        );
+      } catch {
+        return NextResponse.json(
+          { ok: false, error: ERRORS.GENERIC_ERROR },
+          { status: 400 },
+        );
+      }
+    }
+
+    const { password, email, username } = parsedBody.data;
 
     const hashPassword = await bcrypt.hash(password, 12);
 
@@ -41,10 +49,13 @@ export async function POST(req: Request) {
       user[0].status,
     );
 
-    await sql.query(
-      `INSERT INTO refresh_tokens (token, user_id, expires_at) values ($1, $2, NOW() + INTERVAL '7 days')`,
-      [refreshToken, user[0].id],
-    );
+    const ip = getIP(req.headers);
+    const key = `refresh:${user[0].id}:${ip}`;
+    const exp = 60 * 60 * 24 * 7;
+
+    await client.set(key, refreshToken, {
+      expiration: { type: "EX", value: exp },
+    });
 
     const res = NextResponse.json({ ok: true }, { status: 200 });
 

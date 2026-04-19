@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { sql } from "./db";
 import { JWTUserPaylaod } from "@/types/global";
 import { ERRORS } from "@/constants/error-handling";
+import { JWTUserPayloadSchema } from "@/schemas/auth/auth.schema";
 
 export async function auth({
   userId,
@@ -49,9 +50,11 @@ export async function getAuthUser() {
       process.env.ACCESS_SECRET!,
     ) as JWTUserPaylaod;
 
+    const parsedPayload = JWTUserPayloadSchema.parse(payload);
+
     return {
-      user: payload,
-      ...(payload.status === "inactive" || !payload.status
+      user: parsedPayload,
+      ...(parsedPayload.status === "inactive" || !parsedPayload.status
         ? { status: "inactive" }
         : {}),
     };

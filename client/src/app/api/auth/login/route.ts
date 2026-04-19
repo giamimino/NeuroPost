@@ -3,16 +3,23 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { createAccessToken, createRefreshToken } from "@/lib/jwt";
 import { ERRORS } from "@/constants/error-handling";
+import client from "@/lib/client";
+import { getIP } from "@/utils/getIp";
+import { LoginSchema } from "@/schemas/auth/login.schema";
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json();
+    const body = await req.json();
 
-    if (!String(email).trim() || !String(password).trim())
-      return NextResponse.json(
-        { ok: false, error: ERRORS.REQUIRED_FIELDS },
-        { status: 422 },
-      );
+    const parsedBody = LoginSchema.safeParse(body);
+
+    if (!parsedBody.success) {
+      const message = JSON.parse(parsedBody.error.issues[0].message);
+
+      return NextResponse.json({ ok: false, error: message }, { status: 400 });
+    }
+
+    const { email, password } = parsedBody.data!;
 
     const users = await sql.query(`SELECT * FROM users WHERE email = $1`, [
       email,
@@ -40,12 +47,13 @@ export async function POST(req: Request) {
       user.username,
       user.status,
     );
+    const ip = getIP(req.headers);
+    const key = `refresh:${user.id}:${ip}`;
+    const exp = 60 * 60 * 24 * 7;
 
-    await sql.query(
-      `INSERT INTO refresh_tokens (token, user_id, expires_at)
-      VALUES ($1, $2, NOW() + INTERVAL '7 days')`,
-      [refreshToken, user.id],
-    );
+    await client.set(key, refreshToken, {
+      expiration: { type: "EX", value: exp },
+    });
 
     const res = NextResponse.json({ ok: true }, { status: 200 });
 

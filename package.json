@@ -7,10 +7,10 @@
     "server"
   ],
   "scripts": {
-    "dev": "npm run dec:server -w server && npm run dev:client -w client",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "npm run dev --workspace=server",
     "dev:client": "npm run dev --workspace=client",
-    "build": "pnpm build:server && pnpm build:client",
+    "build": "npm run build:server && npm run build:client",
     "build:server": "npm run build -w server",
     "build:client": "npm run build -w client",
     "start": "npm run start:server -w server & npm run start:client -w client",
@@ -20,8 +20,8 @@
     "lint:client": "npm run lint --workspace=client",
     "lint:server": "npm run lint --workspace=server",
     "lint:fix": "npm run lint:server:fix && npm run lint:client:fix",
-    "lint:server:fix": "npm run lint:fix --workspace=client",
-    "lint:client:fix": "npm run lint:fix --workspace=server",
+    "lint:server:fix": "npm run lint:fix --workspace=server",
+    "lint:client:fix": "npm run lint:fix --workspace=client",
     "prettier": "npm run prettier:server && npm run prettier:client",
     "prettier:client": "npm run prettier:fix --workspace=client",
     "prettier:server": "npm run prettier:fix --workspace=server",

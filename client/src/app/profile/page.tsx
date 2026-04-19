@@ -36,7 +36,6 @@ const ProfilePage = () => {
     bio: string | null;
     profile_url: string;
   } | null>(null);
-  const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { addAlert } = useAlertStore();
@@ -88,13 +87,15 @@ const ProfilePage = () => {
           {loading ? (
             <Skeleton className="w-24 h-24 rounded-full" />
           ) : (
-            <Image
-              src={user!.profile_url}
-              width={96}
-              height={96}
-              alt="user-profile"
-              className="rounded-full w-24 h-24 object-cover"
-            />
+            user?.profile_url && (
+              <Image
+                src={user!.profile_url}
+                width={96}
+                height={96}
+                alt="user-profile"
+                className="rounded-full w-24 h-24 object-cover"
+              />
+            )
           )}
           {user ? (
             <>
