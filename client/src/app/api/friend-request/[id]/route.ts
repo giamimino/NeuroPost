@@ -22,9 +22,6 @@ export async function POST(
         { status: 400 },
       );
 
-    const { searchParams } = new URL(req.url);
-    const { withNotif } = Object.fromEntries(searchParams.entries());
-
     const auth = await getAuthUser();
     if (auth.error)
       return NextResponse.json(

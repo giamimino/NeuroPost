@@ -78,10 +78,6 @@ const NotificationsContainer = () => {
   const scrollableContainer = useRef<HTMLDivElement>(null);
   const { addAlert } = useAlertStore();
 
-  const getNotifCat = (id: string) => {
-    return notificationCategories.find((n) => n.id === id);
-  };
-
   const RenderNotificationHint = () => {
     const key = select.id as keyof typeof notifications_hints;
     return notifications_hints[key].hint;

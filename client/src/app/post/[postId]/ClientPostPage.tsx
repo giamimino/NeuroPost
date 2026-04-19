@@ -1,7 +1,6 @@
 "use client";
 import ToggleController from "@/components/common/ToggleController";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -12,12 +11,9 @@ import {
 } from "@/components/ui/card";
 import {
   SkeletonCard,
-  SkeletonReplyComment,
 } from "@/components/ui/Skeleton-examples";
 import { ApiConfig } from "@/configs/api-configs";
 import {
-  CommentType,
-  CommentUserType,
   MediaType,
   Post,
   UserJoin,
@@ -27,7 +23,6 @@ import {
   ChevronUp,
   ClipboardIcon,
   Ellipsis,
-  EllipsisVertical,
   ExternalLink,
   Heart,
   MessageCircle,
@@ -41,7 +36,6 @@ import React, {
   use,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -275,7 +269,7 @@ const ClientPostPage = ({
           commentsCursorRef.current = data.nextCursor;
         }
       }
-    } catch (err) {
+    } catch {
       addAlert({
         id: crypto.randomUUID(),
         type: "error",
@@ -284,9 +278,7 @@ const ClientPostPage = ({
     } finally {
       loadingRef.current = false;
     }
-  }, []);
-
-  console.log(comments.length);
+  }, [addAlert]);
 
   // get post
   useEffect(() => {
@@ -328,7 +320,7 @@ const ClientPostPage = ({
     observer.observe(target);
 
     return () => observer.disconnect();
-  }, [post?.id, handleFetchComments]);
+  }, [post, handleFetchComments]);
 
   if (deleted)
     return (
