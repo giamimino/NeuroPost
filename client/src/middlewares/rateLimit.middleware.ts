@@ -22,7 +22,7 @@ export default function RateLimitMiddleware(req: NextRequest) {
 
   const ip =
     (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() ||
-    // @ts-ignore
+    // @ts-ignore -- its okay
     (typeof req.ip === "string" ? req.ip : "") ||
     "unknown";
   const key = `${ip}:${rule.match}`;

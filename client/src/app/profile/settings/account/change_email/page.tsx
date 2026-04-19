@@ -13,7 +13,6 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 const ChangeEmailSettingPage = () => {
-  const [loading, setLoading] = useState(false);
   const [isOldEmailCheck, setIsOldEmailCheck] = useState(false);
   const [isNewEmailCheck, setIsNewEmailCheck] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
@@ -35,7 +34,7 @@ const ChangeEmailSettingPage = () => {
           addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
         }
       });
-  }, []);
+  }, [addAlert]);
 
   const handleSend = async () => {
     try {
@@ -53,7 +52,7 @@ const ChangeEmailSettingPage = () => {
       else if (data.error) return { error: data.error };
 
       return { error: ERRORS.GENERIC_ERROR };
-    } catch (error) {
+    } catch {
       return { error: ERRORS.GENERIC_ERROR };
     }
   };

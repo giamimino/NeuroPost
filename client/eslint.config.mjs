@@ -7,8 +7,14 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "off"
-    }
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/ban-ts-comment": [
+        "error",
+        {
+          "ts-ignore": "allow-with-description",
+        },
+      ],
+    },
   },
   globalIgnores([
     // Default ignores of eslint-config-next:

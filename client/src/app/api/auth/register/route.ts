@@ -21,7 +21,7 @@ export async function POST(req: Request) {
           { ok: false, error: message },
           { status: 400 },
         );
-      } catch (error) {
+      } catch {
         return NextResponse.json(
           { ok: false, error: ERRORS.GENERIC_ERROR },
           { status: 400 },

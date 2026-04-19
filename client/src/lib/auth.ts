@@ -5,7 +5,6 @@ import { sql } from "./db";
 import { JWTUserPaylaod } from "@/types/global";
 import { ERRORS } from "@/constants/error-handling";
 import { JWTUserPayloadSchema } from "@/schemas/auth/auth.schema";
-import { openAsBlob } from "fs";
 
 export async function auth({
   userId,

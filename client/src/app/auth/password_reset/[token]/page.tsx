@@ -1,7 +1,6 @@
 "use client";
 import ActionButton from "@/components/action-button";
 import BlurWrapper from "@/components/BlurWrapper";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -97,7 +96,7 @@ export default function ForgotPasswordPage({
         }),
       )
       .finally(() => setLoading(false));
-  }, []);
+  }, [addAlert, token]);
 
   if (loading)
     return (
@@ -136,7 +135,7 @@ export default function ForgotPasswordPage({
           <div className="flex flex-col gap-3">
             <CardTitle>Change password for {user?.username}</CardTitle>
             <CardDescription className="text-wrap">
-              Make sure it's at least 15 characters OR at least 8 characters
+              Make sure it{`'`}s at least 15 characters OR at least 8 characters
               including a number and a lowercase letter.
             </CardDescription>
           </div>

@@ -36,7 +36,6 @@ const ProfilePage = () => {
     bio: string | null;
     profile_url: string;
   } | null>(null);
-  const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { addAlert } = useAlertStore();

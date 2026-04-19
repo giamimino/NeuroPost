@@ -1,4 +1,3 @@
-import { sql } from "@/lib/db";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
@@ -33,7 +32,7 @@ export async function POST(req: Request) {
         refreshToken,
         process.env.REFRESH_SECRET!,
       ) as JWTUserPaylaod;
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { ok: false, error: ERRORS.GENERIC_ERROR },
         { status: 500 },

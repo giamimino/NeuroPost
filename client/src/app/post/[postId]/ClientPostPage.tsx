@@ -30,7 +30,7 @@ import {
   XIcon,
 } from "lucide-react";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { use, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "@/lib/apiFetch";
 import { Input } from "@/components/ui/input";

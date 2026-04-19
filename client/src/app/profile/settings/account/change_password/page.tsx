@@ -66,6 +66,8 @@ const ChangePasswordSettingPage = () => {
       else if (isChanged) setIsChanged(false);
     };
     onChange();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [oldPassword, newPassword]);
 
   useEffect(() => {
