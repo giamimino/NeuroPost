@@ -37,7 +37,6 @@ export default function ForgotPasswordPage({
       const confrimPassword = passwordConfrimInputRef.current?.value;
 
       if (!password || !confrimPassword) {
-
         return { error: ERRORS.REQUIRED_FIELDS };
       }
 
@@ -46,13 +45,13 @@ export default function ForgotPasswordPage({
       if (!parsedPassword.success) {
         const message = JSON.parse(parsedPassword.error.issues[0].message);
 
-        return { error: message};
+        return { error: message };
       }
 
       const $password = parsedPassword.data;
 
       if ($password !== confrimPassword) {
-        return { error: ERRORS.PASSWORDS_DO_NOT_MATCH }
+        return { error: ERRORS.PASSWORDS_DO_NOT_MATCH };
       }
 
       const res = await fetch("/api/send/password_reset", {
@@ -62,12 +61,12 @@ export default function ForgotPasswordPage({
       const data = await res.json();
 
       if (!data.ok) {
-        return { error: data.error }
+        return { error: data.error };
       }
 
-      return { data }
+      return { data };
     } catch {
-      return { error: ERRORS.GENERIC_ERROR }
+      return { error: ERRORS.GENERIC_ERROR };
     }
   };
 
@@ -165,7 +164,7 @@ export default function ForgotPasswordPage({
             </div>
           </div>
           <ActionButton
-          onSuccess={() => router.push("/auth/login")}
+            onSuccess={() => router.push("/auth/login")}
             onAction={handlePasswordChange}
             className="cursor-pointer py-5 font-medium"
           >

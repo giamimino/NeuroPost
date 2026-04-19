@@ -27,8 +27,20 @@ export function createEmailVerifyToken({ id }: { id: string }) {
   });
 }
 
-export function createPasswordResetToken({ userId, username, token }: { userId: string, username: string, token: string }) {
-  return jwt.sign({ userId, username, token }, process.env.PASSWORD_RESET_SECRET!, {
-    expiresIn: "15m"
-  })
+export function createPasswordResetToken({
+  userId,
+  username,
+  token,
+}: {
+  userId: string;
+  username: string;
+  token: string;
+}) {
+  return jwt.sign(
+    { userId, username, token },
+    process.env.PASSWORD_RESET_SECRET!,
+    {
+      expiresIn: "15m",
+    },
+  );
 }

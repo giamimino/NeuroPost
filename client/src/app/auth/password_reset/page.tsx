@@ -31,16 +31,16 @@ export default function PasswordResetConfrimationPage() {
         ...ApiConfig.post,
         body: JSON.stringify({ email }),
       });
-      const data = await res.json()
+      const data = await res.json();
 
-      if(!data.ok) {
-        return { error: data.error}
+      if (!data.ok) {
+        return { error: data.error };
       }
 
-      return data
+      return data;
     } catch (error) {
       console.log(error);
-      
+
       return { error: ERRORS.GENERIC_ERROR };
     }
   };

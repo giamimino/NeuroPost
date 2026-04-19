@@ -70,13 +70,13 @@ export default function ActionButton({
     try {
       setStatus("loading");
       const { data, error } = await onAction();
-      
+
       if (error) {
         setStatus("idle");
 
         addAlert({ id: crypto.randomUUID(), type: "error", ...error });
       }
-      
+
       if (data) {
         setStatus("success");
         onSuccess?.(data);

@@ -1,5 +1,3 @@
-
-
 export const RateLimitRules = [
   { match: /^\/api\/auth/, limit: 3 },
   { match: /^\/api\/follow/, limit: 3 },

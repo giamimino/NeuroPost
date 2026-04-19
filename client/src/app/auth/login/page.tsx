@@ -21,15 +21,15 @@ const LoginPage = () => {
       const email = (formData.get("email") as string) || "";
       const password = (formData.get("password") as string) || "";
 
-      const parsed = LoginSchema.safeParse({ email, password })
-      if(!parsed.success) {
-        const message = JSON.parse(parsed.error.issues[0].message)
+      const parsed = LoginSchema.safeParse({ email, password });
+      if (!parsed.success) {
+        const message = JSON.parse(parsed.error.issues[0].message);
 
         addAlert({
           id: crypto.randomUUID(),
           type: "error",
-          ...message
-        })
+          ...message,
+        });
         return;
       }
       const url = "/api/auth/login";
@@ -88,7 +88,11 @@ const LoginPage = () => {
                   Remember me
                 </p>
               </label>
-              <button type="button" onClick={() => router.push("/auth/password_reset")} className="font-semibold font-plusJakartaSans hover:underline cursor-pointer text-xs">
+              <button
+                type="button"
+                onClick={() => router.push("/auth/password_reset")}
+                className="font-semibold font-plusJakartaSans hover:underline cursor-pointer text-xs"
+              >
                 Forgot Password?
               </button>
             </div>

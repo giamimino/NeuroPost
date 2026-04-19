@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const { password, email, username } = parsedBody.data
+    const { password, email, username } = parsedBody.data;
 
     const hashPassword = await bcrypt.hash(password, 12);
 

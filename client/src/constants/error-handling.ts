@@ -159,7 +159,8 @@ export const ERRORS = {
 
   USERNAME_IS_WRONG: {
     title: "Invalid Username",
-    description: "Username may only contain letters, underscores, hyphens, and dots.",
+    description:
+      "Username may only contain letters, underscores, hyphens, and dots.",
   },
 
   PASSWORD_TOO_WEAK: {
@@ -448,6 +449,7 @@ export const ERRORS = {
   },
   PASSWORD_RESET_ACC_INACTIVE: {
     title: "Account Inactive",
-    description: "Your account is inactive. Please verify your email or contact support to reset your password.",
-  }
+    description:
+      "Your account is inactive. Please verify your email or contact support to reset your password.",
+  },
 } as const;

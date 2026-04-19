@@ -24,7 +24,10 @@ export async function POST(req: Request) {
     const parsedUser = JSON.parse(user);
 
     const cookieStore = await cookies();
-    const password_reset_token = createPasswordResetToken({...parsedUser, token});
+    const password_reset_token = createPasswordResetToken({
+      ...parsedUser,
+      token,
+    });
 
     cookieStore.set(
       process.env.PASSWORD_RESET_COOKIE_NAME!,

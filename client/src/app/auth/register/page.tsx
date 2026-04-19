@@ -23,15 +23,19 @@ const RegisterPage = () => {
       const email = formData.get("email") as string;
       const password = formData.get("password") as string;
 
-      const parsedBody = RegisterSchema.safeParse({ username, email, password })
-      if(!parsedBody.success) {
-        const message = JSON.parse(parsedBody.error.issues[0].message)
+      const parsedBody = RegisterSchema.safeParse({
+        username,
+        email,
+        password,
+      });
+      if (!parsedBody.success) {
+        const message = JSON.parse(parsedBody.error.issues[0].message);
 
         addAlert({
           id: crypto.randomUUID(),
           type: "error",
-          ...message
-        })
+          ...message,
+        });
 
         return;
       }

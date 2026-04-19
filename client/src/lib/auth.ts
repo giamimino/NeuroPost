@@ -51,8 +51,8 @@ export async function getAuthUser() {
       process.env.ACCESS_SECRET!,
     ) as JWTUserPaylaod;
 
-    const parsedPayload = JWTUserPayloadSchema.parse(payload)
-    
+    const parsedPayload = JWTUserPayloadSchema.parse(payload);
+
     return {
       user: parsedPayload,
       ...(parsedPayload.status === "inactive" || !parsedPayload.status
