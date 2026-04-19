@@ -208,7 +208,7 @@ const CommentReplies = ({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                          <div className="flex gap-3 flex-col p-3">
+                          <div className="flex gap-3 flex-col p-3 w-75">
                             <CardDescription>
                               Are you sure you want to delete this comment?
                             </CardDescription>
