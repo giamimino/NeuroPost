@@ -2,10 +2,11 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-type CardVariant = "default" | "secondary";
+type CardVariant = "default" | "secondary" | "destructive";
 const cardClasses: Record<CardVariant, string> = {
   default: "bg-card text-card-foreground shadow-sm",
   secondary: "bg-card-secondary text-white",
+  destructive: " bg-destructive/10",
 };
 
 function Card({

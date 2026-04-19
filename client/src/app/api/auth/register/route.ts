@@ -3,27 +3,33 @@ import bcrypt from "bcrypt";
 import { sql } from "@/lib/db";
 import { createAccessToken, createRefreshToken } from "@/lib/jwt";
 import { ERRORS } from "@/constants/error-handling";
-import { PasswordValidator } from "@/utils/validator";
 import { NeonDbError } from "@neondatabase/serverless";
 import { getIP } from "@/utils/getIp";
 import client from "@/lib/client";
+import { RegisterSchema } from "@/schemas/auth/register.schema";
 
 export async function POST(req: Request) {
   try {
-    const { username, email, password } = await req.json();
+    const body = await req.json();
 
-    if (!username?.trim() || !email?.trim() || !password?.trim())
-      return NextResponse.json(
-        { ok: false, error: ERRORS.REQUIRED_FIELDS },
-        { status: 422 },
-      );
+    const parsedBody = RegisterSchema.safeParse(body);
 
-    const validPassword = PasswordValidator(password);
-    if (validPassword.error)
-      return NextResponse.json(
-        { ok: false, error: validPassword.error },
-        { status: 422 },
-      );
+    if (!parsedBody.success) {
+      try {
+        const message = JSON.parse(parsedBody.error.issues[0].message);
+        return NextResponse.json(
+          { ok: false, error: message },
+          { status: 400 },
+        );
+      } catch {
+        return NextResponse.json(
+          { ok: false, error: ERRORS.GENERIC_ERROR },
+          { status: 400 },
+        );
+      }
+    }
+
+    const { password, email, username } = parsedBody.data;
 
     const hashPassword = await bcrypt.hash(password, 12);
 

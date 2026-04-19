@@ -3,6 +3,7 @@ import BlurWrapper from "@/components/BlurWrapper";
 import DefaultInput from "@/components/common/DefaultInput";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
+import { LoginSchema } from "@/schemas/auth/login.schema";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -20,10 +21,21 @@ const LoginPage = () => {
       const email = (formData.get("email") as string) || "";
       const password = (formData.get("password") as string) || "";
 
+      const parsed = LoginSchema.safeParse({ email, password });
+      if (!parsed.success) {
+        const message = JSON.parse(parsed.error.issues[0].message);
+
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...message,
+        });
+        return;
+      }
       const url = "/api/auth/login";
       const res = await fetch(url, {
         ...ApiConfig.post,
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(parsed.data),
       });
       const data = await res?.json();
       console.log(data);
@@ -76,9 +88,13 @@ const LoginPage = () => {
                   Remember me
                 </p>
               </label>
-              <p className="font-semibold font-plusJakartaSans underline cursor-pointer text-xs">
+              <button
+                type="button"
+                onClick={() => router.push("/auth/password_reset")}
+                className="font-semibold font-plusJakartaSans hover:underline cursor-pointer text-xs"
+              >
                 Forgot Password?
-              </p>
+              </button>
             </div>
             <button
               type="submit"

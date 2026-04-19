@@ -1,30 +1,13 @@
 import { ERRORS } from "@/constants/error-handling";
 import { NextRequest, NextResponse } from "next/server";
+import { RateLimitRules } from "./rules/ratelimit.rule";
 
 const ipRequestMap = new Map<string, number[]>();
-
-const rules = [
-  { match: /^\/api\/auth/, limit: 3 },
-  { match: /^\/api\/follow/, limit: 3 },
-  { match: /^\/api\/friend-request/, limit: 10 },
-  { match: /^\/api\/pending-friends/, limit: 10 },
-  { match: /^\/api\/friends/, limit: 7 },
-  { match: /^\/api\/index/, limit: 30 },
-  { match: /^\/api\/notifications/, limit: 30 },
-  { match: /^\/api\/post/, limit: 15 },
-  { match: /^\/api\/r2/, limit: 20 },
-  { match: /^\/api\/redis/, limit: 5 },
-  { match: /^\/api\/redis/, limit: 5 },
-  { match: /^\/api\/search/, limit: 13 },
-  { match: /^\/api\/send/, limit: 2 },
-  { match: /^\/api\/tags/, limit: 10 },
-  { match: /^\/api\/user/, limit: 7 },
-];
 
 const RATE_LIMIT_WINDOW = 60 * 1000;
 
 const getRule = (path: string) => {
-  return rules.find((r) => r.match.test(path));
+  return RateLimitRules.find((r) => r.match.test(path));
 };
 
 export default function RateLimitMiddleware(req: NextRequest) {
@@ -39,7 +22,7 @@ export default function RateLimitMiddleware(req: NextRequest) {
 
   const ip =
     (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() ||
-    // @ts-expect-error ignore
+    // @ts-ignore -- its okay
     (typeof req.ip === "string" ? req.ip : "") ||
     "unknown";
   const key = `${ip}:${rule.match}`;

@@ -93,7 +93,9 @@ const SettingsNotificationsPage = () => {
           addAlert({ id: crypto.randomUUID(), type: "error", ...data.error });
         }
       });
-  }, []);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addAlert]);
 
   return (
     <div

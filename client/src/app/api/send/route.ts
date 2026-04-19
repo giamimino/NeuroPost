@@ -8,7 +8,7 @@ import { sql } from "@/lib/db";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
     const auth = await getAuthUser();
     if (auth.error)

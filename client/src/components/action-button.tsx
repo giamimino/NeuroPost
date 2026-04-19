@@ -67,15 +67,19 @@ export default function ActionButton({
   const { addAlert } = useAlertStore();
 
   const onClick = async () => {
-    setStatus("loading");
     try {
+      setStatus("loading");
       const { data, error } = await onAction();
-      if (data.ok) {
+
+      if (error) {
+        setStatus("idle");
+
+        addAlert({ id: crypto.randomUUID(), type: "error", ...error });
+      }
+
+      if (data) {
         setStatus("success");
         onSuccess?.(data);
-      } else if (error) {
-        setStatus("idle");
-        addAlert({ id: crypto.randomUUID(), type: "error", ...error });
       }
     } catch {
       setStatus("error");
