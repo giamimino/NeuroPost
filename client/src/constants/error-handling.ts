@@ -447,6 +447,14 @@ export const ERRORS = {
     title: "Internal Server Error",
     description: "An unexpected error occurred. Please try again later.",
   },
+  MISSING_CONTENT: {
+    title: "Content Missing",
+    description: "Please provide content for your comment.",
+  },
+  COMMENT_CREATION_FAILED: {
+    title: "Comment Creation Failed",
+    description: "Your comment could not be created. Please try again.",
+  },
   PASSWORD_RESET_ACC_INACTIVE: {
     title: "Account Inactive",
     description:
