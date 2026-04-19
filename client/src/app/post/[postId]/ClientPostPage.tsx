@@ -9,15 +9,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  SkeletonCard,
-} from "@/components/ui/Skeleton-examples";
+import { SkeletonCard } from "@/components/ui/Skeleton-examples";
 import { ApiConfig } from "@/configs/api-configs";
-import {
-  MediaType,
-  Post,
-  UserJoin,
-} from "@/types/neon";
+import { MediaType, Post, UserJoin } from "@/types/neon";
 import {
   ChevronDown,
   ChevronUp,
@@ -32,13 +26,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, {
-  use,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { use, useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/apiFetch";
 import { Input } from "@/components/ui/input";
 import Line from "@/components/ui/Line";
@@ -233,52 +221,55 @@ const ClientPostPage = ({
     selection?.addRange(range);
   };
 
-  const handleFetchComments = useCallback(async (postId: number) => {
-    try {
-      if (loadingRef.current || reachedRef.current) return;
-      loadingRef.current = true;
+  const handleFetchComments = useCallback(
+    async (postId: number) => {
+      try {
+        if (loadingRef.current || reachedRef.current) return;
+        loadingRef.current = true;
 
-      const params = new URLSearchParams({
-        postId: postId.toString(),
-        limit: String(10),
-        ...(commentsCursorRef.current
-          ? {
-              cursorCreatedAt: commentsCursorRef.current.created_at,
-              cursorId: commentsCursorRef.current.id,
-            }
-          : {}),
-      });
+        const params = new URLSearchParams({
+          postId: postId.toString(),
+          limit: String(10),
+          ...(commentsCursorRef.current
+            ? {
+                cursorCreatedAt: commentsCursorRef.current.created_at,
+                cursorId: commentsCursorRef.current.id,
+              }
+            : {}),
+        });
 
-      const res = await apiFetch(`/api/post/comment?${params}`);
-      const data = await res?.json();
+        const res = await apiFetch(`/api/post/comment?${params}`);
+        const data = await res?.json();
 
-      if (!data.ok && data.error) {
+        if (!data.ok && data.error) {
+          addAlert({
+            id: crypto.randomUUID(),
+            type: "error",
+            ...data.error,
+          });
+        } else if (data.ok && data.comments) {
+          setComments((prev) => [...prev, ...data.comments]);
+          console.log(data);
+          const isLastPage = !data.nextCursor || data.comments.length < 10;
+
+          if (isLastPage) {
+            reachedRef.current = true;
+          } else if (data.nextCursor?.id && data.nextCursor?.created_at) {
+            commentsCursorRef.current = data.nextCursor;
+          }
+        }
+      } catch {
         addAlert({
           id: crypto.randomUUID(),
           type: "error",
-          ...data.error,
+          ...ERRORS.GENERIC_ERROR,
         });
-      } else if (data.ok && data.comments) {
-        setComments((prev) => [...prev, ...data.comments]);
-        console.log(data);
-        const isLastPage = !data.nextCursor || data.comments.length < 10;
-
-        if (isLastPage) {
-          reachedRef.current = true;
-        } else if (data.nextCursor?.id && data.nextCursor?.created_at) {
-          commentsCursorRef.current = data.nextCursor;
-        }
+      } finally {
+        loadingRef.current = false;
       }
-    } catch {
-      addAlert({
-        id: crypto.randomUUID(),
-        type: "error",
-        ...ERRORS.GENERIC_ERROR,
-      });
-    } finally {
-      loadingRef.current = false;
-    }
-  }, [addAlert]);
+    },
+    [addAlert],
+  );
 
   // get post
   useEffect(() => {
