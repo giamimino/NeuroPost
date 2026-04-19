@@ -11,7 +11,7 @@ import { Resend } from "resend";
 import { PasswordResetEmailTemplate } from "@/components/email-templates";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -114,13 +114,33 @@ export async function PUT(req: Request) {
       return NextResponse.json({ ok: false, error: message }, { status: 400 });
     }
 
-    const password = parsedPassword.data;
-    const hashedPassword = await bcrypt.hash(password, 12)
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(payload.token)
+      .digest("hex");
 
-    await sql.query(
-      `UPDATE users SET password = $1 WHERE id = $2`,
-      [hashedPassword, payload.userId]
-    )
+    const existing = await client.get(`reset:${hashedToken}`);
+
+    if (!existing)
+      return NextResponse.json(
+        {
+          ok: false,
+          error: ERRORS.PASSWORD_RESET_TOKEN_EXPIRED,
+        },
+        { status: 400 },
+      );
+
+    const password = parsedPassword.data;
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    await sql.query(`UPDATE users SET password = $1 WHERE id = $2`, [
+      hashedPassword,
+      payload.userId,
+    ]);
+
+    cookieStore.delete(process.env.PASSWORD_RESET_COOKIE_NAME!);
+    const key = `reset:${payload.token}`;
+    client.del(key);
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
