@@ -30,11 +30,21 @@ export async function GET(req: Request) {
           'id', m.id,
           'fileurl', m.fileurl,
           'type', m.type
-        ) as media
+        ) as media,
+        COUNT(DISTINCT tl.id) AS likes,
+        COUNT(DISTINCT tc.id) AS comments
       FROM likes l
+
       JOIN posts p ON p.id = l.post_id
+
       LEFT JOIN media m ON m.post_id = p.id
+
+      LEFT JOIN likes tl ON tl.post_id = p.id
+      
+      LEFT JOIN comments tc ON tc.post_id = p.id
+
       WHERE l.user_id = $1 
+
       LIMIT $2`,
       [payload.userId, Number(limit) || 20],
     );
