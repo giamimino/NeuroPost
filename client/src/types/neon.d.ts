@@ -135,3 +135,14 @@ export interface FriendSettingsType {
   muted: boolean | null;
   blocked: boolean | null;
 }
+
+export interface PostMedia extends Post {
+  media: {
+    id: string | null;
+    fileurl: string | null;
+    type: MediaEnumType | null;
+    mediaUrl: string | undefined;
+  };
+  likes: number;
+  comments: number;
+}

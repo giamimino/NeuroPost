@@ -1,11 +1,11 @@
-"use client"
+"use client";
 import { CardDescription, CardTitle } from "@/components/ui/card";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 
 const SettingsSecurityPage = () => {
-  const router = useRouter()
+  const router = useRouter();
   return (
     <div className="flex flex-col gap-6 w-full">
       <CardTitle>Security</CardTitle>
