@@ -5,7 +5,6 @@ import {
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { ERRORS } from "@/constants/error-handling";
@@ -13,6 +12,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { PostMedia } from "@/types/neon";
 import clsx from "clsx";
+import { Heart, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -48,7 +48,7 @@ const ProfileLikesPage = () => {
           ...ERRORS.GENERIC_ERROR,
         }),
       );
-  }, []);
+  }, [addAlert]);
 
   return (
     <div className="">
@@ -80,6 +80,21 @@ const ProfileLikesPage = () => {
                 </CardDescription>
               )}
             </CardContent>
+            <div className="px-6 mt-auto flex gap-2.5">
+              <div className="flex flex-col items-center w-fit">
+                <p className="text-xs">{item.likes}</p>
+                <Heart width={16} height={16} color="#ff0000" fill="#ff0000" />
+              </div>
+              <div className="flex flex-col items-center w-fit">
+                <p className="text-xs">{item.comments}</p>
+                <MessageCircle
+                  width={16}
+                  height={16}
+                  color="#fff"
+                  fill="#fff"
+                />
+              </div>
+            </div>
             <CardFooter>
               <div className="py-2 w-full">
                 <Button

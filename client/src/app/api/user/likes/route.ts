@@ -43,7 +43,9 @@ export async function GET(req: Request) {
       
       LEFT JOIN comments tc ON tc.post_id = p.id
 
-      WHERE l.user_id = $1 
+      WHERE l.user_id = $1
+
+      GROUP BY p.id, m.id
 
       LIMIT $2`,
       [payload.userId, Number(limit) || 20],

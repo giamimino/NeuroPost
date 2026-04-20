@@ -35,7 +35,7 @@ const ProfileSavesPage = () => {
         }
       })
       .catch((err) => console.error(err));
-  }, []);
+  }, [addAlert]);
 
   return (
     <div className="">

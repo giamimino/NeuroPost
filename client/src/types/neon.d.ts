@@ -143,4 +143,6 @@ export interface PostMedia extends Post {
     type: MediaEnumType | null;
     mediaUrl: string | undefined;
   };
+  likes: number;
+  comments: number;
 }
