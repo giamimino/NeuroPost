@@ -115,7 +115,7 @@ const profileNavigationPages: {
 }[] = [
   { url: "p/create", label: "Upload", variant: "default" },
   { url: "", label: "Profile", variant: "ghost" },
-  { url: "saves", label: "Saves", variant: "ghost" },
+  { url: "saves/likes", label: "Saves", variant: "ghost" },
   { url: "edit", label: "Edit", variant: "ghost" },
   { url: "friends", label: "Friends", variant: "ghost" },
   { url: "settings", label: "Settings", variant: "ghost" },

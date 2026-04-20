@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { PostMedia } from "@/types/neon";
@@ -32,7 +33,6 @@ const ProfileLikesPage = () => {
       .then((data) => {
         if (data.ok) {
           setLikes(data.likes);
-          console.log(data);
         } else if (data.error) {
           addAlert({
             id: crypto.randomUUID(),
@@ -41,19 +41,13 @@ const ProfileLikesPage = () => {
           });
         }
       })
-      .catch((err) => console.error(err));
+      .catch(() => addAlert({ id: crypto.randomUUID(), type: "error", ...ERRORS.GENERIC_ERROR }));
   }, []);
 
   return (
     <div className="">
-      <CardContent className="grid gap-6 grid-cols-4 max-lg:grid-cols-2 max-sm:grid-cols-1 justify-center">
+      <CardContent className="grid gap-6 grid-cols-4 max-2xl:grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1 justify-center">
         {likes
-          .sort((a, b) => {
-            return (
-              (b.media?.mediaUrl && b.media.type === "image" ? 1 : 0) -
-              (a.media?.mediaUrl && a.media.type === "image" ? 1 : 0)
-            );
-          })
           .map((item) => (
             <Card
               className={clsx(
@@ -69,15 +63,13 @@ const ProfileLikesPage = () => {
                     alt={item.title}
                     width={720}
                     height={360}
-                    className="object-cover max-h-90"
+                    className="object-cover h-40"
                   />
                 </div>
               )}
-              <CardHeader>
+              <CardContent className="flex flex-col gap-3">
                 <CardTitle>{item.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="justify-self-start">
-                {!item.media.mediaUrl || item.media.type !== "image" && (
+                {!item.media.mediaUrl &&  (
                   <CardDescription className="line-clamp-4">
                     {item.description}
                   </CardDescription>
