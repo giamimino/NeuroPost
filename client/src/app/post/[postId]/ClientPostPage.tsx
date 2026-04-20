@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { SkeletonCard } from "@/components/ui/Skeleton-examples";
 import { ApiConfig } from "@/configs/api-configs";
-import { MediaType, Post, UserJoin } from "@/types/neon";
+import { MediaType, Post, Tag, UserJoin } from "@/types/neon";
 import {
   ChevronDown,
   ChevronUp,
@@ -60,6 +60,7 @@ import {
   ContentToggleContainer,
 } from "@/components/ContentToggle";
 import { CommentSchemaType } from "@/schemas/comment/comment.schema";
+import { TagItem } from "@/components/ui/tag";
 
 const ClientPostPage = ({
   params,
@@ -76,6 +77,7 @@ const ClientPostPage = ({
         user: UserJoin;
         likeid: string | null;
         likes: number;
+        tags: Tag[] | null;
       })
     | null
   >(null);
@@ -335,6 +337,17 @@ const ClientPostPage = ({
                     <>
                       <CardTitle className="text-2xl">{post?.title}</CardTitle>
                       <CardDescription>{post?.description}</CardDescription>
+                      <div>
+                        {post?.tags &&
+                          post.tags.map(({ tag, id }) => (
+                            <TagItem
+                              key={`${tag}-${id}`}
+                              tag={`#${tag}`}
+                              variant="none"
+                              onClick={() => router.push(`/tags/${tag}`)}
+                            />
+                          ))}
+                      </div>
                     </>
                   ) : (
                     <form
@@ -353,7 +366,7 @@ const ClientPostPage = ({
                     </form>
                   )}
                 </div>
-                <CardContent className="pb-5">
+                <CardContent>
                   {/* author stuffs */}
                   <div className="flex items-center mt-2 gap-2.5">
                     {typeof post?.user.profile_url === "string" ? (
@@ -382,7 +395,7 @@ const ClientPostPage = ({
                       height={720}
                       alt="post-media"
                       src={post.signedUrl}
-                      className="w-full object-cover max-h-150 rounded-xl"
+                      className="w-full object-cover max-h-150 rounded-b-xl"
                     />
                   </CardFooter>
                 ) : (
@@ -395,7 +408,7 @@ const ClientPostPage = ({
                         controls={false}
                         loop
                         playsInline
-                        className="rounded-xl w-full"
+                        className="rounded-b-xl w-full"
                       />
                     </CardFooter>
                   )
