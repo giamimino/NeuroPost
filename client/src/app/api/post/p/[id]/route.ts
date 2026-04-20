@@ -157,11 +157,12 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    // const { searchParams } = new URL(req.url)
-    // const { i } = Object.fromEntries(searchParams.entries())
 
     if (!id || !Number(id))
-      return NextResponse.json({ ok: false }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: ERRORS.GENERIC_ERROR },
+        { status: 400 },
+      );
 
     const auth = await getAuthUser();
     if (auth.error)
@@ -177,10 +178,39 @@ export async function GET(
     const payload = auth.user;
 
     const posts = await sql.query(
-      `SELECT p.*, json_build_object('name', u.name, 'username', u.username, 'profile_url', u.profile_url) AS user, l.id AS likeId 
-      FROM posts p JOIN users u ON p.author_id=u.id 
-      LEFT JOIN likes l ON l.post_id = $1 AND l.user_id = $2
-      WHERE p.id = $1 GROUP BY p.id, u.name, u.username, u.profile_url, l.id`,
+      `SELECT 
+        p.*, 
+        json_build_object(
+          'name', u.name, 
+          'username', u.username, 
+          'profile_url', u.profile_url
+        ) AS user, 
+        l.id AS likeId,
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'id', t.id,
+            'tag', t.tag
+          )
+        ) FILTER (WHERE t.id IS NOT NULL) AS tags
+      FROM posts p 
+      
+      JOIN users u ON p.author_id=u.id 
+
+      LEFT JOIN likes l ON 
+        l.post_id = $1 AND l.user_id = $2
+      
+      LEFT JOIN post_tag pt ON pt.post_id = $1
+
+      LEFT JOIN tags t ON t.id = pt.tag_id
+      
+      WHERE p.id = $1 
+      
+      GROUP BY 
+        p.id, 
+        u.name, 
+        u.username, 
+        u.profile_url, 
+        l.id`,
       [Number(id), payload.userId],
     );
     const post = posts[0];
