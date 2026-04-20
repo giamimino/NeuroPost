@@ -20,6 +20,7 @@ import {
   ExternalLink,
   Heart,
   MessageCircle,
+  Plus,
   Send,
   Settings,
   XIcon,
@@ -90,6 +91,7 @@ const ClientPostPage = ({
   const editableValuesRef = useRef<HTMLFormElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const shareUrlRef = useRef<HTMLDivElement>(null);
+  const [tags, setTags] = useState<{ id?: number, tag: string}[]>([]);
   const commentsCursorRef = useRef<{
     created_at: string;
     id: string;
@@ -98,6 +100,14 @@ const ClientPostPage = ({
   const loadingRef = useRef(false);
   const reachedRef = useRef(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const tagInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddTag = (tag: string) => {
+    if (!/^\p{L}+$/u.test(tag) || tags.some((t) => t.tag === tag)) return;
+    const newTag = { tag }
+    setTags((prev) => ([...prev, newTag]));
+    tagInputRef.current!.value = "";
+  };
 
   const handleEditPost = async () => {
     if (!editing || !editableValuesRef.current || !post) return;
@@ -363,6 +373,50 @@ const ClientPostPage = ({
                         name="description"
                         defaultValue={post?.description ?? ""}
                       />
+                      <div className="flex flex-col gap-2.5">
+                        <div className="flex gap-1 flex-wrap">
+                          {tags.map(({ tag, id }) => (
+                            <TagItem
+                              key={`${tag}-${id}`}
+                              tag={`#${tag}`}
+                              variant="none"
+                              onClick={() =>
+                                setTags((prev) =>
+                                  prev.filter((t) => t.tag !== tag),
+                                )
+                              }
+                            />
+                          ))}
+                        </div>
+
+                        <div className="flex gap-2.5 max-w-75 items-center">
+                          <Input
+                            placeholder="Enter a tag..."
+                            ref={tagInputRef}
+                            className="h-8"
+                            onKeyDown={(e) => {
+                              if (
+                                e.key === "Enter" &&
+                                tagInputRef.current &&
+                                tagInputRef.current.value
+                              ) {
+                                handleAddTag(tagInputRef.current.value);
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            size={"md"}
+                            variant={"outline"}
+                            className="cursor-pointer"
+                            onClick={() =>
+                              handleAddTag(tagInputRef.current?.value || "")
+                            }
+                          >
+                            <Plus />
+                          </Button>
+                        </div>
+                      </div>
                     </form>
                   )}
                 </div>
@@ -816,7 +870,12 @@ const ClientPostPage = ({
                           size={"md"}
                           variant={"outline"}
                           className="cursor-pointer w-full"
-                          onClick={() => setEditing(true)}
+                          onClick={() => {
+                            setEditing(true);
+                            if (post.tags) {
+                              setTags(post.tags);
+                            }
+                          }}
                         >
                           Edit
                         </Button>
