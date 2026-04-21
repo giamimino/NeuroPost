@@ -150,18 +150,17 @@ export async function PUT(
       `;
       tagsResult = await sql.query(raw, tags);
 
-      const post_tag_placeholders = tagsResult.map((_, i) => `($1, $${i + 2})`).join(", ")
+      const post_tag_placeholders = tagsResult
+        .map((_, i) => `($1, $${i + 2})`)
+        .join(", ");
 
       const rawSql = `
         INSERT INTO post_tag (post_id, tag_id)
         VALUES ${post_tag_placeholders}
         ON CONFLICT DO NOTHING
-      `
+      `;
 
-      await sql.query(
-        rawSql,
-        [id, ...tagsResult.map(t => t.id)]
-      )
+      await sql.query(rawSql, [id, ...tagsResult.map((t) => t.id)]);
     }
 
     return NextResponse.json({
@@ -170,7 +169,7 @@ export async function PUT(
         title,
         description,
         meida: resMedia ? resMedia[0] : undefined,
-        tags: tagsResult
+        tags: tagsResult,
       },
       signedUrl,
     });

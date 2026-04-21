@@ -91,7 +91,7 @@ const ClientPostPage = ({
   const editableValuesRef = useRef<HTMLFormElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const shareUrlRef = useRef<HTMLDivElement>(null);
-  const [tags, setTags] = useState<{ id?: number, tag: string}[]>([]);
+  const [tags, setTags] = useState<{ id?: number; tag: string }[]>([]);
   const commentsCursorRef = useRef<{
     created_at: string;
     id: string;
@@ -104,8 +104,8 @@ const ClientPostPage = ({
 
   const handleAddTag = (tag: string) => {
     if (!/^\p{L}+$/u.test(tag) || tags.some((t) => t.tag === tag)) return;
-    const newTag = { tag }
-    setTags((prev) => ([...prev, newTag]));
+    const newTag = { tag };
+    setTags((prev) => [...prev, newTag]);
     tagInputRef.current!.value = "";
   };
 
@@ -119,12 +119,12 @@ const ClientPostPage = ({
         return addAlert({ id: crypto.randomUUID(), type: "error", ...error });
       formData.append("media", media);
     }
-    formData.append("tags", JSON.stringify(tags.map(t => t.tag)))
+    formData.append("tags", JSON.stringify(tags.map((t) => t.tag)));
 
     const url = `/api/post/p/${post.id}`;
     const res = await apiFetch(url, { ...ApiConfig.purForm, body: formData });
     const data = await res?.json();
-    
+
     if (data.ok && data.post) {
       setPost((prev) =>
         prev
@@ -134,7 +134,7 @@ const ClientPostPage = ({
               description: data.post.description || prev.description,
               media: data.post.media || prev.media,
               signedUrl: data.signedUrl || prev.signedUrl,
-              tags: data.post.tags || []
+              tags: data.post.tags || [],
             }
           : prev,
       );
@@ -349,7 +349,7 @@ const ClientPostPage = ({
                     <>
                       <CardTitle className="text-2xl">{post?.title}</CardTitle>
                       <CardDescription>{post?.description}</CardDescription>
-                      <div>
+                      <div className="flex gap-1 flex-wrap">
                         {post?.tags &&
                           post.tags.map(({ tag, id }) => (
                             <TagItem
