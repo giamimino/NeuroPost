@@ -134,6 +134,7 @@ const ClientPostPage = ({
               description: data.post.description || prev.description,
               media: data.post.media || prev.media,
               signedUrl: data.signedUrl || prev.signedUrl,
+              tags: data.post.tags || []
             }
           : prev,
       );
