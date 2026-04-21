@@ -49,7 +49,6 @@ export interface Like {
 export interface Tag {
   id: number;
   tag: string;
-  created_at: Date;
 }
 
 export type MediaEnumType = "image" | "video";

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { SkeletonCard } from "@/components/ui/Skeleton-examples";
 import { ApiConfig } from "@/configs/api-configs";
-import { MediaType, Post, UserJoin } from "@/types/neon";
+import { MediaType, Post, Tag, UserJoin } from "@/types/neon";
 import {
   ChevronDown,
   ChevronUp,
@@ -20,6 +20,7 @@ import {
   ExternalLink,
   Heart,
   MessageCircle,
+  Plus,
   Send,
   Settings,
   XIcon,
@@ -60,6 +61,7 @@ import {
   ContentToggleContainer,
 } from "@/components/ContentToggle";
 import { CommentSchemaType } from "@/schemas/comment/comment.schema";
+import { TagItem } from "@/components/ui/tag";
 
 const ClientPostPage = ({
   params,
@@ -76,6 +78,7 @@ const ClientPostPage = ({
         user: UserJoin;
         likeid: string | null;
         likes: number;
+        tags: Tag[] | null;
       })
     | null
   >(null);
@@ -88,6 +91,7 @@ const ClientPostPage = ({
   const editableValuesRef = useRef<HTMLFormElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const shareUrlRef = useRef<HTMLDivElement>(null);
+  const [tags, setTags] = useState<{ id?: number; tag: string }[]>([]);
   const commentsCursorRef = useRef<{
     created_at: string;
     id: string;
@@ -96,6 +100,14 @@ const ClientPostPage = ({
   const loadingRef = useRef(false);
   const reachedRef = useRef(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const tagInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddTag = (tag: string) => {
+    if (!/^\p{L}+$/u.test(tag) || tags.some((t) => t.tag === tag)) return;
+    const newTag = { tag };
+    setTags((prev) => [...prev, newTag]);
+    tagInputRef.current!.value = "";
+  };
 
   const handleEditPost = async () => {
     if (!editing || !editableValuesRef.current || !post) return;
@@ -107,6 +119,7 @@ const ClientPostPage = ({
         return addAlert({ id: crypto.randomUUID(), type: "error", ...error });
       formData.append("media", media);
     }
+    formData.append("tags", JSON.stringify(tags.map((t) => t.tag)));
 
     const url = `/api/post/p/${post.id}`;
     const res = await apiFetch(url, { ...ApiConfig.purForm, body: formData });
@@ -121,6 +134,7 @@ const ClientPostPage = ({
               description: data.post.description || prev.description,
               media: data.post.media || prev.media,
               signedUrl: data.signedUrl || prev.signedUrl,
+              tags: data.post.tags || [],
             }
           : prev,
       );
@@ -335,6 +349,17 @@ const ClientPostPage = ({
                     <>
                       <CardTitle className="text-2xl">{post?.title}</CardTitle>
                       <CardDescription>{post?.description}</CardDescription>
+                      <div className="flex gap-1 flex-wrap">
+                        {post?.tags &&
+                          post.tags.map(({ tag, id }) => (
+                            <TagItem
+                              key={`${tag}-${id}`}
+                              tag={`#${tag}`}
+                              variant="none"
+                              onClick={() => router.push(`/tags/${tag}`)}
+                            />
+                          ))}
+                      </div>
                     </>
                   ) : (
                     <form
@@ -350,10 +375,54 @@ const ClientPostPage = ({
                         name="description"
                         defaultValue={post?.description ?? ""}
                       />
+                      <div className="flex flex-col gap-2.5">
+                        <div className="flex gap-1 flex-wrap">
+                          {tags.map(({ tag, id }) => (
+                            <TagItem
+                              key={`${tag}-${id}`}
+                              tag={`#${tag}`}
+                              variant="none"
+                              onClick={() =>
+                                setTags((prev) =>
+                                  prev.filter((t) => t.tag !== tag),
+                                )
+                              }
+                            />
+                          ))}
+                        </div>
+
+                        <div className="flex gap-2.5 max-w-75 items-center">
+                          <Input
+                            placeholder="Enter a tag..."
+                            ref={tagInputRef}
+                            className="h-8"
+                            onKeyDown={(e) => {
+                              if (
+                                e.key === "Enter" &&
+                                tagInputRef.current &&
+                                tagInputRef.current.value
+                              ) {
+                                handleAddTag(tagInputRef.current.value);
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            size={"md"}
+                            variant={"outline"}
+                            className="cursor-pointer"
+                            onClick={() =>
+                              handleAddTag(tagInputRef.current?.value || "")
+                            }
+                          >
+                            <Plus />
+                          </Button>
+                        </div>
+                      </div>
                     </form>
                   )}
                 </div>
-                <CardContent className="pb-5">
+                <CardContent>
                   {/* author stuffs */}
                   <div className="flex items-center mt-2 gap-2.5">
                     {typeof post?.user.profile_url === "string" ? (
@@ -382,7 +451,7 @@ const ClientPostPage = ({
                       height={720}
                       alt="post-media"
                       src={post.signedUrl}
-                      className="w-full object-cover max-h-150 rounded-xl"
+                      className="w-full object-cover max-h-150 rounded-b-xl"
                     />
                   </CardFooter>
                 ) : (
@@ -395,7 +464,7 @@ const ClientPostPage = ({
                         controls={false}
                         loop
                         playsInline
-                        className="rounded-xl w-full"
+                        className="rounded-b-xl w-full"
                       />
                     </CardFooter>
                   )
@@ -803,7 +872,12 @@ const ClientPostPage = ({
                           size={"md"}
                           variant={"outline"}
                           className="cursor-pointer w-full"
-                          onClick={() => setEditing(true)}
+                          onClick={() => {
+                            setEditing(true);
+                            if (post.tags) {
+                              setTags(post.tags);
+                            }
+                          }}
                         >
                           Edit
                         </Button>

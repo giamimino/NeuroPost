@@ -5,10 +5,12 @@ function TagItem({
   tag,
   onClick,
   variant = "default",
+  className,
 }: {
   tag: string;
   onClick?: () => void;
   variant?: "default" | "none";
+  className?: string;
 }) {
   return (
     <div
@@ -16,6 +18,7 @@ function TagItem({
         "p-1 px-2 rounded-sm truncate",
         variant === "default" && "border border-card-border",
         variant === "none" && "",
+        className,
       )}
       onClick={onClick}
     >
