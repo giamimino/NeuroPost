@@ -5,6 +5,7 @@ import { Header } from "@/components/header";
 import { ScrollContextProvider } from "@/store/contexts/ScrollContext";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import AlertsProvider from "@/components/providers/AlertsProvider";
+import { Analytics } from "@vercel/analytics/next";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -24,6 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" style={{ colorScheme: "dark" }} suppressHydrationWarning>
       <body className={`${plusJakartaSans.variable} antialiased`}>
+        <Analytics />
         <ThemeProvider attribute={"class"} defaultTheme="system" enableSystem>
           <ScrollContextProvider>
             <Header />
