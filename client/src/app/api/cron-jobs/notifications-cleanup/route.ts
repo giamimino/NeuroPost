@@ -2,9 +2,9 @@ import { ERRORS } from "@/constants/error-handling";
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   try {
-    const authHeader = req.headers.get("Authorization");
+    const authHeader = req.headers.get("authorization");
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json(
         { ok: false, error: ERRORS.UNAUTHORIZED },
