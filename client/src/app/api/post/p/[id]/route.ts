@@ -28,6 +28,7 @@ export async function PUT(
     const title = formData.get("title") as string | undefined;
     const description = formData.get("description") as string | undefined;
     const media = formData.get("media") as File | undefined;
+    const $tags = formData.get("tags") as string | undefined;
     if (!title && !description && !media)
       return NextResponse.json({ ok: false, error: ERRORS.GENERIC_ERROR });
 
@@ -133,12 +134,43 @@ export async function PUT(
       signedUrl = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
     }
 
+    const tags: string[] = $tags ? JSON.parse($tags) : [];
+    let tagsResult;
+    if (tags.length === 0) {
+      await sql.query(`DELETE FROM post_tag WHERE post_id = $1`, [id]);
+    } else if (tags.length > 0) {
+      const placeholders = tags.map((_, i) => `($${i + 1})`).join(", ");
+
+      const raw = `
+        INSERT INTO tags (tag)
+        VALUES ${placeholders}
+        ON CONFLICT (tag)
+        DO UPDATE SET tag = EXCLUDED.tag
+        RETURNING *;
+      `;
+      tagsResult = await sql.query(raw, tags);
+
+      const post_tag_placeholders = tagsResult.map((_, i) => `($1, $${i + 2})`).join(", ")
+
+      const rawSql = `
+        INSERT INTO post_tag (post_id, tag_id)
+        VALUES ${post_tag_placeholders}
+        ON CONFLICT DO NOTHING
+      `
+
+      await sql.query(
+        rawSql,
+        [id, ...tagsResult.map(t => t.id)]
+      )
+    }
+
     return NextResponse.json({
       ok: true,
       post: {
         title,
         description,
         meida: resMedia ? resMedia[0] : undefined,
+        tags: tagsResult
       },
       signedUrl,
     });

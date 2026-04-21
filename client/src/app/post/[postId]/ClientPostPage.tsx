@@ -119,11 +119,12 @@ const ClientPostPage = ({
         return addAlert({ id: crypto.randomUUID(), type: "error", ...error });
       formData.append("media", media);
     }
+    formData.append("tags", JSON.stringify(tags.map(t => t.tag)))
 
     const url = `/api/post/p/${post.id}`;
     const res = await apiFetch(url, { ...ApiConfig.purForm, body: formData });
     const data = await res?.json();
-
+    
     if (data.ok && data.post) {
       setPost((prev) =>
         prev
