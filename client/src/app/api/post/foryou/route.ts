@@ -89,7 +89,7 @@ export async function GET(req: Request) {
       LEFT JOIN likes tl 
         ON tl.post_id = p.id
 
-      WHERE p.created_at < $2
+      WHERE p.created_at < $2 AND u."isPrivate" = false
 
       GROUP BY 
         p.id,
