@@ -28,12 +28,27 @@ export async function GET(
       );
     const payload = auth.user;
 
-    const rawSql = `SELECT u.id, u.email, u.name, u.username, u.profile_url, u.bio, json_build_object('id', f.id, 'created_at', f.created_at) as follow FROM users u 
-    LEFT JOIN follows f ON f.follower_id = $2 AND f.follow_id = u.id where u.username = $1`;
+    const rawSql = `
+    SELECT 
+      u.id, 
+      u.email, 
+      u.name, 
+      u.username, 
+      u.profile_url, 
+      u.bio,
+      u."isPrivate",
+      json_build_object(
+        'id', f.id, 
+        'created_at', f.created_at
+      ) as follow FROM users u 
+    LEFT JOIN follows f 
+      ON f.follower_id = $2 
+      AND f.follow_id = u.id 
+    where u.username = $1`;
     const users = await sql.query(rawSql, [username, payload.userId]);
     let user = users[0];
 
-    if (!user || user.length === 0)
+    if (!user || users.length === 0)
       return NextResponse.json(
         { ok: false, error: ERRORS.USER_NOT_FOUND },
         { status: 404 },
@@ -52,7 +67,7 @@ export async function GET(
 
     user = { ...user, profile_url: user.profile_url ? signedUrl : "/user.jpg" };
 
-    if (Boolean(stats) === true) {
+    if (stats === "true" && !user.isPrivate) {
       const stats = await sql.query(
         `
         SELECT 
@@ -67,7 +82,11 @@ export async function GET(
       user = { ...user, stats: stats[0] };
     }
 
-    if (Boolean(friend_status) === true && username !== payload.username) {
+    if (
+      friend_status === "true" &&
+      username !== payload.username &&
+      !user.isPrivate
+    ) {
       const friends = await sql.query(
         `SELECT id FROM friends WHERE CASE
                                         WHEN user_id = $1 AND friend_id = $2 THEN 1
