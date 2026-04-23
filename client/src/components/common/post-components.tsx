@@ -10,19 +10,40 @@ import { PostContext, usePostContext } from "@/store/contexts/PostContext";
 import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { TagItem } from "../ui/tag";
+import { Button } from "../ui/button";
+import { PostContextType } from "@/types/context";
 
 interface GenericType extends Children, ClassName {}
 
 const PostsContainer = ({ children }: Children) => {
   return (
-    <section className="flex flex-col w-full items-center px-10 max-md:px-5 max-sm:px-2.5">{children}</section>
+    <section className="flex flex-col w-full items-center px-10 max-md:px-5 max-sm:px-2.5">
+      {children}
+    </section>
   );
 };
 
-const PostWrapper = ({ children, post }: Children & { post: ForyouPost }) => {
+const PostWrapper = ({
+  children,
+  initialPost,
+}: Children & { initialPost: ForyouPost }) => {
+  const [post, setPost] = useState<ForyouPost>(initialPost);
   const values = {
     post,
-  };
+    onLike: (likeId) =>
+      setPost((prev) => ({
+        ...prev,
+        like_id: likeId,
+        likes: String(Number(prev.likes) + 1),
+      })),
+    onUnlike: () =>
+      setPost((prev) => ({
+        ...prev,
+        like_id: null,
+        likes: String(Number(prev.likes) - 1),
+      })),
+  } as PostContextType;
 
   return <PostContext.Provider value={values}>{children}</PostContext.Provider>;
 };
@@ -126,58 +147,129 @@ const PostLine = () => {
 
 PostLine.displayName = "Post.Line";
 
-const PostActions = ({
-  postId,
-  likeId,
-  onChange,
-  likes,
-}: {
-  postId: number;
-  likeId: string | null;
-  onChange: (args: HandleLikeArgs, data: any) => void;
-  likes: string;
-}) => {
-  const { onOpen } = useCommentsStore();
+const PostActionsWrapper = ({ className, children }: GenericType) => {
   return (
-    <div className="flex gap-3 items-center mt-3">
-      <div className="flex justify-center items-center gap-1">
-        <CardDescription>{likes}</CardDescription>
-        <button
-          className={`cursor-pointer w-fit`}
-          onClick={async () => {
-            const args: HandleLikeArgs = likeId
-              ? { action: "delete", id: likeId }
-              : {
-                  action: "post",
-                  postId,
-                };
-            const data = await handleLike(args);
-            if (data.ok) onChange(args, data);
-          }}
-        >
-          <Heart
-            width={18}
-            height={18}
-            className={`${likeId ? "text-red-600" : ""}`}
-            {...(likeId ? { fill: "#ff0000" } : {})}
-          />
-        </button>
-      </div>
-      <button className={`cursor-pointer w-fit`}>
-        <MessageCircleMore
+    <div className={clsx("flex gap-3 items-center mt-3", className)}>
+      {children}
+    </div>
+  );
+};
+
+PostActionsWrapper.displayName = "Post.ActionsWrapper";
+
+const PostLike = () => {
+  const { post, onLike, onUnlike } = usePostContext();
+  const { likes, like_id, id } = post;
+
+  return (
+    <div className="flex justify-center items-center gap-1">
+      <CardDescription>{likes}</CardDescription>
+      <button
+        className={`cursor-pointer w-fit`}
+        onClick={async () => {
+          const args: HandleLikeArgs = like_id
+            ? { action: "delete", id: like_id }
+            : {
+                action: "post",
+                postId: id,
+              };
+          const data = await handleLike(args);
+          
+          if (data.ok) {
+            if (args.action === "delete") {
+              onUnlike();
+            } else if (args.action === "post" && data.like) {
+              onLike(data.like);
+            }
+          }
+        }}
+      >
+        <Heart
           width={18}
           height={18}
-          onClick={() => onOpen(postId)}
+          className={`${like_id ? "text-red-600" : ""}`}
+          {...(like_id ? { fill: "#ff0000" } : {})}
         />
       </button>
     </div>
   );
 };
 
+PostLike.displayName = "Post.Like";
+
+const PostCommentBtn = () => {
+  const { onOpen } = useCommentsStore();
+  const { post } = usePostContext();
+
+  return (
+    <button className={`cursor-pointer w-fit`}>
+      <MessageCircleMore
+        width={18}
+        height={18}
+        onClick={() => onOpen(post.id)}
+      />
+    </button>
+  );
+};
+
+PostCommentBtn.displayName = "Post.Comment";
+
+const PostTags = ({ className }: ClassName) => {
+  const { post } = usePostContext();
+  const router = useRouter();
+
+  if (!Array.isArray(post.tags)) return null;
+
+  return (
+    <div
+      className={clsx(
+        "flex gap-1.5 flex-wrap justify-center mt-2.5",
+        className,
+      )}
+    >
+      {Array.isArray(post.tags) &&
+        post.tags.map((tag) => {
+          if (tag.id === null || tag.tag === null) return null;
+          return (
+            <TagItem
+              tag={`#${tag.tag}`}
+              key={`${tag.id}-${post.id}`}
+              variant="none"
+              onClick={() => router.push(`/tags/${tag.tag}`)}
+            />
+          );
+        })}
+    </div>
+  );
+};
+
+PostTags.displayName = "Post.Tags";
+
+const ViewPost = ({ className }: ClassName) => {
+  const { post } = usePostContext();
+  const router = useRouter();
+
+  return (
+    <Button
+      variant={"link"}
+      className={clsx(
+        "cursor-pointer p-0 text-muted-foreground hover:text-foreground",
+        className,
+      )}
+      size={"sm"}
+      onClick={() => router.push(`/post/${post.id}`)}
+    >
+      view post
+    </Button>
+  );
+};
+
+ViewPost.displayName = "Post.View";
+
 type PostCompound = React.FC<{
   children: React.ReactNode;
   className?: string;
-  post: ForyouPost;
+  initialPost: ForyouPost;
 }> & {
   Header: typeof PostHeader;
   Title: typeof PostTitle;
@@ -187,6 +279,11 @@ type PostCompound = React.FC<{
   ProfileDescription: typeof PostProfileDescription;
   Card: typeof PostCard;
   Line: typeof PostLine;
+  Tags: typeof PostTags;
+  View: typeof ViewPost;
+  ActionsWrapper: typeof PostActionsWrapper;
+  Like: typeof PostLike;
+  Comment: typeof PostCommentBtn;
 };
 
 const Post = Object.assign(PostWrapper, {
@@ -198,6 +295,11 @@ const Post = Object.assign(PostWrapper, {
   ProfileDescription: PostProfileDescription,
   Card: PostCard,
   Line: PostLine,
+  Tags: PostTags,
+  View: ViewPost,
+  ActionsWrapper: PostActionsWrapper,
+  Like: PostLike,
+  Comment: PostCommentBtn,
 }) as PostCompound;
 
-export { PostWrapper, PostsContainer, PostActions, Post };
+export { PostWrapper, PostsContainer, Post };

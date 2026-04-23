@@ -1,7 +1,6 @@
 "use client";
 import {
   Post,
-  PostActions,
   PostsContainer,
   PostWrapper,
 } from "@/components/common/post-components";
@@ -82,14 +81,29 @@ export default function Home() {
     <motion.div className="w-full flex pt-20 transition duration-300">
       <PostsContainer>
         {posts.map((post) => (
-          <Post post={post} key={post.id}>
+          <Post initialPost={post} key={post.id}>
             <Post.Card>
+
               <Post.Title />
+
               <Post.Description />
+
               <Post.Profile>
+
                 <Post.ProfileImage />
                 <Post.ProfileDescription />
+
               </Post.Profile>
+
+              <Post.Tags />
+
+              <Post.ActionsWrapper>
+                <Post.Like />
+                <Post.Comment />
+              </Post.ActionsWrapper>
+
+              <Post.View />
+
             </Post.Card>
             <Post.Line />
           </Post>

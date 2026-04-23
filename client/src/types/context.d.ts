@@ -32,4 +32,6 @@ export interface CommentPostContextType {
 
 export interface PostContextType {
   post: ForyouPost;
+  onLike: (likeId: string) => void;
+  onUnlike: () => void
 }
