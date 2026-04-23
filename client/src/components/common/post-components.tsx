@@ -1,56 +1,130 @@
-import { Children } from "@/types/global";
+import { Children, ClassName, ForyouPost } from "@/types/global";
 import Line from "../ui/Line";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { HandleLikeArgs } from "@/types/arguments";
 import { Heart, MessageCircleMore } from "lucide-react";
 import { handleLike } from "@/utils/functions/LikeActions";
 import { useCommentsStore } from "@/store/zustand/commentsStore";
-import { CardDescription } from "../ui/card";
+import { CardDescription, CardTitle } from "../ui/card";
+import { PostContext, usePostContext } from "@/store/contexts/PostContext";
+import clsx from "clsx";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+
+interface GenericType extends Children, ClassName {}
 
 const PostsContainer = ({ children }: Children) => {
-  return <section className="flex flex-col w-full gap-2.5">{children}</section>;
+  return (
+    <section className="flex flex-col w-full items-center px-10 max-md:px-5 max-sm:px-2.5">{children}</section>
+  );
 };
 
-const PostWrapper = ({ children }: Children) => {
-  const [animate, setAnimate] = useState(false);
-  const postRef = useRef<HTMLDivElement>(null);
+const PostWrapper = ({ children, post }: Children & { post: ForyouPost }) => {
+  const values = {
+    post,
+  };
 
-  useEffect(() => {
-    const postElement = postRef.current;
+  return <PostContext.Provider value={values}>{children}</PostContext.Provider>;
+};
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setAnimate(true);
+const PostHeader = ({ children, className }: GenericType) => {
+  return <div className={clsx("flex flex-col", className)}>{children}</div>;
+};
 
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.3 },
-    );
+PostHeader.displayName = "Post.Header";
 
-    if (postElement) {
-      observer.observe(postElement);
-    }
+const PostTitle = ({ className }: ClassName) => {
+  const { post } = usePostContext();
 
-    return () => {
-      if (postElement) {
-        observer.unobserve(postElement);
-        observer.disconnect();
-      }
-    };
-  }, []);
+  return <CardTitle className={className}>{post.title}</CardTitle>;
+};
+
+PostTitle.displayName = "Post.Title";
+
+const PostDescription = ({ className }: ClassName) => {
+  const { post } = usePostContext();
 
   return (
-    <div
-      ref={postRef}
-      className={`w-full flex flex-col items-center px-10 max-xs:px-5 pt-2 opacity-0 ${animate ? "animate-fadeUpDown opacity-0" : ""}`}
+    <p
+      className={clsx(
+        "text-muted-foreground w-full max-w-50 line-clamp-4",
+        className,
+      )}
     >
-      <div className="py-10 w-full max-w-125">{children}</div>
-      <Line />
+      {post.description}
+    </p>
+  );
+};
+
+PostDescription.displayName = "Post.Description";
+
+const PostProfile = ({ children, className }: GenericType) => {
+  return (
+    <div className={clsx("flex gap-2.5 items-center", className)}>
+      {children}
     </div>
   );
 };
+
+PostProfile.displayName = "Post.Profile";
+
+const PostProfileImage = ({ className }: ClassName) => {
+  const { post } = usePostContext();
+  return (
+    <Image
+      src={post.user.profile_url}
+      width={36}
+      height={36}
+      alt={`${post.user.name}-user-profile`}
+      className={clsx("object-cover rounded-full mt-2 w-8 h-8", className)}
+    />
+  );
+};
+
+PostProfileImage.displayName = "Post.ProfileImage";
+
+const PostProfileDescription = ({ className }: ClassName) => {
+  const { post } = usePostContext();
+  const router = useRouter();
+
+  return (
+    <CardDescription
+      className={clsx("cursor-pointer", className)}
+      onClick={() => router.push(`/u/${post.user.username}`)}
+    >
+      {post.user.name}
+    </CardDescription>
+  );
+};
+
+PostProfileDescription.displayName = "Post.ProfileDescription";
+
+const PostCard = ({ className, children }: GenericType) => {
+  return (
+    <div
+      className={clsx(
+        `font-plusJakartaSans text-start 
+        flex flex-col items-start border 
+        border-card-border p-5 rounded-lg w-full max-w-125`,
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+};
+
+PostCard.displayName = "Post.Card";
+
+const PostLine = () => {
+  return (
+    <div className="w-full max-md:my-7.5 max-sm:my-5 my-10">
+      <Line className="mb-0 opacity-50" />
+    </div>
+  );
+};
+
+PostLine.displayName = "Post.Line";
 
 const PostActions = ({
   postId,
@@ -100,4 +174,30 @@ const PostActions = ({
   );
 };
 
-export { PostWrapper, PostsContainer, PostActions };
+type PostCompound = React.FC<{
+  children: React.ReactNode;
+  className?: string;
+  post: ForyouPost;
+}> & {
+  Header: typeof PostHeader;
+  Title: typeof PostTitle;
+  Description: typeof PostDescription;
+  Profile: typeof PostProfile;
+  ProfileImage: typeof PostProfileImage;
+  ProfileDescription: typeof PostProfileDescription;
+  Card: typeof PostCard;
+  Line: typeof PostLine;
+};
+
+const Post = Object.assign(PostWrapper, {
+  Header: PostHeader,
+  Title: PostTitle,
+  Description: PostDescription,
+  Profile: PostProfile,
+  ProfileImage: PostProfileImage,
+  ProfileDescription: PostProfileDescription,
+  Card: PostCard,
+  Line: PostLine,
+}) as PostCompound;
+
+export { PostWrapper, PostsContainer, PostActions, Post };

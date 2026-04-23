@@ -1,5 +1,6 @@
 "use client";
 import {
+  Post,
   PostActions,
   PostsContainer,
   PostWrapper,
@@ -8,8 +9,8 @@ import { TagItem } from "@/components/ui/tag";
 import Title from "@/components/ui/title";
 import { apiFetch } from "@/lib/apiFetch";
 import { HandleLikeArgs } from "@/types/arguments";
-import { TagType } from "@/types/global";
-import { MediaEnumType, Post, UserJoin } from "@/types/neon";
+import { ForyouPost, TagType } from "@/types/global";
+import { MediaEnumType, UserJoin } from "@/types/neon";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -20,13 +21,7 @@ import Video from "@/components/common/video";
 
 export default function Home() {
   const [posts, setPosts] = useState<
-    (Post & {
-      tags: TagType[];
-      like_id: string | null;
-      media: { type: MediaEnumType; url: string | null };
-      user: UserJoin;
-      likes: string;
-    })[]
+    ForyouPost[]
   >([]);
   const [took, setTook] = useState<number>(0);
   const tickingRef = useRef(false);
@@ -87,115 +82,17 @@ export default function Home() {
     <motion.div className="w-full flex pt-20 transition duration-300">
       <PostsContainer>
         {posts.map((post) => (
-          <PostWrapper
-            key={`a_${post.author_id}_pd_${post.id}_postwrapper-${post.created_at}`}
-          >
-            <div className="w-full flex justify-center">
-              <div className="font-plusJakartaSans text-start flex flex-col items-start border border-card-border p-5 rounded-lg">
-                <div className="flex flex-col self-start">
-                  <Title title={post.title} />
-                  <p className="text-muted-foreground max-w-3/5 line-clamp-4">
-                    {post.description}
-                  </p>
-                </div>
-                <div className="flex gap-2.5">
-                  <Image
-                    src={post.user.profile_url ?? "/user.jpg"}
-                    width={48}
-                    height={48}
-                    alt={`${post.user.name}-user-profile`}
-                    className="object-cover rounded-full mt-2 w-9 h-9"
-                  />
-                  <CardDescription
-                    className="self-end mb-1 cursor-pointer"
-                    onClick={() => router.push(`/u/${post.user.username}`)}
-                  >
-                    {post.user.name}
-                  </CardDescription>
-                </div>
-                <div className="w-full">
-                  {post.media &&
-                  post.media.url &&
-                  post.media.type === "image" ? (
-                    <Image
-                      src={post.media.url}
-                      width={1080}
-                      height={720}
-                      alt={post.title}
-                      className="object-cover rounded-md mt-2 w-full"
-                    />
-                  ) : (
-                    post.media &&
-                    post.media.url &&
-                    post.media.type === "video" && (
-                      <Video
-                        src={post.media.url}
-                        loop
-                        playsInline
-                        className="rounded-xl w-full"
-                      />
-                    )
-                  )}
-                </div>
-                <div className="flex gap-1.5 flex-wrap justify-center mt-5">
-                  {Array.isArray(post.tags) &&
-                    post.tags.map((tag, i) => {
-                      if (tag.id === null || tag.tag === null) return null;
-                      return (
-                        <TagItem
-                          tag={`#${tag.tag}`}
-                          key={`${tag.id}-${i}-${post.id}`}
-                          variant="none"
-                          onClick={() => router.push(`/tags/${tag.tag}`)}
-                        />
-                      );
-                    })}
-                </div>
-                <PostActions
-                  likes={post.likes}
-                  onChange={(args: HandleLikeArgs, data) => {
-                    if (args.action === "delete" && data.ok) {
-                      setPosts((prev) =>
-                        prev.map((p) =>
-                          p.id === post.id
-                            ? {
-                                ...p,
-                                like_id: null,
-                                likes: String(Number(p.likes) - 1),
-                              }
-                            : p,
-                        ),
-                      );
-                    } else if (args.action === "post" && data.ok) {
-                      setPosts((prev) =>
-                        prev.map((p) =>
-                          p.id === post.id
-                            ? {
-                                ...p,
-                                like_id: data.like,
-                                likes: String(Number(p.likes) + 1),
-                              }
-                            : p,
-                        ),
-                      );
-                    }
-                  }}
-                  likeId={post.like_id}
-                  postId={post.id}
-                />
-                <div>
-                  <Button
-                    variant={"link"}
-                    className="cursor-pointer p-0 text-muted-foreground hover:text-foreground"
-                    size={"sm"}
-                    onClick={() => router.push(`/post/${post.id}`)}
-                  >
-                    view post
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </PostWrapper>
+          <Post post={post} key={post.id}>
+            <Post.Card>
+              <Post.Title />
+              <Post.Description />
+              <Post.Profile>
+                <Post.ProfileImage />
+                <Post.ProfileDescription />
+              </Post.Profile>
+            </Post.Card>
+            <Post.Line />
+          </Post>
         ))}
       </PostsContainer>
       <div className="fixed top-0 left-0 text-white z-99">
