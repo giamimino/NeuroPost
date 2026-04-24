@@ -19,9 +19,7 @@ import { Button } from "@/components/ui/button";
 import Video from "@/components/common/video";
 
 export default function Home() {
-  const [posts, setPosts] = useState<
-    ForyouPost[]
-  >([]);
+  const [posts, setPosts] = useState<ForyouPost[]>([]);
   const [took, setTook] = useState<number>(0);
   const tickingRef = useRef(false);
   const reachedRef = useRef(false);
@@ -83,17 +81,20 @@ export default function Home() {
         {posts.map((post) => (
           <Post initialPost={post} key={post.id}>
             <Post.Card>
-
               <Post.Title />
 
               <Post.Description />
 
               <Post.Profile>
-
                 <Post.ProfileImage />
                 <Post.ProfileDescription />
-
               </Post.Profile>
+
+              {post.media && (
+                <div className="w-full mt-2.5">
+                  <Post.Media />
+                </div>
+              )}
 
               <Post.Tags />
 
@@ -103,7 +104,6 @@ export default function Home() {
               </Post.ActionsWrapper>
 
               <Post.View />
-
             </Post.Card>
             <Post.Line />
           </Post>

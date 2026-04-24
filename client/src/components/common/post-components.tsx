@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { TagItem } from "../ui/tag";
 import { Button } from "../ui/button";
 import { PostContextType } from "@/types/context";
+import Video from "./video";
 
 interface GenericType extends Children, ClassName {}
 
@@ -174,7 +175,7 @@ const PostLike = () => {
                 postId: id,
               };
           const data = await handleLike(args);
-          
+
           if (data.ok) {
             if (args.action === "delete") {
               onUnlike();
@@ -266,6 +267,51 @@ const ViewPost = ({ className }: ClassName) => {
 
 ViewPost.displayName = "Post.View";
 
+type MediaProps = {
+  src: string;
+  alt?: string;
+  className?: string;
+};
+
+const medias = {
+  image: ({ src, alt, className }: MediaProps) => (
+    <Image
+      src={src}
+      width={1080}
+      height={720}
+      alt={alt || ""}
+      className={clsx("object-cover rounded-md mt-2 w-full", className)}
+    />
+  ),
+
+  video: ({ src, className }: MediaProps) => (
+    <Video
+      src={src}
+      loop
+      playsInline
+      autoPlayView
+      className={clsx("rounded-xl w-full", className)}
+    />
+  ),
+};
+
+const PostMedia = ({ className }: ClassName) => {
+  const { post } = usePostContext();
+
+  if (!post.media || !post.media.url) return null;
+  const MediaComponent = medias[post.media.type];
+
+  return (
+    <MediaComponent
+      className={className}
+      alt={post.title}
+      src={post.media.url}
+    />
+  );
+};
+
+PostMedia.displayName = "Post.Media";
+
 type PostCompound = React.FC<{
   children: React.ReactNode;
   className?: string;
@@ -284,6 +330,7 @@ type PostCompound = React.FC<{
   ActionsWrapper: typeof PostActionsWrapper;
   Like: typeof PostLike;
   Comment: typeof PostCommentBtn;
+  Media: typeof PostMedia;
 };
 
 const Post = Object.assign(PostWrapper, {
@@ -300,6 +347,7 @@ const Post = Object.assign(PostWrapper, {
   ActionsWrapper: PostActionsWrapper,
   Like: PostLike,
   Comment: PostCommentBtn,
+  Media: PostMedia,
 }) as PostCompound;
 
 export { PostWrapper, PostsContainer, Post };

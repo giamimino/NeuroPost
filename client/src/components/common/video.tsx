@@ -7,9 +7,11 @@ export default function Video({
   src,
   poster,
   className,
+  autoPlayView = false,
   ...rest
 }: React.VideoHTMLAttributes<HTMLVideoElement> & {
   poster?: string;
+  autoPlayView?: boolean,
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
@@ -27,10 +29,13 @@ export default function Video({
   };
 
   const handleSafePlay = () => {
+    setPaused(false)
     videoRef.current?.play().catch(() => {});
   };
 
   useEffect(() => {
+    if(!autoPlayView) return;
+
     const video = videoRef.current;
     if (!video) return;
     const observer = new IntersectionObserver(
@@ -42,7 +47,7 @@ export default function Video({
           video.pause();
         }
       },
-      { threshold: 0.4 },
+      { threshold: 1, rootMargin: "-10% 0px" },
     );
 
     observer.observe(video);
