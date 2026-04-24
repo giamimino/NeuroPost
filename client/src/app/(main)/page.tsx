@@ -1,22 +1,9 @@
 "use client";
-import {
-  Post,
-  PostsContainer,
-  PostWrapper,
-} from "@/components/common/post-components";
-import { TagItem } from "@/components/ui/tag";
-import Title from "@/components/ui/title";
+import { Post, PostsContainer } from "@/components/common/post-components";
 import { apiFetch } from "@/lib/apiFetch";
-import { HandleLikeArgs } from "@/types/arguments";
-import { ForyouPost, TagType } from "@/types/global";
-import { MediaEnumType, UserJoin } from "@/types/neon";
-import { useRouter } from "next/navigation";
+import { ForyouPost } from "@/types/global";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
-import { CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Video from "@/components/common/video";
 
 export default function Home() {
   const [posts, setPosts] = useState<ForyouPost[]>([]);
@@ -24,7 +11,6 @@ export default function Home() {
   const tickingRef = useRef(false);
   const reachedRef = useRef(false);
   const latestPost = useRef<Date>(null);
-  const router = useRouter();
 
   const fetchPosts = () => {
     if (tickingRef.current || reachedRef.current) return;

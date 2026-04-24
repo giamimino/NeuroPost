@@ -1,6 +1,6 @@
 import { Children, ClassName, ForyouPost } from "@/types/global";
 import Line from "../ui/Line";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { HandleLikeArgs } from "@/types/arguments";
 import { Heart, MessageCircleMore } from "lucide-react";
 import { handleLike } from "@/utils/functions/LikeActions";

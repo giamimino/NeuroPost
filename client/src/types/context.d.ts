@@ -1,6 +1,4 @@
-import { int } from "zod";
-import { MediaEnumType, Post, UserJoin } from "./neon";
-import { ForyouPost, TagType } from "./global";
+import { ForyouPost } from "./global";
 
 export interface ToggleContextType {
   checked: boolean;

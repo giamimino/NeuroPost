@@ -55,7 +55,7 @@ export default function Video({
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [autoPlayView]);
 
   return (
     <div className="relative" onClick={handlePause}>
