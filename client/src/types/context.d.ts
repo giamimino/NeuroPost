@@ -1,3 +1,5 @@
+import { ForyouPost } from "./global";
+
 export interface ToggleContextType {
   checked: boolean;
   toggle: () => void;
@@ -24,4 +26,10 @@ export interface CommentPostContextType {
   ) => void;
   post_id: number;
   comment_id: string;
+}
+
+export interface PostContextType {
+  post: ForyouPost;
+  onLike: (likeId: string) => void;
+  onUnlike: () => void;
 }
