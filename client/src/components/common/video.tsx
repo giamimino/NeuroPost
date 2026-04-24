@@ -11,7 +11,7 @@ export default function Video({
   ...rest
 }: React.VideoHTMLAttributes<HTMLVideoElement> & {
   poster?: string;
-  autoPlayView?: boolean,
+  autoPlayView?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
@@ -29,12 +29,12 @@ export default function Video({
   };
 
   const handleSafePlay = () => {
-    setPaused(false)
+    setPaused(false);
     videoRef.current?.play().catch(() => {});
   };
 
   useEffect(() => {
-    if(!autoPlayView) return;
+    if (!autoPlayView) return;
 
     const video = videoRef.current;
     if (!video) return;

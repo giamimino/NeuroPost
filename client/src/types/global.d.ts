@@ -34,5 +34,5 @@ export interface ForyouPost extends Post {
 }
 
 export interface ClassName {
-  className?: string
+  className?: string;
 }
