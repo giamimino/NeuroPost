@@ -8,11 +8,18 @@ import { Card, CardDescription, CardTitle } from "../ui/card";
 import {
   CommentContext,
   CommentPostContext,
+  CommentReactionContext,
   useComment,
   useCommentPost,
+  useCommentReaction,
 } from "@/store/contexts/CommentCntext";
 import { Input } from "../ui/input";
-import { CommentPostContextType } from "@/types/context";
+import {
+  CommentPostContextType,
+  CommentReactionContextType,
+  CommentReactionsCountType,
+  UserReactionType,
+} from "@/types/context";
 import { Spinner } from "../ui/spinner";
 import { apiFetch } from "@/lib/apiFetch";
 import {
@@ -40,6 +47,14 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { ApiConfig } from "@/configs/api-configs";
+import clsx from "clsx";
+import { Children } from "@/types/global";
+import {
+  CommentsReactions,
+  ReactionContent,
+} from "@/constants/comments.constants";
+import { CommentReactionEnum } from "@/types/enums";
+import { motion } from "framer-motion";
 
 type CommentContainerProps = {
   className?: string;
@@ -445,7 +460,11 @@ const CommentPostContainerInput = ({
 CommentPostContainerInput.displayName = "CommentPost.Input";
 
 const CommentHeader = ({ className, children }: CommentContainerProps) => {
-  return <div className={className}>{children}</div>;
+  return (
+    <div className={clsx("flex items-center gap-1.5", className)}>
+      {children}
+    </div>
+  );
 };
 CommentHeader.displayName = "Comment.Header";
 
@@ -459,6 +478,85 @@ const CommentProfile = ({ className, children }: CommentContainerProps) => {
 };
 CommentProfile.displayName = "Comment.Profile";
 
+const CommentReactionBase = ({
+  children,
+  initialUserReaction = null,
+  initialReactions,
+  commentId,
+}: Children & {
+  initialUserReaction: UserReactionType | null;
+  initialReactions: CommentReactionsCountType;
+  commentId: string;
+}) => {
+  const [userReaction, setUserReaction] = useState<UserReactionType | null>(
+    initialUserReaction,
+  );
+  const [reactions, setReactions] =
+    useState<CommentReactionsCountType>(initialReactions);
+
+  const values = {
+    commentId,
+    userReaction,
+    reactions,
+    increaseReaction: (type, count) =>
+      setReactions((prev) => ({
+        ...prev,
+        [type]: { count: prev[type].count + count },
+      })),
+    decreaseReaction: (type, count) =>
+      setReactions((prev) => ({
+        ...prev,
+        [type]: { count: prev[type].count - count },
+      })),
+    setUserReaction,
+  } as CommentReactionContextType;
+
+  return (
+    <CommentReactionContext.Provider value={values}>
+      {children}
+    </CommentReactionContext.Provider>
+  );
+};
+
+const CommentBaseReactionBtn = () => {
+  const { userReaction } = useCommentReaction();
+  return (
+    <Button
+      key={userReaction?.reactionId}
+      variant="outline"
+      size={"sm"}
+      className="w-18 cursor-pointer"
+    >
+      <motion.div initial={false} animate={{ scale: [1, 2, 1] }}>
+        {CommentsReactions[userReaction?.type || "LIKE"]}
+      </motion.div>
+    </Button>
+  );
+};
+
+const CommentReactionBtn = ({
+  reaction,
+}: {
+  reaction: {
+    id: CommentReactionEnum;
+    label: Capitalize<Lowercase<CommentReactionEnum>>;
+    icon: ReactionContent;
+  };
+}) => {
+  const { setUserReaction } = useCommentReaction();
+
+  return (
+    <div
+      onClick={() =>
+        setUserReaction({ reactionId: reaction.id, type: reaction.id })
+      }
+      className="cursor-pointer hover:opacity-55 hover:scale-125 transition-all hover:-translate-y-0.5"
+    >
+      {reaction.icon}
+    </div>
+  );
+};
+
 type CommentPostCompound = React.FC<{
   children: React.ReactNode;
   className?: string;
@@ -467,6 +565,17 @@ type CommentPostCompound = React.FC<{
 }> & {
   Button: typeof CommentPostContainerButton;
   Input: typeof CommentPostContainerInput;
+};
+
+type CommentReactionCompound = React.FC<
+  Children & {
+    initialUserReaction: UserReactionType | null;
+    initialReactions: CommentReactionsCountType;
+    commentId: string;
+  }
+> & {
+  BaseReaction: typeof CommentBaseReactionBtn;
+  ReactionBtn: typeof CommentReactionBtn;
 };
 
 const CommentPost = Object.assign(CommentPostContainer, {
@@ -492,4 +601,9 @@ const Comment = Object.assign(CommentBase, {
   Profile: CommentProfile,
 }) as CommentCompound;
 
-export { Comment, CommentContainer, CommentPost };
+const CommentReaction = Object.assign(CommentReactionBase, {
+  BaseReaction: CommentBaseReactionBtn,
+  ReactionBtn: CommentReactionBtn,
+}) as CommentReactionCompound;
+
+export { Comment, CommentContainer, CommentPost, CommentReaction };
