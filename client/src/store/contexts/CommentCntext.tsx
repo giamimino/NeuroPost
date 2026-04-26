@@ -38,5 +38,5 @@ export const useCommentReaction = () => {
     throw new Error(
       "CommentReactions components must be used within CommentReaction",
     );
-  return ctx
+  return ctx;
 };

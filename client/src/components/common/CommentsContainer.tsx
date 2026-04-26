@@ -55,7 +55,11 @@ import {
 } from "@/constants/comments.constants";
 import { CommentReactionEnum } from "@/types/enums";
 import { motion } from "framer-motion";
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "../ui/hover-card";
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from "../ui/hover-card";
 import { commentsReactions } from "@/app/post/[postId]/ClientPostPage";
 
 type CommentContainerProps = {
@@ -177,73 +181,71 @@ const CommentReplies = ({
                       <CardDescription>{c.content}</CardDescription>
                     </Comment.Content>
                     <div className="flex gap-2.5">
-                                <div>
-                                  <CommentReaction
-                                    initialUserReaction={null}
-                                    initialReactions={{
-                                      ANGRY: { count: 0 },
-                                      HEART: { count: 0 },
-                                      LAUGH: { count: 0 },
-                                      LIKE: { count: 0 },
-                                      WOW: { count: 0 },
-                                    }}
-                                    commentId={c.id}
-                                  >
-                                    <HoverCard>
-                                      <HoverCardTrigger>
-                                        <CommentReaction.BaseReaction />
-                                      </HoverCardTrigger>
-                                      <HoverCardContent
-                                        side="top"
-                                        sideOffset={10}
-                                        className="flex gap-2.5 w-fit py-2"
-                                      >
-                                        {commentsReactions.map((c) => (
-                                          <CommentReaction.ReactionBtn
-                                            key={c.id}
-                                            reaction={c}
-                                          />
-                                        ))}
-                                      </HoverCardContent>
-                                    </HoverCard>
-                                  </CommentReaction>
-                                </div>
-                                <ContentToggleContainer>
-                                  <div className="flex gap-2.5 max-lg:flex-col">
-                                    <ContentToggle.Controller className="w-fit">
-                                      <Button
-                                        variant={"ghost"}
-                                        size={"md"}
-                                        className="cursor-pointer rounded-xl text-xs"
-                                      >
-                                        Reply
-                                      </Button>
-                                    </ContentToggle.Controller>
-                                    <ContentToggle.Content>
-                                      <CommentPost
-                                        post_id={c.post_id}
-                                        comment_id={c.id}
-                                        className="flex gap-2.5 items-center"
-                                      >
-                                        <CommentPost.Input
-                                          className="px-2 py-1 text-xs"
-                                          placeholder="Write a reply..."
-                                        />
-                                        <CommentPost.Button
-                                          onSuccess={() => {}}
-                                        >
-                                          <Button
-                                            variant={"outline"}
-                                            className="cursor-pointer w-fit"
-                                          >
-                                            <Send />
-                                          </Button>
-                                        </CommentPost.Button>
-                                      </CommentPost>
-                                    </ContentToggle.Content>
-                                  </div>
-                                </ContentToggleContainer>
-                              </div>
+                      <div>
+                        <CommentReaction
+                          initialUserReaction={null}
+                          initialReactions={{
+                            ANGRY: { count: 0 },
+                            HEART: { count: 0 },
+                            LAUGH: { count: 0 },
+                            LIKE: { count: 0 },
+                            WOW: { count: 0 },
+                          }}
+                          commentId={c.id}
+                        >
+                          <HoverCard>
+                            <HoverCardTrigger>
+                              <CommentReaction.BaseReaction />
+                            </HoverCardTrigger>
+                            <HoverCardContent
+                              side="top"
+                              sideOffset={10}
+                              className="flex gap-2.5 w-fit py-2"
+                            >
+                              {commentsReactions.map((c) => (
+                                <CommentReaction.ReactionBtn
+                                  key={c.id}
+                                  reaction={c}
+                                />
+                              ))}
+                            </HoverCardContent>
+                          </HoverCard>
+                        </CommentReaction>
+                      </div>
+                      <ContentToggleContainer>
+                        <div className="flex gap-2.5 max-lg:flex-col">
+                          <ContentToggle.Controller className="w-fit">
+                            <Button
+                              variant={"ghost"}
+                              size={"md"}
+                              className="cursor-pointer rounded-xl text-xs"
+                            >
+                              Reply
+                            </Button>
+                          </ContentToggle.Controller>
+                          <ContentToggle.Content>
+                            <CommentPost
+                              post_id={c.post_id}
+                              comment_id={c.id}
+                              className="flex gap-2.5 items-center"
+                            >
+                              <CommentPost.Input
+                                className="px-2 py-1 text-xs"
+                                placeholder="Write a reply..."
+                              />
+                              <CommentPost.Button onSuccess={() => {}}>
+                                <Button
+                                  variant={"outline"}
+                                  className="cursor-pointer w-fit"
+                                >
+                                  <Send />
+                                </Button>
+                              </CommentPost.Button>
+                            </CommentPost>
+                          </ContentToggle.Content>
+                        </div>
+                      </ContentToggleContainer>
+                    </div>
                   </div>
                 </div>
                 {c.role === "creator" && (
@@ -304,7 +306,7 @@ const CommentReplies = ({
                 )}
               </div>
               {/* replies */}
-              
+
               <Comment.Replies
                 className="ml-10 flex flex-col gap-2"
                 comment_id={c.id}
@@ -595,7 +597,10 @@ const CommentBaseReactionBtn = () => {
       )}
       onClick={handleReaction}
     >
-      <motion.div initial={false} animate={{ scale: userReaction ? [1, 1.7, 1] : 1}}>
+      <motion.div
+        initial={false}
+        animate={{ scale: userReaction ? [1, 1.7, 1] : 1 }}
+      >
         {CommentsReactions[userReaction?.type || "LIKE"]}
       </motion.div>
     </Button>
