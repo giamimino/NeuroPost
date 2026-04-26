@@ -74,7 +74,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 
-const commentsReactions: {
+export const commentsReactions: {
   id: CommentReactionEnum;
   label: Capitalize<Lowercase<CommentReactionEnum>>;
   icon: ReactionContent;
@@ -653,35 +653,39 @@ const ClientPostPage = ({
                                   </CommentReaction>
                                 </div>
                                 <ContentToggleContainer>
-                                  <ContentToggle.Controller className="w-fit">
-                                    <Button
-                                      variant={"ghost"}
-                                      size={"md"}
-                                      className="cursor-pointer rounded-xl text-xs"
-                                    >
-                                      Reply
-                                    </Button>
-                                  </ContentToggle.Controller>
-                                  <ContentToggle.Content>
-                                    <CommentPost
-                                      post_id={c.post_id}
-                                      comment_id={c.id}
-                                      className="flex gap-2.5 items-center"
-                                    >
-                                      <CommentPost.Input
-                                        className="px-2 py-1 text-xs"
-                                        placeholder="Write a reply..."
-                                      />
-                                      <CommentPost.Button onSuccess={() => {}}>
-                                        <Button
-                                          variant={"outline"}
-                                          className="cursor-pointer w-fit"
+                                  <div className="flex gap-2.5 max-lg:flex-col">
+                                    <ContentToggle.Controller className="w-fit">
+                                      <Button
+                                        variant={"ghost"}
+                                        size={"md"}
+                                        className="cursor-pointer rounded-xl text-xs"
+                                      >
+                                        Reply
+                                      </Button>
+                                    </ContentToggle.Controller>
+                                    <ContentToggle.Content>
+                                      <CommentPost
+                                        post_id={c.post_id}
+                                        comment_id={c.id}
+                                        className="flex gap-2.5 items-center"
+                                      >
+                                        <CommentPost.Input
+                                          className="px-2 py-1 text-xs"
+                                          placeholder="Write a reply..."
+                                        />
+                                        <CommentPost.Button
+                                          onSuccess={() => {}}
                                         >
-                                          <Send />
-                                        </Button>
-                                      </CommentPost.Button>
-                                    </CommentPost>
-                                  </ContentToggle.Content>
+                                          <Button
+                                            variant={"outline"}
+                                            className="cursor-pointer w-fit"
+                                          >
+                                            <Send />
+                                          </Button>
+                                        </CommentPost.Button>
+                                      </CommentPost>
+                                    </ContentToggle.Content>
+                                  </div>
                                 </ContentToggleContainer>
                               </div>
                             </div>
