@@ -1,5 +1,4 @@
 import { CommentReactionEnum } from "@/types/enums";
-import { ThumbsUp } from "lucide-react";
 import React from "react";
 
 export type ReactionContent = string | React.ReactNode;
@@ -11,3 +10,11 @@ export const CommentsReactions: Record<CommentReactionEnum, ReactionContent> = {
   LIKE: "👍",
   WOW: "😮",
 };
+
+export const ReactionsConst: CommentReactionEnum[] = [
+  "ANGRY",
+  "HEART",
+  "LAUGH",
+  "LIKE",
+  "WOW",
+];
