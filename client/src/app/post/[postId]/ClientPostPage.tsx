@@ -107,10 +107,12 @@ const ClientPostPage = ({
     | null
   >(null);
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState<(CommentSchemaType & {
-    user_reaction: UserReactionType | null,
-    reactions: CommentReactionsCountType
-  })[]>([]);
+  const [comments, setComments] = useState<
+    (CommentSchemaType & {
+      user_reaction: UserReactionType | null;
+      reactions: CommentReactionsCountType;
+    })[]
+  >([]);
   const [deleted, setDeleted] = useState(false);
   const [editing, setEditing] = useState(false);
   const [media, setMedia] = useState<File | null>(null);
@@ -628,7 +630,23 @@ const ClientPostPage = ({
                                 <div>
                                   <CommentReaction
                                     initialUserReaction={c.user_reaction}
-                                    initialReactions={c.reactions}
+                                    initialReactions={{
+                                      LIKE: {
+                                        count: c.reactions.LIKE?.count || 0,
+                                      },
+                                      ANGRY: {
+                                        count: c.reactions.ANGRY?.count || 0,
+                                      },
+                                      HEART: {
+                                        count: c.reactions.HEART?.count || 0,
+                                      },
+                                      WOW: {
+                                        count: c.reactions.WOW?.count || 0,
+                                      },
+                                      LAUGH: {
+                                        count: c.reactions.LAUGH?.count || 0,
+                                      },
+                                    }}
                                     commentId={c.id}
                                   >
                                     <HoverCard>

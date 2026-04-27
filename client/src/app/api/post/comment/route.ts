@@ -112,21 +112,21 @@ export async function GET(req: Request) {
         
         COUNT(DISTINCT r.id) as replies_count,
 
-        jsonb_build_object(
-          'LIKE', jsonb_build_object('count', COALESCE(SUM(CASE WHEN rt.type = 'LIKE' THEN rt.count END), 0)),
-          'LAUGH', jsonb_build_object('count', COALESCE(SUM(CASE WHEN rt.type = 'LAUGH' THEN rt.count END), 0)),
-          'ANGRY', jsonb_build_object('count', COALESCE(SUM(CASE WHEN rt.type = 'ANGRY' THEN rt.count END), 0)),
-          'WOW', jsonb_build_object('count', COALESCE(SUM(CASE WHEN rt.type = 'WOW' THEN rt.count END), 0)),
-          'HEART', jsonb_build_object('count', COALESCE(SUM(CASE WHEN rt.type = 'HEART' THEN rt.count END), 0))
-        )as reactions,
+        COALESCE(reactions.reactions, '{
+          "LIKE": {"count": 0},
+          "LAUGH": {"count": 0},
+          "ANGRY": {"count": 0},
+          "WOW": {"count": 0},
+          "HEART": {"count": 0}
+        }'::jsonb) AS reactions,
 
-        CASE
-          WHEN cr.id IS NULL AND cr.type IS NULL THEN NULL
+        CASE 
+          WHEN cr.id IS NULL THEN NULL
           ELSE json_build_object(
             'reactionId', cr.id,
             'type', cr.type
           )
-        END as user_reaction 
+        END AS user_reaction
 
       FROM comments c 
 
@@ -134,13 +134,25 @@ export async function GET(req: Request) {
 
       LEFT JOIN comments r ON r.parent_id = c.id
 
-      LEFT JOIN comment_reactions cr ON cr.user_id = c.user_id
+      LEFT JOIN comment_reactions cr ON cr.comment_id = c.id AND cr.user_id = c.user_id
 
       LEFT JOIN (
-        SELECT comment_id, type, COUNT(*) as count
-        FROM comment_reactions
-        GROUP BY comment_id, type
-      ) rt ON rt.comment_id = c.id
+        SELECT 
+          comment_id,
+          jsonb_object_agg(
+            type,
+            jsonb_build_object('count', cnt)
+          ) AS reactions
+        FROM (
+          SELECT 
+            comment_id,
+            type,
+            COUNT(*) AS cnt
+          FROM comment_reactions
+          GROUP BY comment_id, type
+        ) x
+        GROUP BY comment_id
+      ) reactions ON reactions.comment_id = c.id
 
       WHERE c.post_id = $1 
         AND c.parent_id IS NULL
@@ -150,7 +162,7 @@ export async function GET(req: Request) {
           OR (c.created_at = $3 AND c.id < $4)
         )
 
-      GROUP BY c.id, u.id, cr.id
+      GROUP BY c.id, u.id, cr.id, u.name, u.username, u.profile_url, cr.type, reactions.reactions
 
       ORDER BY c.created_at DESC, c.id DESC 
       LIMIT $2;`,

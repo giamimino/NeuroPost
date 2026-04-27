@@ -570,16 +570,50 @@ const CommentReactionBase = ({
 };
 
 const CommentBaseReactionBtn = () => {
-  const { userReaction, setUserReaction, decreaseReaction, increaseReaction } =
-    useCommentReaction();
+  const {
+    userReaction,
+    setUserReaction,
+    decreaseReaction,
+    increaseReaction,
+    commentId,
+  } = useCommentReaction();
+  const { addAlert } = useAlertStore();
 
-  const handleReaction = () => {
+  const handleReaction = async () => {
     if (!(userReaction?.reactionId && userReaction.type)) {
-      increaseReaction("LIKE", 1);
-      setUserReaction({ reactionId: crypto.randomUUID(), type: "LIKE" });
+      const res = await fetch("/api/post/comment/reaction", {
+        ...ApiConfig.post,
+        body: JSON.stringify({ commentId, type: "LIKE" }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        increaseReaction(data.reaction.type, 1);
+        setUserReaction(data.reaction);
+      } else if (data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+      }
     } else if (userReaction.reactionId) {
-      decreaseReaction(userReaction.type, 1);
-      setUserReaction(null);
+      const res = await fetch("/api/post/comment/reaction", {
+        ...ApiConfig.delete,
+        body: JSON.stringify({ reactionId: userReaction.reactionId }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        decreaseReaction(userReaction.type, 1);
+        setUserReaction(null);
+      } else if (data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+      }
     }
   };
 
