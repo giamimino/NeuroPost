@@ -73,6 +73,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { CommentReactionsCountType, UserReactionType } from "@/types/context";
 
 export const commentsReactions: {
   id: CommentReactionEnum;
@@ -106,7 +107,10 @@ const ClientPostPage = ({
     | null
   >(null);
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState<CommentSchemaType[]>([]);
+  const [comments, setComments] = useState<(CommentSchemaType & {
+    user_reaction: UserReactionType | null,
+    reactions: CommentReactionsCountType
+  })[]>([]);
   const [deleted, setDeleted] = useState(false);
   const [editing, setEditing] = useState(false);
   const [media, setMedia] = useState<File | null>(null);
@@ -623,14 +627,8 @@ const ClientPostPage = ({
                               <div className="flex gap-2.5">
                                 <div>
                                   <CommentReaction
-                                    initialUserReaction={null}
-                                    initialReactions={{
-                                      ANGRY: { count: 0 },
-                                      HEART: { count: 0 },
-                                      LAUGH: { count: 0 },
-                                      LIKE: { count: 0 },
-                                      WOW: { count: 0 },
-                                    }}
+                                    initialUserReaction={c.user_reaction}
+                                    initialReactions={c.reactions}
                                     commentId={c.id}
                                   >
                                     <HoverCard>
