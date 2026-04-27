@@ -119,10 +119,14 @@ export async function GET(req: Request) {
           'WOW', jsonb_build_object('count', COALESCE(SUM(CASE WHEN rt.type = 'WOW' THEN rt.count END), 0)),
           'HEART', jsonb_build_object('count', COALESCE(SUM(CASE WHEN rt.type = 'HEART' THEN rt.count END), 0))
         )as reactions,
-        json_build_object(
-          'reactionId', cr.id,
-          'type', cr.type
-        ) as user_reaction
+
+        CASE
+          WHEN cr.id IS NULL AND cr.type IS NULL THEN NULL
+          ELSE json_build_object(
+            'reactionId', cr.id,
+            'type', cr.type
+          )
+        END as user_reaction 
 
       FROM comments c 
 
