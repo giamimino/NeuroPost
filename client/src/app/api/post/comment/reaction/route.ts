@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     const payload = auth.user;
 
     const reactions = await sql.query(
-      `INSERT INTO comment_reactions (user_id, comment_id, type) VALUES ($1, $2, $3) RETURNING id as reactionId, type`,
+      `INSERT INTO comment_reactions (user_id, comment_id, type) VALUES ($1, $2, $3) RETURNING id as "reactionId", type`,
       [payload.userId, commentId, type],
     );
     const reaction = reactions[0];
@@ -115,7 +115,7 @@ export async function PUT(req: Request) {
       );
 
     const reactions = await sql.query(
-      `UPDATE comment_reactions SET type = $2 WHERE id = $1 RETURNING id, type`,
+      `UPDATE comment_reactions SET type = $2 WHERE id = $1 RETURNING id as "reactionId", type`,
       [reactionId, type],
     );
     const reaction = reactions[0];

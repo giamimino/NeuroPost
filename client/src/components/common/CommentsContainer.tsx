@@ -1,6 +1,8 @@
 import React, {
   DetailedHTMLProps,
   InputHTMLAttributes,
+  useCallback,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -545,22 +547,23 @@ const CommentReactionBase = ({
   const [reactions, setReactions] =
     useState<CommentReactionsCountType>(initialReactions);
 
-  const values = {
+  const updateReaction = useCallback(
+    (type: CommentReactionEnum, delta: number) => {
+      setReactions((prev) => ({
+        ...prev,
+        [type]: { count: Math.max(0, prev[type].count + delta) },
+      }));
+    },
+    [],
+  );
+
+  const values = useMemo(() => ({
     commentId,
     userReaction,
     reactions,
-    increaseReaction: (type, count) =>
-      setReactions((prev) => ({
-        ...prev,
-        [type]: { count: prev[type].count + count },
-      })),
-    decreaseReaction: (type, count) =>
-      setReactions((prev) => ({
-        ...prev,
-        [type]: { count: prev[type].count - count },
-      })),
+    updateReaction,
     setUserReaction,
-  } as CommentReactionContextType;
+  }), [commentId, userReaction, reactions, updateReaction]);
 
   return (
     <CommentReactionContext.Provider value={values}>
@@ -570,17 +573,12 @@ const CommentReactionBase = ({
 };
 
 const CommentBaseReactionBtn = () => {
-  const {
-    userReaction,
-    setUserReaction,
-    decreaseReaction,
-    increaseReaction,
-    commentId,
-  } = useCommentReaction();
+  const { userReaction, setUserReaction, updateReaction, commentId } =
+    useCommentReaction();
   const { addAlert } = useAlertStore();
 
   const handleReaction = async () => {
-    if (!(userReaction?.reactionId && userReaction.type)) {
+    if (userReaction === null) {
       const res = await fetch("/api/post/comment/reaction", {
         ...ApiConfig.post,
         body: JSON.stringify({ commentId, type: "LIKE" }),
@@ -588,7 +586,7 @@ const CommentBaseReactionBtn = () => {
       const data = await res.json();
 
       if (data.ok) {
-        increaseReaction(data.reaction.type, 1);
+        updateReaction(data.reaction.type, +1);
         setUserReaction(data.reaction);
       } else if (data.error) {
         addAlert({
@@ -597,7 +595,7 @@ const CommentBaseReactionBtn = () => {
           ...data.error,
         });
       }
-    } else if (userReaction.reactionId) {
+    } else if (userReaction) {
       const res = await fetch("/api/post/comment/reaction", {
         ...ApiConfig.delete,
         body: JSON.stringify({ reactionId: userReaction.reactionId }),
@@ -605,7 +603,7 @@ const CommentBaseReactionBtn = () => {
       const data = await res.json();
 
       if (data.ok) {
-        decreaseReaction(userReaction.type, 1);
+        updateReaction(userReaction.type, -1);
         setUserReaction(null);
       } else if (data.error) {
         addAlert({
@@ -653,20 +651,74 @@ const CommentReactionBtn = ({
   const {
     setUserReaction,
     reactions,
-    increaseReaction,
+    updateReaction,
     userReaction,
-    decreaseReaction,
+    commentId,
   } = useCommentReaction();
+  const { addAlert } = useAlertStore();
+
+  const handleReaction = async () => {
+    if (!userReaction) {
+      const res = await fetch("/api/post/comment/reaction", {
+        ...ApiConfig.post,
+        body: JSON.stringify({ commentId, type: reaction.id }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        updateReaction(data.reaction.type, +1);
+        setUserReaction(data.reaction);
+      } else if (data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+      }
+    } else if (userReaction.reactionId && userReaction.type === reaction.id) {
+      const res = await fetch("/api/post/comment/reaction", {
+        ...ApiConfig.delete,
+        body: JSON.stringify({ reactionId: userReaction.reactionId }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        updateReaction(userReaction.type, -1);
+        setUserReaction(null);
+      } else if (data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+      }
+    } else if (userReaction.reactionId && userReaction.type !== reaction.id) {
+      const res = await fetch("/api/post/comment/reaction", {
+        ...ApiConfig.put,
+        body: JSON.stringify({
+          reactionId: userReaction.reactionId,
+          type: reaction.id,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        updateReaction(reaction.id, -1);
+        updateReaction(data.reaction.type, +1);
+        setUserReaction(data.reaction);
+      } else if (data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+      }
+    }
+  };
 
   return (
     <div
-      onClick={() => {
-        if (userReaction?.reactionId) {
-          decreaseReaction(userReaction.type, 1);
-        }
-        setUserReaction({ reactionId: reaction.id, type: reaction.id });
-        increaseReaction(reaction.id, 1);
-      }}
+      onClick={handleReaction}
       className="cursor-pointer hover:opacity-55 hover:scale-125 transition-all hover:-translate-y-0.5 flex gap-0.5 items-center"
     >
       <p className="text-muted-foreground text-sm">

@@ -50,8 +50,7 @@ export interface CommentReactionContextType {
   userReaction: UserReactionType | null;
   commentId: string;
   reactions: CommentReactionsCountType;
-  increaseReaction: (type: CommentReactionEnum, count: number) => void;
-  decreaseReaction: (type: CommentReactionEnum, count: number) => void;
+  updateReaction: (type: CommentReactionEnum, delta: number) => void;
   setUserReaction: React.Dispatch<
     React.SetStateAction<UserReactionType | null>
   >;
