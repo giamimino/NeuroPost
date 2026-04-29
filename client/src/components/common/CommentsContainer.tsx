@@ -3,6 +3,7 @@ import React, {
   InputHTMLAttributes,
   useCallback,
   useMemo,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -20,6 +21,7 @@ import {
   CommentPostContextType,
   CommentReactionContextType,
   CommentReactionsCountType,
+  CommentReducerAction,
   UserReactionType,
 } from "@/types/context";
 import { Spinner } from "../ui/spinner";
@@ -531,6 +533,67 @@ const CommentReactionVariants: Record<CommentReactionEnum & "NONE", string> = {
   WOW: "border border-[#29B6F6]",
 } as const;
 
+type CommentReducerState = {
+  userReaction: UserReactionType | null;
+  reactions: CommentReactionsCountType;
+};
+
+export function CommentReducer(
+  state: CommentReducerState,
+  action: CommentReducerAction,
+): CommentReducerState {
+  switch (action.type) {
+    case "CHANGE_REACTION": {
+      const { newReaction, prevReaction } = action.payload
+
+      const updated = {...state.reactions}
+
+      if(prevReaction) {
+        updated[prevReaction.type] = {
+          count: Math.max(0, updated[prevReaction.type].count - 1)
+        }
+      }
+
+      updated[newReaction.type] = {
+        count: Math.max(0, updated[newReaction.type].count + 1)
+      }
+
+      return {
+        userReaction: newReaction,
+        reactions: updated
+      }
+    }
+    case "DELETE_REACTION": {
+      const { reactionType }= action
+      const updated = { ...state.reactions }
+
+      updated[reactionType] = {
+        count: Math.max(0, updated[reactionType].count - 1)
+      }
+
+      return {
+        userReaction: null,
+        reactions: updated
+      }
+    }
+    case "ADD_REACTION": {
+      const payload = action.payload
+      const updated = { ...state.reactions }
+
+      updated[payload.type] = {
+        count: Math.max(0, updated[payload.type].count + 1)
+      }
+
+      return {
+        reactions: updated,
+        userReaction: payload
+      }
+    }
+    default:
+      return state;
+  }
+}
+
 const CommentReactionBase = ({
   children,
   initialUserReaction = null,
@@ -541,29 +604,17 @@ const CommentReactionBase = ({
   initialReactions: CommentReactionsCountType;
   commentId: string;
 }) => {
-  const [userReaction, setUserReaction] = useState<UserReactionType | null>(
-    initialUserReaction,
-  );
-  const [reactions, setReactions] =
-    useState<CommentReactionsCountType>(initialReactions);
+  const [{ reactions, userReaction }, dispatch] = useReducer(CommentReducer, {
+    reactions: initialReactions,
+    userReaction: initialUserReaction,
+  });
 
-  const updateReaction = useCallback(
-    (type: CommentReactionEnum, delta: number) => {
-      setReactions((prev) => ({
-        ...prev,
-        [type]: { count: Math.max(0, prev[type].count + delta) },
-      }));
-    },
-    [],
-  );
-
-  const values = useMemo(() => ({
+  const values = {
     commentId,
     userReaction,
     reactions,
-    updateReaction,
-    setUserReaction,
-  }), [commentId, userReaction, reactions, updateReaction]);
+    dispatch,
+  };
 
   return (
     <CommentReactionContext.Provider value={values}>
@@ -573,7 +624,7 @@ const CommentReactionBase = ({
 };
 
 const CommentBaseReactionBtn = () => {
-  const { userReaction, setUserReaction, updateReaction, commentId } =
+  const { userReaction, dispatch, commentId } =
     useCommentReaction();
   const { addAlert } = useAlertStore();
 
@@ -586,8 +637,10 @@ const CommentBaseReactionBtn = () => {
       const data = await res.json();
 
       if (data.ok) {
-        updateReaction(data.reaction.type, +1);
-        setUserReaction(data.reaction);
+        dispatch({
+          type: "ADD_REACTION",
+          payload: data.reaction
+        })
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -603,8 +656,10 @@ const CommentBaseReactionBtn = () => {
       const data = await res.json();
 
       if (data.ok) {
-        updateReaction(userReaction.type, -1);
-        setUserReaction(null);
+        dispatch({
+          type: "DELETE_REACTION",
+          reactionType: userReaction.type
+        })
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -649,11 +704,10 @@ const CommentReactionBtn = ({
   };
 }) => {
   const {
-    setUserReaction,
     reactions,
-    updateReaction,
     userReaction,
     commentId,
+    dispatch
   } = useCommentReaction();
   const { addAlert } = useAlertStore();
 
@@ -666,8 +720,10 @@ const CommentReactionBtn = ({
       const data = await res.json();
 
       if (data.ok) {
-        updateReaction(data.reaction.type, +1);
-        setUserReaction(data.reaction);
+        dispatch({
+          type: "ADD_REACTION",
+          payload: data.reaction
+        })
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -683,8 +739,10 @@ const CommentReactionBtn = ({
       const data = await res.json();
 
       if (data.ok) {
-        updateReaction(userReaction.type, -1);
-        setUserReaction(null);
+        dispatch({
+          type: "DELETE_REACTION",
+          reactionType: userReaction.type
+        })
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -703,9 +761,13 @@ const CommentReactionBtn = ({
       const data = await res.json();
 
       if (data.ok) {
-        updateReaction(reaction.id, -1);
-        updateReaction(data.reaction.type, +1);
-        setUserReaction(data.reaction);
+        dispatch({
+          type: "CHANGE_REACTION",
+          payload: {
+            newReaction: data.reaction,
+            prevReaction: userReaction,
+          }
+        })
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),

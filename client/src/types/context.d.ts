@@ -46,12 +46,26 @@ export type CommentReactionsCountType = Record<
   { count: number }
 >;
 
+type CommentReducerAction =
+  | {
+      type: "CHANGE_REACTION";
+      payload: {
+        newReaction: UserReactionType;
+        prevReaction: UserReactionType | null;
+      };
+    }
+  | {
+      type: "ADD_REACTION";
+      payload: UserReactionType;
+    }
+  | {
+      type: "DELETE_REACTION";
+      reactionType: CommentReactionEnum;
+    };
+
 export interface CommentReactionContextType {
   userReaction: UserReactionType | null;
   commentId: string;
   reactions: CommentReactionsCountType;
-  updateReaction: (type: CommentReactionEnum, delta: number) => void;
-  setUserReaction: React.Dispatch<
-    React.SetStateAction<UserReactionType | null>
-  >;
+  dispatch: React.ActionDispatch<[action: CommentReducerAction]>
 }
