@@ -67,5 +67,5 @@ export interface CommentReactionContextType {
   userReaction: UserReactionType | null;
   commentId: string;
   reactions: CommentReactionsCountType;
-  dispatch: React.ActionDispatch<[action: CommentReducerAction]>
+  dispatch: React.ActionDispatch<[action: CommentReducerAction]>;
 }

@@ -544,50 +544,50 @@ export function CommentReducer(
 ): CommentReducerState {
   switch (action.type) {
     case "CHANGE_REACTION": {
-      const { newReaction, prevReaction } = action.payload
+      const { newReaction, prevReaction } = action.payload;
 
-      const updated = {...state.reactions}
+      const updated = { ...state.reactions };
 
-      if(prevReaction) {
+      if (prevReaction) {
         updated[prevReaction.type] = {
-          count: Math.max(0, updated[prevReaction.type].count - 1)
-        }
+          count: Math.max(0, updated[prevReaction.type].count - 1),
+        };
       }
 
       updated[newReaction.type] = {
-        count: Math.max(0, updated[newReaction.type].count + 1)
-      }
+        count: Math.max(0, updated[newReaction.type].count + 1),
+      };
 
       return {
         userReaction: newReaction,
-        reactions: updated
-      }
+        reactions: updated,
+      };
     }
     case "DELETE_REACTION": {
-      const { reactionType }= action
-      const updated = { ...state.reactions }
+      const { reactionType } = action;
+      const updated = { ...state.reactions };
 
       updated[reactionType] = {
-        count: Math.max(0, updated[reactionType].count - 1)
-      }
+        count: Math.max(0, updated[reactionType].count - 1),
+      };
 
       return {
         userReaction: null,
-        reactions: updated
-      }
+        reactions: updated,
+      };
     }
     case "ADD_REACTION": {
-      const payload = action.payload
-      const updated = { ...state.reactions }
+      const payload = action.payload;
+      const updated = { ...state.reactions };
 
       updated[payload.type] = {
-        count: Math.max(0, updated[payload.type].count + 1)
-      }
+        count: Math.max(0, updated[payload.type].count + 1),
+      };
 
       return {
         reactions: updated,
-        userReaction: payload
-      }
+        userReaction: payload,
+      };
     }
     default:
       return state;
@@ -624,8 +624,7 @@ const CommentReactionBase = ({
 };
 
 const CommentBaseReactionBtn = () => {
-  const { userReaction, dispatch, commentId } =
-    useCommentReaction();
+  const { userReaction, dispatch, commentId } = useCommentReaction();
   const { addAlert } = useAlertStore();
 
   const handleReaction = async () => {
@@ -639,8 +638,8 @@ const CommentBaseReactionBtn = () => {
       if (data.ok) {
         dispatch({
           type: "ADD_REACTION",
-          payload: data.reaction
-        })
+          payload: data.reaction,
+        });
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -658,8 +657,8 @@ const CommentBaseReactionBtn = () => {
       if (data.ok) {
         dispatch({
           type: "DELETE_REACTION",
-          reactionType: userReaction.type
-        })
+          reactionType: userReaction.type,
+        });
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -703,12 +702,7 @@ const CommentReactionBtn = ({
     icon: ReactionContent;
   };
 }) => {
-  const {
-    reactions,
-    userReaction,
-    commentId,
-    dispatch
-  } = useCommentReaction();
+  const { reactions, userReaction, commentId, dispatch } = useCommentReaction();
   const { addAlert } = useAlertStore();
 
   const handleReaction = async () => {
@@ -722,8 +716,8 @@ const CommentReactionBtn = ({
       if (data.ok) {
         dispatch({
           type: "ADD_REACTION",
-          payload: data.reaction
-        })
+          payload: data.reaction,
+        });
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -741,8 +735,8 @@ const CommentReactionBtn = ({
       if (data.ok) {
         dispatch({
           type: "DELETE_REACTION",
-          reactionType: userReaction.type
-        })
+          reactionType: userReaction.type,
+        });
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -766,8 +760,8 @@ const CommentReactionBtn = ({
           payload: {
             newReaction: data.reaction,
             prevReaction: userReaction,
-          }
-        })
+          },
+        });
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
