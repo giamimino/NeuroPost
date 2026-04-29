@@ -1,8 +1,6 @@
 import React, {
   DetailedHTMLProps,
   InputHTMLAttributes,
-  useCallback,
-  useMemo,
   useReducer,
   useRef,
   useState,
@@ -19,7 +17,6 @@ import {
 import { Input } from "../ui/input";
 import {
   CommentPostContextType,
-  CommentReactionContextType,
   CommentReactionsCountType,
   CommentReducerAction,
   UserReactionType,

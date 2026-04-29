@@ -1,4 +1,3 @@
-import { int } from "zod";
 import { CommentReactionEnum, FriendRequestStatusType } from "./enums";
 
 export interface Post {
