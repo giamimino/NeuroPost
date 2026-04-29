@@ -140,13 +140,64 @@ export async function GET(req: Request) {
     const payload = auth.user;
 
     const comments = await sql.query(
-      `SELECT c.*, 
-      json_build_object('id', u.id, 'username', u.username, 'name', u.name, 'profile_url', u.profile_url) AS user,
-      COUNT(r.id) AS replies_count
+      `SELECT 
+        c.*, 
+        json_build_object(
+          'id', u.id, 
+          'username', u.username, 
+          'name', u.name, 
+          'profile_url', u.profile_url
+        ) AS user,
+
+      COUNT(DISTINCT r.id) AS replies_count,
+
+      COALESCE(reactions.reactions, '{
+        "LIKE": {"count": 0},
+        "LAUGH": {"count": 0},
+        "ANGRY": {"count": 0},
+        "WOW": {"count": 0},
+        "HEART": {"count": 0}
+      }'::jsonb) AS reactions,
+
+      CASE 
+        WHEN cr.id IS NULL THEN NULL
+        ELSE json_build_object(
+          'reactionId', cr.id,
+          'type', cr.type
+        )
+      END AS user_reaction
+
       FROM comments c 
+
       JOIN users u ON u.id = c.user_id 
+
       LEFT JOIN comments r ON r.parent_id = c.id
-      WHERE c.parent_id = $1 GROUP BY c.id, u.id LIMIT $2`,
+
+      LEFT JOIN comment_reactions cr ON cr.comment_id = c.id AND cr.user_id = c.user_id
+
+      LEFT JOIN (
+        SELECT 
+          comment_id,
+          jsonb_object_agg(
+            type,
+            jsonb_build_object('count', cnt)
+          ) AS reactions
+        FROM (
+          SELECT 
+            comment_id,
+            type,
+            COUNT(*) AS cnt
+          FROM comment_reactions
+          GROUP BY comment_id, type
+        ) x
+        GROUP BY comment_id
+      ) reactions ON reactions.comment_id = c.id
+
+      WHERE c.parent_id = $1
+      
+      GROUP BY c.id, u.id, reactions.reactions, cr.id
+
+      LIMIT $2`,
       [comment_id, Number(limit) || 20],
     );
 
