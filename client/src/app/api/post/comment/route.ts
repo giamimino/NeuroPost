@@ -31,8 +31,17 @@ export async function POST(req: Request) {
     const payload = auth.user;
 
     const comment = await sql.query(
-      `WITH new_comment AS (INSERT INTO comments (content, post_id, user_id) VALUES ($1, $2, $3) RETURNING *) 
-      SELECT new_comment.*, json_build_object('id', u.id, 'name', u.name, 'profile_url', u.profile_url) as user FROM new_comment 
+      `WITH new_comment AS (
+        INSERT INTO comments (content, post_id, user_id) 
+        VALUES ($1, $2, $3) RETURNING *
+      ) 
+      SELECT 
+        new_comment.*, 
+        json_build_object(
+          'id', u.id, 
+          'name', u.name, 
+          'profile_url', u.profile_url
+        ) as user FROM new_comment 
       JOIN users u ON u.id = new_comment.user_id`,
       [content, post_id, payload.userId],
     );
@@ -92,17 +101,59 @@ export async function GET(req: Request) {
     const payload = auth.user;
 
     const comments = await sql.query(
-      `SELECT c.*, 
-      json_build_object(
-        'id', u.id, 
-        'name', u.name, 
-        'username', u.username, 
-        'profile_url', u.profile_url
-      ) as user, 
-      COUNT(r.id) as replies_count 
+      `SELECT 
+        c.*, 
+        json_build_object(
+          'id', u.id, 
+          'name', u.name, 
+          'username', u.username, 
+          'profile_url', u.profile_url
+        ) as user,
+        
+        COUNT(DISTINCT r.id) as replies_count,
+
+        COALESCE(reactions.reactions, '{
+          "LIKE": {"count": 0},
+          "LAUGH": {"count": 0},
+          "ANGRY": {"count": 0},
+          "WOW": {"count": 0},
+          "HEART": {"count": 0}
+        }'::jsonb) AS reactions,
+
+        CASE 
+          WHEN cr.id IS NULL THEN NULL
+          ELSE json_build_object(
+            'reactionId', cr.id,
+            'type', cr.type
+          )
+        END AS user_reaction
+
       FROM comments c 
+
       JOIN users u ON u.id = c.user_id
+
       LEFT JOIN comments r ON r.parent_id = c.id
+
+      LEFT JOIN comment_reactions cr ON cr.comment_id = c.id AND cr.user_id = c.user_id
+
+      LEFT JOIN (
+        SELECT 
+          comment_id,
+          jsonb_object_agg(
+            type,
+            jsonb_build_object('count', cnt)
+          ) AS reactions
+        FROM (
+          SELECT 
+            comment_id,
+            type,
+            COUNT(*) AS cnt
+          FROM comment_reactions
+          GROUP BY comment_id, type
+        ) x
+        GROUP BY comment_id
+      ) reactions ON reactions.comment_id = c.id
+
       WHERE c.post_id = $1 
         AND c.parent_id IS NULL
         AND (
@@ -110,8 +161,11 @@ export async function GET(req: Request) {
           OR c.created_at < $3
           OR (c.created_at = $3 AND c.id < $4)
         )
-      GROUP BY c.id, u.id 
-      ORDER BY c.created_at DESC, c.id DESC LIMIT $2`,
+
+      GROUP BY c.id, u.id, cr.id, u.name, u.username, u.profile_url, cr.type, reactions.reactions
+
+      ORDER BY c.created_at DESC, c.id DESC 
+      LIMIT $2;`,
       [postId, Number(limit) || 20, cursorCreatedAt || null, cursorId || null],
     );
 

@@ -1,6 +1,7 @@
 import React, {
   DetailedHTMLProps,
   InputHTMLAttributes,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -8,11 +9,18 @@ import { Card, CardDescription, CardTitle } from "../ui/card";
 import {
   CommentContext,
   CommentPostContext,
+  CommentReactionContext,
   useComment,
   useCommentPost,
+  useCommentReaction,
 } from "@/store/contexts/CommentCntext";
 import { Input } from "../ui/input";
-import { CommentPostContextType } from "@/types/context";
+import {
+  CommentPostContextType,
+  CommentReactionsCountType,
+  CommentReducerAction,
+  UserReactionType,
+} from "@/types/context";
 import { Spinner } from "../ui/spinner";
 import { apiFetch } from "@/lib/apiFetch";
 import {
@@ -40,6 +48,20 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { ApiConfig } from "@/configs/api-configs";
+import clsx from "clsx";
+import { Children } from "@/types/global";
+import {
+  CommentsReactions,
+  ReactionContent,
+} from "@/constants/comments.constants";
+import { CommentReactionEnum } from "@/types/enums";
+import { motion } from "framer-motion";
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from "../ui/hover-card";
+import { commentsReactions } from "@/app/post/[postId]/ClientPostPage";
 
 type CommentContainerProps = {
   className?: string;
@@ -159,37 +181,72 @@ const CommentReplies = ({
                     <Comment.Content>
                       <CardDescription>{c.content}</CardDescription>
                     </Comment.Content>
-                    <ContentToggleContainer>
-                      <ContentToggle.Controller className="w-fit">
-                        <Button
-                          variant={"ghost"}
-                          size={"md"}
-                          className="cursor-pointer rounded-xl text-xs"
+                    <div className="flex gap-2.5">
+                      <div>
+                        <CommentReaction
+                          initialUserReaction={null}
+                          initialReactions={{
+                            ANGRY: { count: 0 },
+                            HEART: { count: 0 },
+                            LAUGH: { count: 0 },
+                            LIKE: { count: 0 },
+                            WOW: { count: 0 },
+                          }}
+                          commentId={c.id}
                         >
-                          Reply
-                        </Button>
-                      </ContentToggle.Controller>
-                      <ContentToggle.Content>
-                        <CommentPost
-                          post_id={c.post_id}
-                          comment_id={c.id}
-                          className="flex gap-2.5 items-center"
-                        >
-                          <CommentPost.Input
-                            className="px-2 py-1 text-xs"
-                            placeholder="Write a reply..."
-                          />
-                          <CommentPost.Button onSuccess={() => {}}>
-                            <Button
-                              variant={"outline"}
-                              className="cursor-pointer w-fit"
+                          <HoverCard>
+                            <HoverCardTrigger>
+                              <CommentReaction.BaseReaction />
+                            </HoverCardTrigger>
+                            <HoverCardContent
+                              side="top"
+                              sideOffset={10}
+                              className="flex gap-2.5 w-fit py-2"
                             >
-                              <Send />
+                              {commentsReactions.map((c) => (
+                                <CommentReaction.ReactionBtn
+                                  key={c.id}
+                                  reaction={c}
+                                />
+                              ))}
+                            </HoverCardContent>
+                          </HoverCard>
+                        </CommentReaction>
+                      </div>
+                      <ContentToggleContainer>
+                        <div className="flex gap-2.5 max-lg:flex-col">
+                          <ContentToggle.Controller className="w-fit">
+                            <Button
+                              variant={"ghost"}
+                              size={"md"}
+                              className="cursor-pointer rounded-xl text-xs"
+                            >
+                              Reply
                             </Button>
-                          </CommentPost.Button>
-                        </CommentPost>
-                      </ContentToggle.Content>
-                    </ContentToggleContainer>
+                          </ContentToggle.Controller>
+                          <ContentToggle.Content>
+                            <CommentPost
+                              post_id={c.post_id}
+                              comment_id={c.id}
+                              className="flex gap-2.5 items-center"
+                            >
+                              <CommentPost.Input
+                                className="px-2 py-1 text-xs"
+                                placeholder="Write a reply..."
+                              />
+                              <CommentPost.Button onSuccess={() => {}}>
+                                <Button
+                                  variant={"outline"}
+                                  className="cursor-pointer w-fit"
+                                >
+                                  <Send />
+                                </Button>
+                              </CommentPost.Button>
+                            </CommentPost>
+                          </ContentToggle.Content>
+                        </div>
+                      </ContentToggleContainer>
+                    </div>
                   </div>
                 </div>
                 {c.role === "creator" && (
@@ -250,6 +307,7 @@ const CommentReplies = ({
                 )}
               </div>
               {/* replies */}
+
               <Comment.Replies
                 className="ml-10 flex flex-col gap-2"
                 comment_id={c.id}
@@ -445,7 +503,11 @@ const CommentPostContainerInput = ({
 CommentPostContainerInput.displayName = "CommentPost.Input";
 
 const CommentHeader = ({ className, children }: CommentContainerProps) => {
-  return <div className={className}>{children}</div>;
+  return (
+    <div className={clsx("flex items-center gap-1.5", className)}>
+      {children}
+    </div>
+  );
 };
 CommentHeader.displayName = "Comment.Header";
 
@@ -459,6 +521,267 @@ const CommentProfile = ({ className, children }: CommentContainerProps) => {
 };
 CommentProfile.displayName = "Comment.Profile";
 
+const CommentReactionVariants: Record<CommentReactionEnum & "NONE", string> = {
+  NONE: "border shadow-xs dark:border-input",
+  LIKE: "border border-[#3B82F6]",
+  ANGRY: "border border-[#FF3B30]",
+  HEART: "border border-[#FF2D55]",
+  LAUGH: "border border-[#FBC02D]",
+  WOW: "border border-[#29B6F6]",
+} as const;
+
+type CommentReducerState = {
+  userReaction: UserReactionType | null;
+  reactions: CommentReactionsCountType;
+};
+
+export function CommentReducer(
+  state: CommentReducerState,
+  action: CommentReducerAction,
+): CommentReducerState {
+  switch (action.type) {
+    case "CHANGE_REACTION": {
+      const { newReaction, prevReaction } = action.payload;
+
+      const updated = { ...state.reactions };
+
+      if (prevReaction) {
+        updated[prevReaction.type] = {
+          count: Math.max(0, updated[prevReaction.type].count - 1),
+        };
+      }
+
+      updated[newReaction.type] = {
+        count: Math.max(0, updated[newReaction.type].count + 1),
+      };
+
+      return {
+        userReaction: newReaction,
+        reactions: updated,
+      };
+    }
+    case "DELETE_REACTION": {
+      const { reactionType } = action;
+      const updated = { ...state.reactions };
+
+      updated[reactionType] = {
+        count: Math.max(0, updated[reactionType].count - 1),
+      };
+
+      return {
+        userReaction: null,
+        reactions: updated,
+      };
+    }
+    case "ADD_REACTION": {
+      const payload = action.payload;
+      const updated = { ...state.reactions };
+
+      updated[payload.type] = {
+        count: Math.max(0, updated[payload.type].count + 1),
+      };
+
+      return {
+        reactions: updated,
+        userReaction: payload,
+      };
+    }
+    default:
+      return state;
+  }
+}
+
+const CommentReactionBase = ({
+  children,
+  initialUserReaction = null,
+  initialReactions,
+  commentId,
+}: Children & {
+  initialUserReaction: UserReactionType | null;
+  initialReactions: CommentReactionsCountType;
+  commentId: string;
+}) => {
+  const [{ reactions, userReaction }, dispatch] = useReducer(CommentReducer, {
+    reactions: initialReactions,
+    userReaction: initialUserReaction,
+  });
+
+  const values = {
+    commentId,
+    userReaction,
+    reactions,
+    dispatch,
+  };
+
+  return (
+    <CommentReactionContext.Provider value={values}>
+      {children}
+    </CommentReactionContext.Provider>
+  );
+};
+
+const CommentBaseReactionBtn = () => {
+  const { userReaction, dispatch, commentId } = useCommentReaction();
+  const { addAlert } = useAlertStore();
+
+  const handleReaction = async () => {
+    if (userReaction === null) {
+      const res = await fetch("/api/post/comment/reaction", {
+        ...ApiConfig.post,
+        body: JSON.stringify({ commentId, type: "LIKE" }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        dispatch({
+          type: "ADD_REACTION",
+          payload: data.reaction,
+        });
+      } else if (data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+      }
+    } else if (userReaction) {
+      const res = await fetch("/api/post/comment/reaction", {
+        ...ApiConfig.delete,
+        body: JSON.stringify({ reactionId: userReaction.reactionId }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        dispatch({
+          type: "DELETE_REACTION",
+          reactionType: userReaction.type,
+        });
+      } else if (data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+      }
+    }
+  };
+
+  return (
+    <Button
+      key={userReaction?.reactionId}
+      variant="none"
+      size={"sm"}
+      className={clsx(
+        "w-18 cursor-pointer bg-background dark:bg-input/30",
+        "hover:bg-accent hover:text-accent-foreground dark:hover:bg-input/50",
+        CommentReactionVariants[
+          (userReaction?.type || "NONE") as keyof typeof CommentReactionVariants
+        ],
+      )}
+      onClick={handleReaction}
+    >
+      <motion.div
+        initial={false}
+        animate={{ scale: userReaction ? [1, 1.7, 1] : 1 }}
+      >
+        {CommentsReactions[userReaction?.type || "LIKE"]}
+      </motion.div>
+    </Button>
+  );
+};
+
+const CommentReactionBtn = ({
+  reaction,
+}: {
+  reaction: {
+    id: CommentReactionEnum;
+    label: Capitalize<Lowercase<CommentReactionEnum>>;
+    icon: ReactionContent;
+  };
+}) => {
+  const { reactions, userReaction, commentId, dispatch } = useCommentReaction();
+  const { addAlert } = useAlertStore();
+
+  const handleReaction = async () => {
+    if (!userReaction) {
+      const res = await fetch("/api/post/comment/reaction", {
+        ...ApiConfig.post,
+        body: JSON.stringify({ commentId, type: reaction.id }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        dispatch({
+          type: "ADD_REACTION",
+          payload: data.reaction,
+        });
+      } else if (data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+      }
+    } else if (userReaction.reactionId && userReaction.type === reaction.id) {
+      const res = await fetch("/api/post/comment/reaction", {
+        ...ApiConfig.delete,
+        body: JSON.stringify({ reactionId: userReaction.reactionId }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        dispatch({
+          type: "DELETE_REACTION",
+          reactionType: userReaction.type,
+        });
+      } else if (data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+      }
+    } else if (userReaction.reactionId && userReaction.type !== reaction.id) {
+      const res = await fetch("/api/post/comment/reaction", {
+        ...ApiConfig.put,
+        body: JSON.stringify({
+          reactionId: userReaction.reactionId,
+          type: reaction.id,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        dispatch({
+          type: "CHANGE_REACTION",
+          payload: {
+            newReaction: data.reaction,
+            prevReaction: userReaction,
+          },
+        });
+      } else if (data.error) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+      }
+    }
+  };
+
+  return (
+    <div
+      onClick={handleReaction}
+      className="cursor-pointer hover:opacity-55 hover:scale-125 transition-all hover:-translate-y-0.5 flex gap-0.5 items-center"
+    >
+      <p className="text-muted-foreground text-sm">
+        {reactions[reaction.id].count}
+      </p>
+      <p>{reaction.icon}</p>
+    </div>
+  );
+};
+
 type CommentPostCompound = React.FC<{
   children: React.ReactNode;
   className?: string;
@@ -467,6 +790,17 @@ type CommentPostCompound = React.FC<{
 }> & {
   Button: typeof CommentPostContainerButton;
   Input: typeof CommentPostContainerInput;
+};
+
+type CommentReactionCompound = React.FC<
+  Children & {
+    initialUserReaction: UserReactionType | null;
+    initialReactions: CommentReactionsCountType;
+    commentId: string;
+  }
+> & {
+  BaseReaction: typeof CommentBaseReactionBtn;
+  ReactionBtn: typeof CommentReactionBtn;
 };
 
 const CommentPost = Object.assign(CommentPostContainer, {
@@ -492,4 +826,9 @@ const Comment = Object.assign(CommentBase, {
   Profile: CommentProfile,
 }) as CommentCompound;
 
-export { Comment, CommentContainer, CommentPost };
+const CommentReaction = Object.assign(CommentReactionBase, {
+  BaseReaction: CommentBaseReactionBtn,
+  ReactionBtn: CommentReactionBtn,
+}) as CommentReactionCompound;
+
+export { Comment, CommentContainer, CommentPost, CommentReaction };

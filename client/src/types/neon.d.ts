@@ -1,4 +1,4 @@
-import { FriendRequestStatusType } from "./enums";
+import { CommentReactionEnum, FriendRequestStatusType } from "./enums";
 
 export interface Post {
   id: number;
@@ -145,3 +145,16 @@ export interface PostMedia extends Post {
   likes: number;
   comments: number;
 }
+
+export interface CommentReactionType {
+  id: string;
+  user_id: string;
+  comment_id: string;
+  type: CommentReactionEnum;
+  created_at: string;
+}
+
+export type CommentReactionPreview = Pick<
+  CommentReactionType,
+  "comment_id" | "type" | "user_id"
+>;

@@ -55,6 +55,7 @@ import {
   Comment,
   CommentPost,
   CommentContainer,
+  CommentReaction,
 } from "@/components/common/CommentsContainer";
 import {
   ContentToggle,
@@ -62,6 +63,29 @@ import {
 } from "@/components/ContentToggle";
 import { CommentSchemaType } from "@/schemas/comment/comment.schema";
 import { TagItem } from "@/components/ui/tag";
+import { CommentReactionEnum } from "@/types/enums";
+import {
+  CommentsReactions,
+  ReactionContent,
+} from "@/constants/comments.constants";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { CommentReactionsCountType, UserReactionType } from "@/types/context";
+
+export const commentsReactions: {
+  id: CommentReactionEnum;
+  label: Capitalize<Lowercase<CommentReactionEnum>>;
+  icon: ReactionContent;
+}[] = [
+  { id: "LIKE", label: "Like", icon: CommentsReactions.LIKE },
+  { id: "ANGRY", label: "Angry", icon: CommentsReactions.ANGRY },
+  { id: "HEART", label: "Heart", icon: CommentsReactions.HEART },
+  { id: "LAUGH", label: "Laugh", icon: CommentsReactions.LAUGH },
+  { id: "WOW", label: "Wow", icon: CommentsReactions.WOW },
+];
 
 const ClientPostPage = ({
   params,
@@ -83,7 +107,12 @@ const ClientPostPage = ({
     | null
   >(null);
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState<CommentSchemaType[]>([]);
+  const [comments, setComments] = useState<
+    (CommentSchemaType & {
+      user_reaction: UserReactionType | null;
+      reactions: CommentReactionsCountType;
+    })[]
+  >([]);
   const [deleted, setDeleted] = useState(false);
   const [editing, setEditing] = useState(false);
   const [media, setMedia] = useState<File | null>(null);
@@ -579,7 +608,7 @@ const ClientPostPage = ({
                               )}
                             </Comment.Profile>
                             <div className="flex flex-col gap-1.5">
-                              <Comment.Header className="flex items-center gap-1.5">
+                              <Comment.Header>
                                 <CardTitle
                                   className="text-foreground cursor-pointer"
                                   onClick={() =>
@@ -597,37 +626,84 @@ const ClientPostPage = ({
                                   {c.content}
                                 </CardDescription>
                               </Comment.Content>
-                              <ContentToggleContainer>
-                                <ContentToggle.Controller className="w-fit">
-                                  <Button
-                                    variant={"ghost"}
-                                    size={"md"}
-                                    className="cursor-pointer rounded-xl text-xs"
+                              <div className="flex gap-2.5">
+                                <div>
+                                  <CommentReaction
+                                    initialUserReaction={c.user_reaction}
+                                    initialReactions={{
+                                      LIKE: {
+                                        count: c.reactions.LIKE?.count || 0,
+                                      },
+                                      ANGRY: {
+                                        count: c.reactions.ANGRY?.count || 0,
+                                      },
+                                      HEART: {
+                                        count: c.reactions.HEART?.count || 0,
+                                      },
+                                      WOW: {
+                                        count: c.reactions.WOW?.count || 0,
+                                      },
+                                      LAUGH: {
+                                        count: c.reactions.LAUGH?.count || 0,
+                                      },
+                                    }}
+                                    commentId={c.id}
                                   >
-                                    Reply
-                                  </Button>
-                                </ContentToggle.Controller>
-                                <ContentToggle.Content>
-                                  <CommentPost
-                                    post_id={c.post_id}
-                                    comment_id={c.id}
-                                    className="flex gap-2.5 items-center"
-                                  >
-                                    <CommentPost.Input
-                                      className="px-2 py-1 text-xs"
-                                      placeholder="Write a reply..."
-                                    />
-                                    <CommentPost.Button onSuccess={() => {}}>
-                                      <Button
-                                        variant={"outline"}
-                                        className="cursor-pointer w-fit"
+                                    <HoverCard>
+                                      <HoverCardTrigger>
+                                        <CommentReaction.BaseReaction />
+                                      </HoverCardTrigger>
+                                      <HoverCardContent
+                                        side="top"
+                                        sideOffset={10}
+                                        className="flex gap-2.5 w-fit py-2"
                                       >
-                                        <Send />
+                                        {commentsReactions.map((c) => (
+                                          <CommentReaction.ReactionBtn
+                                            key={c.id}
+                                            reaction={c}
+                                          />
+                                        ))}
+                                      </HoverCardContent>
+                                    </HoverCard>
+                                  </CommentReaction>
+                                </div>
+                                <ContentToggleContainer>
+                                  <div className="flex gap-2.5 max-lg:flex-col">
+                                    <ContentToggle.Controller className="w-fit">
+                                      <Button
+                                        variant={"ghost"}
+                                        size={"md"}
+                                        className="cursor-pointer rounded-xl text-xs"
+                                      >
+                                        Reply
                                       </Button>
-                                    </CommentPost.Button>
-                                  </CommentPost>
-                                </ContentToggle.Content>
-                              </ContentToggleContainer>
+                                    </ContentToggle.Controller>
+                                    <ContentToggle.Content>
+                                      <CommentPost
+                                        post_id={c.post_id}
+                                        comment_id={c.id}
+                                        className="flex gap-2.5 items-center"
+                                      >
+                                        <CommentPost.Input
+                                          className="px-2 py-1 text-xs"
+                                          placeholder="Write a reply..."
+                                        />
+                                        <CommentPost.Button
+                                          onSuccess={() => {}}
+                                        >
+                                          <Button
+                                            variant={"outline"}
+                                            className="cursor-pointer w-fit"
+                                          >
+                                            <Send />
+                                          </Button>
+                                        </CommentPost.Button>
+                                      </CommentPost>
+                                    </ContentToggle.Content>
+                                  </div>
+                                </ContentToggleContainer>
+                              </div>
                             </div>
                           </div>
                           {c.role === "creator" && (

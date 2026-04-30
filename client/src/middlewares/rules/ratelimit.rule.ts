@@ -6,7 +6,7 @@ export const RateLimitRules = [
   { match: /^\/api\/friends/, limit: 7 },
   { match: /^\/api\/index/, limit: 30 },
   { match: /^\/api\/notifications/, limit: 30 },
-  { match: /^\/api\/post/, limit: 10 },
+  { match: /^\/api\/post/, limit: 30 },
   { match: /^\/api\/r2/, limit: 20 },
   { match: /^\/api\/redis/, limit: 5 },
   { match: /^\/api\/redis/, limit: 5 },

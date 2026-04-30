@@ -1,3 +1,5 @@
+import React from "react";
+import { CommentReactionEnum } from "./enums";
 import { ForyouPost } from "./global";
 
 export interface ToggleContextType {
@@ -32,4 +34,38 @@ export interface PostContextType {
   post: ForyouPost;
   onLike: (likeId: string) => void;
   onUnlike: () => void;
+}
+
+export interface UserReactionType {
+  reactionId: string;
+  type: CommentReactionEnum;
+}
+
+export type CommentReactionsCountType = Record<
+  CommentReactionEnum,
+  { count: number }
+>;
+
+type CommentReducerAction =
+  | {
+      type: "CHANGE_REACTION";
+      payload: {
+        newReaction: UserReactionType;
+        prevReaction: UserReactionType | null;
+      };
+    }
+  | {
+      type: "ADD_REACTION";
+      payload: UserReactionType;
+    }
+  | {
+      type: "DELETE_REACTION";
+      reactionType: CommentReactionEnum;
+    };
+
+export interface CommentReactionContextType {
+  userReaction: UserReactionType | null;
+  commentId: string;
+  reactions: CommentReactionsCountType;
+  dispatch: React.ActionDispatch<[action: CommentReducerAction]>;
 }
