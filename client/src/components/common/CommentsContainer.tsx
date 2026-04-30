@@ -1,6 +1,7 @@
 import React, {
   DetailedHTMLProps,
   InputHTMLAttributes,
+  useEffect,
   useReducer,
   useRef,
   useState,
@@ -24,6 +25,7 @@ import {
 import { Spinner } from "../ui/spinner";
 import { apiFetch } from "@/lib/apiFetch";
 import {
+  CommentReplyApiGetResSchema,
   CommentReplyAPIResSchema,
   CommentReplyAPISchema,
   CommentReplyType,
@@ -49,7 +51,7 @@ import {
 } from "../ui/dropdown-menu";
 import { ApiConfig } from "@/configs/api-configs";
 import clsx from "clsx";
-import { Children } from "@/types/global";
+import { Children, GenericStatus } from "@/types/global";
 import {
   CommentsReactions,
   ReactionContent,
@@ -62,6 +64,8 @@ import {
   HoverCardContent,
 } from "../ui/hover-card";
 import { commentsReactions } from "@/app/post/[postId]/ClientPostPage";
+import { repliesReducer } from "@/reducers/replies.reducer";
+import { RepliesAction, RepliesState } from "@/types/reducer";
 
 type CommentContainerProps = {
   className?: string;
@@ -101,8 +105,13 @@ const CommentReplies = ({
   className?: string;
   comment_id: string;
 }) => {
+  const [repliesCache, dispatch] = useReducer(
+    repliesReducer,
+    new Map<string, Set<CommentReplyType>>(),
+  );
+  const replies = repliesCache.get(comment_id);
   const { openReplies } = useComment();
-  const { status, data, setData } = useReplies(comment_id, openReplies, true);
+  const [status, setStatus] = useState<GenericStatus>("idle");
   const router = useRouter();
   const { addAlert } = useAlertStore();
 
@@ -119,9 +128,6 @@ const CommentReplies = ({
       const data = await res?.json();
 
       if (data.ok) {
-        setData((prev) =>
-          prev ? prev.filter((c) => c.id !== commentId) : prev,
-        );
         const cachedReplies = RepliesCache.get(parentId);
         if (cachedReplies) {
           for (const item of cachedReplies) {
@@ -144,11 +150,71 @@ const CommentReplies = ({
     }
   };
 
+  const fetchReplies = async () => {
+    try {
+      setStatus("loading");
+
+      const res = await apiFetch(
+        `/api/post/comment/reply?comment_id=${comment_id}&limit=20`,
+      );
+      const data = await res?.json();
+
+      const parsed = CommentReplyApiGetResSchema.safeParse(data);
+
+      if (!parsed.success || !parsed.data.ok) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...(parsed.data?.error || ERRORS.GENERIC_ERROR),
+        });
+        return null;
+      }
+
+      const replies = parsed.data.comments;
+
+      if (!replies) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...ERRORS.GENERIC_ERROR,
+        });
+        return null;
+      }
+      setStatus("success");
+      return replies;
+    } catch {
+      setStatus("error");
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+      return null
+    }
+  };
+
+  useEffect(() => {
+    if (repliesCache.has(comment_id) || !openReplies) return;
+
+    (async () => {
+      const data = await fetchReplies()
+
+      if(!data) return;
+
+      dispatch({
+        type: "SET_REPLIES",
+        comment_id,
+        replies: new Set(data),
+      });
+    })();
+  }, [openReplies, comment_id]);
+
   return (
     <div className={className} hidden={!openReplies}>
       {status === "loading" && <SkeletonReplyComment />}
       {status === "success" &&
-        data?.map((c: CommentReplyType) => (
+        replies &&
+        Array.from(replies).map((c: CommentReplyType) => (
           <CommentContainer key={c.id}>
             <Comment className="flex flex-col gap-2.5">
               <div className="flex justify-between items-center">
