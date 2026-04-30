@@ -130,6 +130,7 @@ const ClientPostPage = ({
   const reachedRef = useRef(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
+  const [openComments, setOpenComments] = useState(false);
 
   const handleAddTag = (tag: string) => {
     if (!/^\p{L}+$/u.test(tag) || tags.some((t) => t.tag === tag)) return;
@@ -267,7 +268,7 @@ const ClientPostPage = ({
   const handleFetchComments = useCallback(
     async (postId: number) => {
       try {
-        if (loadingRef.current || reachedRef.current) return;
+        if (loadingRef.current || reachedRef.current || !openComments) return;
         loadingRef.current = true;
 
         const params = new URLSearchParams({
@@ -311,7 +312,7 @@ const ClientPostPage = ({
         loadingRef.current = false;
       }
     },
-    [addAlert],
+    [addAlert, openComments],
   );
 
   // get post
@@ -556,7 +557,7 @@ const ClientPostPage = ({
             )}
           </div>
           {/* comments */}
-          {comments.length > 0 && (
+          {comments.length > 0 && openComments && (
             <div className="w-full flex items-center justify-center">
               <Card className="w-full">
                 <CardHeader>
@@ -864,6 +865,7 @@ const ClientPostPage = ({
                 className={`rounded-sm cursor-pointer`}
                 variant={"outline"}
                 onClick={async () => {
+                  setOpenComments((prev) => !prev);
                   if (comments.length === 0 && post) {
                     await handleFetchComments(post.id);
                   }
