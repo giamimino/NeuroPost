@@ -74,6 +74,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { CommentReactionsCountType, UserReactionType } from "@/types/context";
+import CommentRepliesProvider from "@/components/providers/commentReplies.provider";
 
 export const commentsReactions: {
   id: CommentReactionEnum;
@@ -586,214 +587,216 @@ const ClientPostPage = ({
                   <Line className="mt-5" />
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3.5">
-                  {comments.map((c) => (
-                    <CommentContainer key={c.id}>
-                      <Comment className="flex flex-col gap-2.5">
-                        <div className="flex justify-between items-center">
-                          <div className="flex gap-2.5">
-                            <Comment.Profile className="w-8 h-8">
-                              {typeof c.user.profile_url === "string" ? (
-                                <Image
-                                  src={c.user.profile_url}
-                                  width={40}
-                                  height={40}
-                                  alt="user-profile"
-                                  className="w-8 h-8 object-cover rounded-full"
-                                  style={{
-                                    width: 32,
-                                    height: 32,
-                                  }}
-                                />
-                              ) : (
-                                <Skeleton className="h-8 w-8 rounded-full" />
-                              )}
-                            </Comment.Profile>
-                            <div className="flex flex-col gap-1.5">
-                              <Comment.Header>
-                                <CardTitle
-                                  className="text-foreground cursor-pointer"
-                                  onClick={() =>
-                                    router.push(`/u/${c.user.username}`)
-                                  }
-                                >
-                                  {c.user.name}
-                                </CardTitle>
-                                <CardDescription className="text-sm">
-                                  {timeAgo(new Date(c.created_at))}
-                                </CardDescription>
-                              </Comment.Header>
-                              <Comment.Content>
-                                <CardDescription className="text-wrap w-full max-w-100">
-                                  {c.content}
-                                </CardDescription>
-                              </Comment.Content>
-                              <div className="flex gap-2.5">
-                                <div>
-                                  <CommentReaction
-                                    initialUserReaction={c.user_reaction}
-                                    initialReactions={{
-                                      LIKE: {
-                                        count: c.reactions.LIKE?.count || 0,
-                                      },
-                                      ANGRY: {
-                                        count: c.reactions.ANGRY?.count || 0,
-                                      },
-                                      HEART: {
-                                        count: c.reactions.HEART?.count || 0,
-                                      },
-                                      WOW: {
-                                        count: c.reactions.WOW?.count || 0,
-                                      },
-                                      LAUGH: {
-                                        count: c.reactions.LAUGH?.count || 0,
-                                      },
+                  <CommentRepliesProvider>
+                    {comments.map((c) => (
+                      <CommentContainer key={c.id}>
+                        <Comment className="flex flex-col gap-2.5">
+                          <div className="flex justify-between items-center">
+                            <div className="flex gap-2.5">
+                              <Comment.Profile className="w-8 h-8">
+                                {typeof c.user.profile_url === "string" ? (
+                                  <Image
+                                    src={c.user.profile_url}
+                                    width={40}
+                                    height={40}
+                                    alt="user-profile"
+                                    className="w-8 h-8 object-cover rounded-full"
+                                    style={{
+                                      width: 32,
+                                      height: 32,
                                     }}
-                                    commentId={c.id}
+                                  />
+                                ) : (
+                                  <Skeleton className="h-8 w-8 rounded-full" />
+                                )}
+                              </Comment.Profile>
+                              <div className="flex flex-col gap-1.5">
+                                <Comment.Header>
+                                  <CardTitle
+                                    className="text-foreground cursor-pointer"
+                                    onClick={() =>
+                                      router.push(`/u/${c.user.username}`)
+                                    }
                                   >
-                                    <HoverCard>
-                                      <HoverCardTrigger>
-                                        <CommentReaction.BaseReaction />
-                                      </HoverCardTrigger>
-                                      <HoverCardContent
-                                        side="top"
-                                        sideOffset={10}
-                                        className="flex gap-2.5 w-fit py-2"
-                                      >
-                                        {commentsReactions.map((c) => (
-                                          <CommentReaction.ReactionBtn
-                                            key={c.id}
-                                            reaction={c}
-                                          />
-                                        ))}
-                                      </HoverCardContent>
-                                    </HoverCard>
-                                  </CommentReaction>
-                                </div>
-                                <ContentToggleContainer>
-                                  <div className="flex gap-2.5 max-lg:flex-col">
-                                    <ContentToggle.Controller className="w-fit">
-                                      <Button
-                                        variant={"ghost"}
-                                        size={"md"}
-                                        className="cursor-pointer rounded-xl text-xs"
-                                      >
-                                        Reply
-                                      </Button>
-                                    </ContentToggle.Controller>
-                                    <ContentToggle.Content>
-                                      <CommentPost
-                                        post_id={c.post_id}
-                                        comment_id={c.id}
-                                        className="flex gap-2.5 items-center"
-                                      >
-                                        <CommentPost.Input
-                                          className="px-2 py-1 text-xs"
-                                          placeholder="Write a reply..."
-                                        />
-                                        <CommentPost.Button
-                                          onSuccess={() => {}}
+                                    {c.user.name}
+                                  </CardTitle>
+                                  <CardDescription className="text-sm">
+                                    {timeAgo(new Date(c.created_at))}
+                                  </CardDescription>
+                                </Comment.Header>
+                                <Comment.Content>
+                                  <CardDescription className="text-wrap w-full max-w-100">
+                                    {c.content}
+                                  </CardDescription>
+                                </Comment.Content>
+                                <div className="flex gap-2.5">
+                                  <div>
+                                    <CommentReaction
+                                      initialUserReaction={c.user_reaction}
+                                      initialReactions={{
+                                        LIKE: {
+                                          count: c.reactions.LIKE?.count || 0,
+                                        },
+                                        ANGRY: {
+                                          count: c.reactions.ANGRY?.count || 0,
+                                        },
+                                        HEART: {
+                                          count: c.reactions.HEART?.count || 0,
+                                        },
+                                        WOW: {
+                                          count: c.reactions.WOW?.count || 0,
+                                        },
+                                        LAUGH: {
+                                          count: c.reactions.LAUGH?.count || 0,
+                                        },
+                                      }}
+                                      commentId={c.id}
+                                    >
+                                      <HoverCard>
+                                        <HoverCardTrigger>
+                                          <CommentReaction.BaseReaction />
+                                        </HoverCardTrigger>
+                                        <HoverCardContent
+                                          side="top"
+                                          sideOffset={10}
+                                          className="flex gap-2.5 w-fit py-2"
                                         >
-                                          <Button
-                                            variant={"outline"}
-                                            className="cursor-pointer w-fit"
-                                          >
-                                            <Send />
-                                          </Button>
-                                        </CommentPost.Button>
-                                      </CommentPost>
-                                    </ContentToggle.Content>
+                                          {commentsReactions.map((c) => (
+                                            <CommentReaction.ReactionBtn
+                                              key={c.id}
+                                              reaction={c}
+                                            />
+                                          ))}
+                                        </HoverCardContent>
+                                      </HoverCard>
+                                    </CommentReaction>
                                   </div>
-                                </ContentToggleContainer>
+                                  <ContentToggleContainer>
+                                    <div className="flex gap-2.5 max-lg:flex-col">
+                                      <ContentToggle.Controller className="w-fit">
+                                        <Button
+                                          variant={"ghost"}
+                                          size={"md"}
+                                          className="cursor-pointer rounded-xl text-xs"
+                                        >
+                                          Reply
+                                        </Button>
+                                      </ContentToggle.Controller>
+                                      <ContentToggle.Content>
+                                        <CommentPost
+                                          post_id={c.post_id}
+                                          comment_id={c.id}
+                                          className="flex gap-2.5 items-center"
+                                        >
+                                          <CommentPost.Input
+                                            className="px-2 py-1 text-xs"
+                                            placeholder="Write a reply..."
+                                          />
+                                          <CommentPost.Button
+                                            onSuccess={() => {}}
+                                          >
+                                            <Button
+                                              variant={"outline"}
+                                              className="cursor-pointer w-fit"
+                                            >
+                                              <Send />
+                                            </Button>
+                                          </CommentPost.Button>
+                                        </CommentPost>
+                                      </ContentToggle.Content>
+                                    </div>
+                                  </ContentToggleContainer>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          {c.role === "creator" && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant={"ghost"}
-                                  size={"sm"}
-                                  className="cursor-pointer"
-                                >
-                                  <Ellipsis />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant={"none"}
-                                      className="w-full cursor-pointer border border-destructive text-destructive bg-destructive/4 hover:bg-destructive/10"
-                                    >
-                                      Delete
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent>
-                                    <div className="flex gap-3 flex-col p-3 w-75">
-                                      <CardDescription>
-                                        Are you sure you want to delete this
-                                        comment?
-                                      </CardDescription>
-                                      <div className="flex gap-3">
-                                        <DropdownMenuItem className="focus:bg-transparent focus:text-inherit p-0">
-                                          <Button
-                                            onClick={() =>
-                                              handleDeleteComment({
-                                                commentId: c.id,
-                                              })
-                                            }
-                                            variant={"none"}
-                                            className="w-full cursor-pointer border border-destructive text-destructive bg-destructive/4 hover:bg-destructive/10"
-                                          >
-                                            Delete
-                                          </Button>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem className="focus:bg-transparent focus:text-inherit p-0">
-                                          <Button
-                                            variant={"ghost"}
-                                            className="cursor-pointer"
-                                          >
-                                            cancel
-                                          </Button>
-                                        </DropdownMenuItem>
+                            {c.role === "creator" && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant={"ghost"}
+                                    size={"sm"}
+                                    className="cursor-pointer"
+                                  >
+                                    <Ellipsis />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant={"none"}
+                                        className="w-full cursor-pointer border border-destructive text-destructive bg-destructive/4 hover:bg-destructive/10"
+                                      >
+                                        Delete
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                      <div className="flex gap-3 flex-col p-3 w-75">
+                                        <CardDescription>
+                                          Are you sure you want to delete this
+                                          comment?
+                                        </CardDescription>
+                                        <div className="flex gap-3">
+                                          <DropdownMenuItem className="focus:bg-transparent focus:text-inherit p-0">
+                                            <Button
+                                              onClick={() =>
+                                                handleDeleteComment({
+                                                  commentId: c.id,
+                                                })
+                                              }
+                                              variant={"none"}
+                                              className="w-full cursor-pointer border border-destructive text-destructive bg-destructive/4 hover:bg-destructive/10"
+                                            >
+                                              Delete
+                                            </Button>
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem className="focus:bg-transparent focus:text-inherit p-0">
+                                            <Button
+                                              variant={"ghost"}
+                                              className="cursor-pointer"
+                                            >
+                                              cancel
+                                            </Button>
+                                          </DropdownMenuItem>
+                                        </div>
                                       </div>
-                                    </div>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
-                        </div>
-                        {/* replies */}
-                        <Comment.Replies
-                          className="ml-10 flex flex-col gap-2"
-                          comment_id={c.id}
-                        />
-                        {c.replies_count > 0 && (
-                          <Comment.ReplyToggle className="w-fit">
-                            {({ status }) => (
-                              <Button
-                                variant={"outline"}
-                                className="cursor-pointer rounded-lg"
-                              >
-                                {status ? (
-                                  <>
-                                    <p>Hide Replies</p>
-                                    <ChevronUp className="size-4" />
-                                  </>
-                                ) : (
-                                  <>
-                                    <p>{c.replies_count} Replies</p>
-                                    <ChevronDown className="size-4" />
-                                  </>
-                                )}
-                              </Button>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             )}
-                          </Comment.ReplyToggle>
-                        )}
-                      </Comment>
-                    </CommentContainer>
-                  ))}
+                          </div>
+                          {/* replies */}
+                          <Comment.Replies
+                            className="ml-10 flex flex-col gap-2"
+                            comment_id={c.id}
+                          />
+                          {c.replies_count > 0 && (
+                            <Comment.ReplyToggle className="w-fit">
+                              {({ status }) => (
+                                <Button
+                                  variant={"outline"}
+                                  className="cursor-pointer rounded-lg"
+                                >
+                                  {status ? (
+                                    <>
+                                      <p>Hide Replies</p>
+                                      <ChevronUp className="size-4" />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <p>{c.replies_count} Replies</p>
+                                      <ChevronDown className="size-4" />
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </Comment.ReplyToggle>
+                          )}
+                        </Comment>
+                      </CommentContainer>
+                    ))}
+                  </CommentRepliesProvider>
                 </CardContent>
               </Card>
             </div>

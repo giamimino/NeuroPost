@@ -1,6 +1,7 @@
-import React from "react";
+import React, { ActionDispatch } from "react";
 import { CommentReactionEnum } from "./enums";
 import { ForyouPost } from "./global";
+import { RepliesAction, RepliesState } from "./reducer";
 
 export interface ToggleContextType {
   checked: boolean;
@@ -68,4 +69,9 @@ export interface CommentReactionContextType {
   commentId: string;
   reactions: CommentReactionsCountType;
   dispatch: React.ActionDispatch<[action: CommentReducerAction]>;
+}
+
+export interface CommentRepliesContextType {
+  repliesCache: RepliesState,
+  dispatch: ActionDispatch<[action: RepliesAction]>,
 }

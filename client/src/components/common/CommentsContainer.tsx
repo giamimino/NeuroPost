@@ -14,6 +14,7 @@ import {
   useComment,
   useCommentPost,
   useCommentReaction,
+  useCommentReplies,
 } from "@/store/contexts/CommentCntext";
 import { Input } from "../ui/input";
 import {
@@ -32,7 +33,6 @@ import {
 } from "@/schemas/comment/reply.schema";
 import { useAlertStore } from "@/store/zustand/alertStore";
 import { ERRORS } from "@/constants/error-handling";
-import useReplies from "@/hook/useReplies";
 import { SkeletonReplyComment } from "../ui/Skeleton-examples";
 import { ChevronDown, ChevronUp, Ellipsis, Send } from "lucide-react";
 import { Button } from "../ui/button";
@@ -41,7 +41,6 @@ import { timeAgo } from "@/utils/functions/timeAgo";
 import Image from "next/image";
 import { Skeleton } from "../ui/skeleton";
 import { useRouter } from "next/navigation";
-import { RepliesCache } from "@/lib/cache/replies.cache";
 import { useContentToggle } from "@/store/contexts/ContentToggle.context";
 import {
   DropdownMenu,
@@ -64,8 +63,6 @@ import {
   HoverCardContent,
 } from "../ui/hover-card";
 import { commentsReactions } from "@/app/post/[postId]/ClientPostPage";
-import { repliesReducer } from "@/reducers/replies.reducer";
-import { RepliesAction, RepliesState } from "@/types/reducer";
 
 type CommentContainerProps = {
   className?: string;
@@ -105,11 +102,9 @@ const CommentReplies = ({
   className?: string;
   comment_id: string;
 }) => {
-  const [repliesCache, dispatch] = useReducer(
-    repliesReducer,
-    new Map<string, Set<CommentReplyType>>(),
-  );
+  const { repliesCache, dispatch } = useCommentReplies();
   const replies = repliesCache.get(comment_id);
+
   const { openReplies } = useComment();
   const [status, setStatus] = useState<GenericStatus>("idle");
   const router = useRouter();
@@ -189,7 +184,7 @@ const CommentReplies = ({
         type: "error",
         ...ERRORS.GENERIC_ERROR,
       });
-      return null
+      return null;
     }
   };
 
@@ -197,9 +192,9 @@ const CommentReplies = ({
     if (repliesCache.has(comment_id) || !openReplies) return;
 
     (async () => {
-      const data = await fetchReplies()
+      const data = await fetchReplies();
 
-      if(!data) return;
+      if (!data) return;
 
       dispatch({
         type: "SET_REPLIES",
@@ -300,7 +295,17 @@ const CommentReplies = ({
                                 className="px-2 py-1 text-xs"
                                 placeholder="Write a reply..."
                               />
-                              <CommentPost.Button onSuccess={() => {}}>
+                              <CommentPost.Button
+                                onSuccess={(comment) => {
+                                  console.log(comment);
+
+                                  dispatch({
+                                    type: "ADD_REPLY",
+                                    payload: comment,
+                                    comment_id: comment.parent_id,
+                                  });
+                                }}
+                              >
                                 <Button
                                   variant={"outline"}
                                   className="cursor-pointer w-fit"
@@ -469,11 +474,10 @@ const CommentPostContainerButton = ({
   onSuccess,
 }: {
   children: React.ReactNode;
-  onSuccess?: () => void;
+  onSuccess: (comment: CommentReplyType) => void;
 }) => {
   const { ref, setStatus, status, comment_id, post_id } = useCommentPost();
   const { addAlert } = useAlertStore();
-  const { setOpenReplies } = useComment();
   const { setExpanded } = useContentToggle();
 
   const handleClick = async () => {
@@ -522,17 +526,9 @@ const CommentPostContainerButton = ({
           return;
         }
 
-        const cacheKey = comment.parent_id || comment_id;
-        const existing = RepliesCache.get(cacheKey);
-
-        if (existing) {
-          existing.add(comment);
-        }
-
-        setOpenReplies(true);
+        onSuccess(comment);
         setExpanded(false);
       }
-      onSuccess?.();
     } catch {
       setStatus("idle");
     } finally {

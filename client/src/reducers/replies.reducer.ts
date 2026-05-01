@@ -8,9 +8,23 @@ function repliesReducer(
     case "SET_REPLIES": {
       const next = new Map(state);
       next.set(action.comment_id, action.replies);
-      console.log(action);
       
       return next;
+    }
+    case "ADD_REPLY": {
+      const { comment_id, payload } = action
+      const next = new Map(state)
+      const set = next.get(comment_id)
+
+      if(!set) return state
+
+      const updated = new Set(set)
+
+      updated.add(payload)
+
+      next.set(comment_id, updated)
+
+      return next
     }
 
     default:
