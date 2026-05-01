@@ -18,4 +18,10 @@ export type RepliesAction = {
   type: "ADD_REPLY",
   comment_id: string,
   payload: CommentReplyType
+} | {
+  type: "INCREMENT_REPLY_COUNT",
+  reply_id: string
+} | {
+  type: "DECREMENT_REPLY_COUNT",
+  reply_id: string
 }

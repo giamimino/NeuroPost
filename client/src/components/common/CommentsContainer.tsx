@@ -124,6 +124,10 @@ const CommentReplies = ({
 
       if (data.ok) {
         dispatch({
+          type: "DECREMENT_REPLY_COUNT",
+          reply_id: parentId
+        })
+        dispatch({
           type: "DEL_REPLY",
           comment_id: parentId,
           reply_id: commentId,
@@ -516,6 +520,10 @@ const CommentPostContainerButton = ({
           type: "ADD_REPLY",
           comment_id,
           payload: comment
+        })
+        dispatch({
+          type: "INCREMENT_REPLY_COUNT",
+          reply_id: comment_id
         })
         setExpanded(false);
       }
