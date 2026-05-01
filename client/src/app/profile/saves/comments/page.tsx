@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { monthsShort } from "@/constants/months";
 import { apiFetch } from "@/lib/apiFetch";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { CommentType } from "@/types/neon";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";

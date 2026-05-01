@@ -10,7 +10,7 @@ import {
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";

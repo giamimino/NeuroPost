@@ -4,7 +4,7 @@ import {
   CommentReplyApiGetResSchema,
   CommentReplyType,
 } from "@/schemas/comment/reply.schema";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { GenericStatus } from "@/types/global";
 import { useEffect, useState } from "react";
 

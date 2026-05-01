@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "./ui/button";
 import { ERRORS } from "@/constants/error-handling";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { Spinner } from "./ui/spinner";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";

@@ -31,7 +31,7 @@ import React, { use, useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/apiFetch";
 import { Input } from "@/components/ui/input";
 import Line from "@/components/ui/Line";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { ERRORS } from "@/constants/error-handling";
 import { handleLike } from "@/utils/functions/LikeActions";
 import { HandleLikeArgs } from "@/types/arguments";

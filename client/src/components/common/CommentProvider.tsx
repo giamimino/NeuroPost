@@ -1,5 +1,5 @@
 "use client";
-import { useCommentsStore } from "@/store/zustand/commentsStore";
+import { useCommentToggleStore } from "@/store/zustand/commentsToggle.store";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Card,
@@ -18,7 +18,7 @@ import ToggleController from "./ToggleController";
 import { Input } from "../ui/input";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { Skeleton } from "../ui/skeleton";
 import { SkeletonComments } from "../ui/Skeleton-examples";
 import { timeAgo } from "@/utils/functions/timeAgo";
@@ -26,7 +26,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 const CommentProvider = () => {
-  const { comment, onClose } = useCommentsStore();
+  const { comment, onClose } = useCommentToggleStore();
   const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState<
     (CommentType & { user: CommentUserType; role: "creator" | "guest" })[]

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "./ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Spinner } from "./ui/spinner";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { ERRORS } from "@/constants/error-handling";
 import { Check } from "lucide-react";
 

@@ -31,7 +31,7 @@ import {
   CommentReplyAPISchema,
   CommentReplyType,
 } from "@/schemas/comment/reply.schema";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { ERRORS } from "@/constants/error-handling";
 import { SkeletonReplyComment } from "../ui/Skeleton-examples";
 import { ChevronDown, ChevronUp, Ellipsis, Send } from "lucide-react";

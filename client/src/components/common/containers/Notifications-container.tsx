@@ -14,7 +14,7 @@ import { timeAgo } from "@/utils/functions/timeAgo";
 import { ChevronRight, Circle } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { SkeletonNotifications } from "@/components/ui/Skeleton-examples";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import {
   HoverCard,
   HoverCardContent,

@@ -20,7 +20,7 @@ import {
 import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { Post } from "@/types/neon";
 import { Bell } from "lucide-react";
 import Image from "next/image";

@@ -19,7 +19,7 @@ import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { monthsShort } from "@/constants/months";
 import { apiFetch } from "@/lib/apiFetch";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import {
   FriendRequestType,
   FriendSettingsType,
