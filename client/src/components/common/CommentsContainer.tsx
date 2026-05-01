@@ -123,15 +123,11 @@ const CommentReplies = ({
       const data = await res?.json();
 
       if (data.ok) {
-        const cachedReplies = RepliesCache.get(parentId);
-        if (cachedReplies) {
-          for (const item of cachedReplies) {
-            if (item.id === commentId) {
-              cachedReplies.delete(item);
-              break;
-            }
-          }
-        }
+        dispatch({
+          type: "DEL_REPLY",
+          comment_id: parentId,
+          reply_id: commentId,
+        })
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -296,15 +292,6 @@ const CommentReplies = ({
                                 placeholder="Write a reply..."
                               />
                               <CommentPost.Button
-                                onSuccess={(comment) => {
-                                  console.log(comment);
-
-                                  dispatch({
-                                    type: "ADD_REPLY",
-                                    payload: comment,
-                                    comment_id: comment.parent_id,
-                                  });
-                                }}
                               >
                                 <Button
                                   variant={"outline"}
@@ -471,12 +458,11 @@ const CommentPostContainer = ({
 
 const CommentPostContainerButton = ({
   children,
-  onSuccess,
 }: {
   children: React.ReactNode;
-  onSuccess: (comment: CommentReplyType) => void;
 }) => {
   const { ref, setStatus, status, comment_id, post_id } = useCommentPost();
+  const { dispatch } = useCommentReplies()
   const { addAlert } = useAlertStore();
   const { setExpanded } = useContentToggle();
 
@@ -526,7 +512,11 @@ const CommentPostContainerButton = ({
           return;
         }
 
-        onSuccess(comment);
+        dispatch({
+          type: "ADD_REPLY",
+          comment_id,
+          payload: comment
+        })
         setExpanded(false);
       }
     } catch {

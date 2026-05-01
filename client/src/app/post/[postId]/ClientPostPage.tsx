@@ -692,9 +692,7 @@ const ClientPostPage = ({
                                             className="px-2 py-1 text-xs"
                                             placeholder="Write a reply..."
                                           />
-                                          <CommentPost.Button
-                                            onSuccess={() => {}}
-                                          >
+                                          <CommentPost.Button>
                                             <Button
                                               variant={"outline"}
                                               className="cursor-pointer w-fit"

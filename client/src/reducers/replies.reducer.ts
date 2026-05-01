@@ -18,7 +18,7 @@ function repliesReducer(
 
       if(!set) return state
 
-      const updated = new Set(set)
+      const updated = new Set(set ?? [])
 
       updated.add(payload)
 
@@ -27,6 +27,30 @@ function repliesReducer(
       return next
     }
 
+    case "DEL_REPLY": {
+      const { comment_id, reply_id } = action
+      const next = new Map(state)
+      const set = next.get(comment_id)
+
+      if(!set) return state
+
+      const updated = new Set(set ?? [])
+
+      for(const item of updated) {
+        if(item.id === reply_id) {
+          updated.delete(item)
+        }
+      }
+
+      if(updated.size === 0) {
+        next.delete(comment_id)
+      } else {
+        next.set(comment_id, updated)
+      }
+
+      
+      return next
+    }
     default:
       return state;
   }
