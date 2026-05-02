@@ -75,6 +75,7 @@ import {
 } from "@/components/ui/hover-card";
 import { CommentReactionsCountType, UserReactionType } from "@/types/context";
 import CommentRepliesProvider from "@/components/providers/commentReplies.provider";
+import { useCommentsStore } from "@/store/zustand/comments.store";
 
 export const commentsReactions: {
   id: CommentReactionEnum;
@@ -108,12 +109,7 @@ const ClientPostPage = ({
     | null
   >(null);
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState<
-    (CommentSchemaType & {
-      user_reaction: UserReactionType | null;
-      reactions: CommentReactionsCountType;
-    })[]
-  >([]);
+  const { comments, pushComments, deleteComment } = useCommentsStore();
   const [deleted, setDeleted] = useState(false);
   const [editing, setEditing] = useState(false);
   const [media, setMedia] = useState<File | null>(null);
@@ -220,7 +216,7 @@ const ClientPostPage = ({
     });
     const data = await res?.json();
     if (data.ok) {
-      setComments((prev) => [data.comment, ...prev]);
+      pushComments(data.comment);
     } else {
       addAlert({
         id: crypto.randomUUID(),
@@ -240,7 +236,7 @@ const ClientPostPage = ({
       const data = await res?.json();
 
       if (data.ok) {
-        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        deleteComment(commentId);
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -293,8 +289,8 @@ const ClientPostPage = ({
             ...data.error,
           });
         } else if (data.ok && data.comments) {
-          setComments((prev) => [...prev, ...data.comments]);
-          console.log(data);
+          pushComments(data.comments);
+
           const isLastPage = !data.nextCursor || data.comments.length < 10;
 
           if (isLastPage) {

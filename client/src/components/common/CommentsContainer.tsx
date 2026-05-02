@@ -63,6 +63,7 @@ import {
   HoverCardContent,
 } from "../ui/hover-card";
 import { commentsReactions } from "@/app/post/[postId]/ClientPostPage";
+import { useCommentsStore } from "@/store/zustand/comments.store";
 
 type CommentContainerProps = {
   className?: string;
@@ -107,6 +108,7 @@ const CommentReplies = ({
 
   const { openReplies } = useComment();
   const [status, setStatus] = useState<GenericStatus>("idle");
+  const { comments, decrementReplies } = useCommentsStore();
   const router = useRouter();
   const { addAlert } = useAlertStore();
 
@@ -123,15 +125,20 @@ const CommentReplies = ({
       const data = await res?.json();
 
       if (data.ok) {
-        dispatch({
-          type: "DECREMENT_REPLY_COUNT",
-          reply_id: parentId
-        })
+        const existing = comments.find((c) => c.id === comment_id);
+        if (existing) {
+          decrementReplies(existing.id);
+        } else {
+          dispatch({
+            type: "DECREMENT_REPLY_COUNT",
+            reply_id: parentId,
+          });
+        }
         dispatch({
           type: "DEL_REPLY",
           comment_id: parentId,
           reply_id: commentId,
-        })
+        });
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -295,8 +302,7 @@ const CommentReplies = ({
                                 className="px-2 py-1 text-xs"
                                 placeholder="Write a reply..."
                               />
-                              <CommentPost.Button
-                              >
+                              <CommentPost.Button>
                                 <Button
                                   variant={"outline"}
                                   className="cursor-pointer w-fit"
@@ -466,8 +472,9 @@ const CommentPostContainerButton = ({
   children: React.ReactNode;
 }) => {
   const { ref, setStatus, status, comment_id, post_id } = useCommentPost();
-  const { dispatch } = useCommentReplies()
+  const { dispatch } = useCommentReplies();
   const { addAlert } = useAlertStore();
+  const { comments, incrementReplies } = useCommentsStore();
   const { setExpanded } = useContentToggle();
 
   const handleClick = async () => {
@@ -516,15 +523,22 @@ const CommentPostContainerButton = ({
           return;
         }
 
+        const existing = comments.find((c) => c.id === comment_id);
+
+        if (existing) {
+          incrementReplies(existing.id);
+        } else {
+          dispatch({
+            type: "INCREMENT_REPLY_COUNT",
+            reply_id: comment_id,
+          });
+        }
+
         dispatch({
           type: "ADD_REPLY",
           comment_id,
-          payload: comment
-        })
-        dispatch({
-          type: "INCREMENT_REPLY_COUNT",
-          reply_id: comment_id
-        })
+          payload: comment,
+        });
         setExpanded(false);
       }
     } catch {
