@@ -23,15 +23,15 @@ export interface CommentToggleStoreType {
 }
 
 export interface CommentsType extends CommentSchemaType {
-  user_reaction: UserReactionType | null,
-  reactions: CommentReactionsCountType
+  user_reaction: UserReactionType | null;
+  reactions: CommentReactionsCountType;
 }
 
 export interface CommentsStoreType {
-  comments: CommentsType[],
-  setComments: (comments: CommentsType[]) => void,
-  pushComments: (comments: CommentsType[]) => void, 
-  incrementReplies: (commentId: string) => void,
-  decrementReplies: (commentId: string) => void,
-  deleteComment: (commentId: string) => void
+  comments: CommentsType[];
+  setComments: (comments: CommentsType[]) => void;
+  pushComments: (comments: CommentsType[]) => void;
+  incrementReplies: (commentId: string) => void;
+  decrementReplies: (commentId: string) => void;
+  deleteComment: (commentId: string) => void;
 }

@@ -65,10 +65,10 @@ function repliesReducer(
           ),
         );
 
-        next.set(parentId, updated)
+        next.set(parentId, updated);
       }
 
-      return next
+      return next;
     }
 
     case "DECREMENT_REPLY_COUNT": {
@@ -85,10 +85,10 @@ function repliesReducer(
           ),
         );
 
-        next.set(parentId, updated)
+        next.set(parentId, updated);
       }
 
-      return next
+      return next;
     }
 
     default:

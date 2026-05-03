@@ -72,6 +72,6 @@ export interface CommentReactionContextType {
 }
 
 export interface CommentRepliesContextType {
-  repliesCache: RepliesState,
-  dispatch: ActionDispatch<[action: RepliesAction]>,
+  repliesCache: RepliesState;
+  dispatch: ActionDispatch<[action: RepliesAction]>;
 }

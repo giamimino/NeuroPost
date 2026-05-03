@@ -61,7 +61,6 @@ import {
   ContentToggle,
   ContentToggleContainer,
 } from "@/components/ContentToggle";
-import { CommentSchemaType } from "@/schemas/comment/comment.schema";
 import { TagItem } from "@/components/ui/tag";
 import { CommentReactionEnum } from "@/types/enums";
 import {
@@ -73,7 +72,6 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { CommentReactionsCountType, UserReactionType } from "@/types/context";
 import CommentRepliesProvider from "@/components/providers/commentReplies.provider";
 import { useCommentsStore } from "@/store/zustand/comments.store";
 
@@ -309,7 +307,7 @@ const ClientPostPage = ({
         loadingRef.current = false;
       }
     },
-    [addAlert, openComments],
+    [addAlert, openComments, pushComments],
   );
 
   // get post
@@ -326,7 +324,7 @@ const ClientPostPage = ({
         setLoading(false);
       })
       .catch((err) => console.error(err));
-  }, [postId]);
+  }, [postId, pushComments]);
 
   useEffect(() => {
     if (!post) return;

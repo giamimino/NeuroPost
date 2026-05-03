@@ -1,6 +1,7 @@
 import React, {
   DetailedHTMLProps,
   InputHTMLAttributes,
+  useCallback,
   useEffect,
   useReducer,
   useRef,
@@ -152,7 +153,7 @@ const CommentReplies = ({
     }
   };
 
-  const fetchReplies = async () => {
+  const fetchReplies = useCallback(async () => {
     try {
       setStatus("loading");
 
@@ -193,7 +194,7 @@ const CommentReplies = ({
       });
       return null;
     }
-  };
+  }, [addAlert, comment_id]);
 
   useEffect(() => {
     if (repliesCache.has(comment_id) || !openReplies) return;
@@ -209,7 +210,7 @@ const CommentReplies = ({
         replies: new Set(data),
       });
     })();
-  }, [openReplies, comment_id]);
+  }, [openReplies, comment_id, dispatch, repliesCache, fetchReplies]);
 
   return (
     <div className={className} hidden={!openReplies}>

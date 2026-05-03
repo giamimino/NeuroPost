@@ -41,18 +41,20 @@ const useCommentReaction = () => {
   return ctx;
 };
 
-const CommentRepliesContext = createContext<CommentRepliesContextType | null>(null)
+const CommentRepliesContext = createContext<CommentRepliesContextType | null>(
+  null,
+);
 
 const useCommentReplies = () => {
-  const ctx = useContext(CommentRepliesContext)
+  const ctx = useContext(CommentRepliesContext);
 
-  if(!ctx)
+  if (!ctx)
     throw new Error(
-      "CommentReplies components most be used within CommentRepliesProvider"
-    )
+      "CommentReplies components most be used within CommentRepliesProvider",
+    );
 
-  return ctx
-}
+  return ctx;
+};
 
 export {
   CommentContext,
@@ -62,5 +64,5 @@ export {
   CommentReactionContext,
   useCommentReaction,
   CommentRepliesContext,
-  useCommentReplies
+  useCommentReplies,
 };
