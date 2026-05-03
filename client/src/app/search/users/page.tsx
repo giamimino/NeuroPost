@@ -13,12 +13,13 @@ import { SkeletonPost } from "@/components/ui/Skeleton-examples";
 import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import useDebounce from "@/hook/useDebounce";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const SearchUsersPage = () => {
   const [users, setUsers] = useState<
-    { name: string; username: string; id: string; bio: string | null }[]
+    { name: string; username: string; id: string; bio: string | null, profile_url: string }[]
   >([]);
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -26,7 +27,7 @@ const SearchUsersPage = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (!debouncedSearch) return;
+    if (!debouncedSearch || debouncedSearch.length < 3) return;
     (async () => {
       try {
         setLoading(true);
@@ -75,7 +76,14 @@ const SearchUsersPage = () => {
             className="gap-2 pb-0 overflow-hidden justify-between"
             key={user.id}
           >
-            <CardHeader>
+            <CardHeader className="flex gap-2 items-center">
+              <Image
+                src={user.profile_url}
+                width={48}
+                height={48}
+                alt={user.username}
+                className="w-8 h-8 object-cover rounded-full"
+              />
               <CardTitle>{user.name}</CardTitle>
             </CardHeader>
             <CardContent>
