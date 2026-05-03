@@ -43,7 +43,7 @@ export async function GET(
       ) as follow FROM users u 
     LEFT JOIN follows f 
       ON f.follower_id = $2 
-      AND f.follow_id = u.id 
+      AND f.follow_id = u.id AND u."isPrivate" = FALSE
     where u.username = $1`;
     const users = await sql.query(rawSql, [username, payload.userId]);
     let user = users[0];
@@ -67,32 +67,13 @@ export async function GET(
 
     user = { ...user, profile_url: user.profile_url ? signedUrl : "/user.jpg" };
 
-    if (stats === "true" && !user.isPrivate) {
-      const stats = await sql.query(
-        `
-        SELECT 
-        (SELECT COUNT(*) FROM follows WHERE follower_id = $1) AS following,
-        (SELECT COUNT(*) FROM follows WHERE follow_id = $1) AS followers,
-        (SELECT COUNT(l.id) FROM posts p 
-        LEFT JOIN likes l ON l.post_id = p.id 
-        WHERE p.author_id = $1) as likes;`,
-        [user.id],
-      );
-
-      user = { ...user, stats: stats[0] };
-    }
-
-    if (
-      friend_status === "true" &&
-      username !== payload.username &&
-      !user.isPrivate
-    ) {
+    if (friend_status === "true" && username !== payload.username) {
       const friends = await sql.query(
         `SELECT id FROM friends WHERE CASE
-                                        WHEN user_id = $1 AND friend_id = $2 THEN 1
-                                        WHEN user_id = $2 AND friend_id = $1 THEN 1
-                                        ELSE 0
-                                      END = 1;`,
+        WHEN user_id = $1 AND friend_id = $2 THEN 1
+        WHEN user_id = $2 AND friend_id = $1 THEN 1
+        ELSE 0
+        END = 1;`,
         [payload.userId, user.id],
       );
       const friend = friends[0];
@@ -128,6 +109,24 @@ export async function GET(
           };
         }
       }
+    }
+
+    if (
+      stats === "true" &&
+      (!user.isPrivate || user.friend_status?.status === "accepted")
+    ) {
+      const stats = await sql.query(
+        `
+          SELECT 
+          (SELECT COUNT(*) FROM follows WHERE follower_id = $1) AS following,
+          (SELECT COUNT(*) FROM follows WHERE follow_id = $1) AS followers,
+          (SELECT COUNT(l.id) FROM posts p 
+          LEFT JOIN likes l ON l.post_id = p.id 
+          WHERE p.author_id = $1) as likes;`,
+        [user.id],
+      );
+
+      user = { ...user, stats: stats[0] };
     }
 
     return NextResponse.json({ ok: true, user }, { status: 200 });

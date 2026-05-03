@@ -235,7 +235,8 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   }, [addAlert, username]);
 
   useEffect(() => {
-    if (!user || user.posts || user.isPrivate) return;
+    if (!user || user.posts) return;
+    if (user.isPrivate && user.friend_status?.status !== "accepted") return;
 
     (() => {
       apiFetch(`/api/post/u/${user.id}`)
@@ -288,7 +289,9 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                     {user.follow.id ? "Following" : "Follow"}
                   </Button>
                 )}
-                {(user?.follow.id || user?.friend_status?.status) &&
+                {(user?.follow.id ||
+                  user?.friend_status?.status ||
+                  user.isPrivate) &&
                   !user.friend_receive &&
                   user.friend_status?.status !== "unknown" &&
                   user.friend_status?.status !== "accepted" && (
