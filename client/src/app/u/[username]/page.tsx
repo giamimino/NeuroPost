@@ -31,6 +31,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     username: string;
     bio: string | null;
     profile_url: string;
+    isPrivate: boolean;
     friend_status?: {
       id?: string;
       status: "pending" | "accepted" | "rejected" | "unknown";
@@ -235,6 +236,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
 
   useEffect(() => {
     if (!user || user.posts) return;
+    if (user.isPrivate && user.friend_status?.status !== "accepted") return;
 
     (() => {
       apiFetch(`/api/post/u/${user.id}`)
@@ -273,7 +275,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                 </p>
               </div>
               <div className="flex gap-2">
-                {user?.follow && (
+                {user?.follow && !user.isPrivate && (
                   <Button
                     variant={user?.follow.id ? "outline" : "default"}
                     className={clsx(
@@ -287,7 +289,9 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                     {user.follow.id ? "Following" : "Follow"}
                   </Button>
                 )}
-                {(user?.follow.id || user?.friend_status?.status) &&
+                {(user?.follow.id ||
+                  user?.friend_status?.status ||
+                  user.isPrivate) &&
                   !user.friend_receive &&
                   user.friend_status?.status !== "unknown" &&
                   user.friend_status?.status !== "accepted" && (
@@ -332,7 +336,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                 )}
               </div>
               <div className="flex gap-5">
-                {user?.stats &&
+                {user?.stats ? (
                   Object.entries(user.stats).map(([key, value]) => (
                     <div key={`${key}`} className="flex gap-1.5">
                       <CardTitle>{value}</CardTitle>
@@ -340,7 +344,29 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                         {`${key.charAt(0).toUpperCase()}${key.slice(1, key.length)}`}
                       </CardDescription>
                     </div>
-                  ))}
+                  ))
+                ) : (
+                  <>
+                    <div className="flex gap-1.5">
+                      <CardTitle>-</CardTitle>
+                      <CardDescription className="cursor-pointer">
+                        Following
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <CardTitle>-</CardTitle>
+                      <CardDescription className="cursor-pointer">
+                        Followers
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <CardTitle>-</CardTitle>
+                      <CardDescription className="cursor-pointer">
+                        Likes
+                      </CardDescription>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="my-3">
                 <p className="text-foreground">{user?.bio ?? "No bio yet."}</p>
@@ -380,6 +406,11 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
               </CardFooter>
             </Card>
           ))}
+          {user?.isPrivate && (
+            <div>
+              <CardDescription>Account is private</CardDescription>
+            </div>
+          )}
         </div>
       </div>
     </div>
