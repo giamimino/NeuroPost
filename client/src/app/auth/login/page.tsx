@@ -4,7 +4,7 @@ import DefaultInput from "@/components/common/DefaultInput";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { LoginSchema } from "@/schemas/auth/login.schema";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { useRouter } from "next/navigation";
 import React from "react";
 

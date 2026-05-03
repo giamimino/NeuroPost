@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { PostMedia } from "@/types/neon";
 import clsx from "clsx";
 import { Heart, MessageCircle } from "lucide-react";

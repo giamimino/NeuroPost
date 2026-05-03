@@ -1,5 +1,5 @@
 "use client";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect } from "react";
 import AlertContainer from "../common/AlertContainer";

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { HandleLikeArgs } from "@/types/arguments";
 import { Heart, MessageCircleMore } from "lucide-react";
 import { handleLike } from "@/utils/functions/LikeActions";
-import { useCommentsStore } from "@/store/zustand/commentsStore";
+import { useCommentToggleStore } from "@/store/zustand/commentsToggle.store";
 import { CardDescription, CardTitle } from "../ui/card";
 import { PostContext, usePostContext } from "@/store/contexts/PostContext";
 import clsx from "clsx";
@@ -199,7 +199,7 @@ const PostLike = () => {
 PostLike.displayName = "Post.Like";
 
 const PostCommentBtn = () => {
-  const { onOpen } = useCommentsStore();
+  const { onOpen } = useCommentToggleStore();
   const { post } = usePostContext();
 
   return (

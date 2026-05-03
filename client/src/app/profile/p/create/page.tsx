@@ -20,7 +20,7 @@ import {
   ALLOWED_VIDEO_TYPES,
 } from "@/constants/validators";
 import { apiFetch } from "@/lib/apiFetch";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { Tag } from "@/types/neon";
 import { MediaValidator } from "@/utils/validator";
 import { Plus } from "lucide-react";

@@ -1,11 +1,10 @@
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
-import { RepliesCache } from "@/lib/cache/replies.cache";
 import {
   CommentReplyApiGetResSchema,
   CommentReplyType,
 } from "@/schemas/comment/reply.schema";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { GenericStatus } from "@/types/global";
 import { useEffect, useState } from "react";
 
@@ -19,24 +18,10 @@ export default function useReplies(
   const { addAlert } = useAlertStore();
 
   useEffect(() => {
-    if (!enabled) return;
-
-    const cachedReplies = RepliesCache.get(commentId);
-    const checkCache = () => {
-      if (!cached) return;
-      if (cachedReplies) {
-        setStatus("success");
-        const replies = Array.from(cachedReplies);
-        setData(replies);
-        return true;
-      }
-      return false;
-    };
-    checkCache();
+    if (!enabled || cached) return;
 
     const fetchReplies = async () => {
       try {
-        if (cachedReplies && enabled) return;
         setStatus("loading");
 
         const res = await apiFetch(
@@ -64,8 +49,6 @@ export default function useReplies(
             ...ERRORS.GENERIC_ERROR,
           });
 
-        RepliesCache.set(commentId, new Set(replies));
-
         setData(replies);
         setStatus("success");
       } catch {
@@ -79,7 +62,7 @@ export default function useReplies(
     };
 
     fetchReplies();
-  }, [commentId, enabled, cached, addAlert]);
+  }, [commentId, enabled, addAlert, cached]);
 
-  return { data, status, setData };
+  return { data, status };
 }

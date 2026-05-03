@@ -11,7 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { UserJoin } from "@/types/neon";
 import { ChevronLeft, EllipsisVertical } from "lucide-react";
 import Image from "next/image";

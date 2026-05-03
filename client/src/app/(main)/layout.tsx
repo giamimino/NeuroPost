@@ -1,6 +1,6 @@
 "use client";
 import CommentProvider from "@/components/common/CommentProvider";
-import { useCommentsStore } from "@/store/zustand/commentsStore";
+import { useCommentToggleStore } from "@/store/zustand/commentsToggle.store";
 import { motion } from "framer-motion";
 import React from "react";
 
@@ -9,7 +9,7 @@ export default function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { comment } = useCommentsStore();
+  const { comment } = useCommentToggleStore();
 
   const responsive =
     typeof window !== "undefined"

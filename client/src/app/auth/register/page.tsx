@@ -5,7 +5,7 @@ import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { RegisterSchema } from "@/schemas/auth/register.schema";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { useRouter } from "next/navigation";
 import React from "react";
 

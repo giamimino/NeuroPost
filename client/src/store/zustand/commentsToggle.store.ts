@@ -1,7 +1,7 @@
-import { CommentsStoreType } from "@/types/zustand.store";
+import { CommentToggleStoreType } from "@/types/zustand.store";
 import { create } from "zustand";
 
-export const useCommentsStore = create<CommentsStoreType>((set) => ({
+export const useCommentToggleStore = create<CommentToggleStoreType>((set) => ({
   comment: null,
   onOpen: (id) => set(() => ({ comment: id })),
   onClose: () => set(() => ({ comment: null })),

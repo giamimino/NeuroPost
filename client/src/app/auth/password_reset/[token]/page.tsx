@@ -12,7 +12,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { PasswordValidatorSchema } from "@/schemas/auth/auth.schema";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { use, useEffect, useRef, useState } from "react";

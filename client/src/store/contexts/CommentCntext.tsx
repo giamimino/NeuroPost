@@ -2,25 +2,24 @@ import {
   CommentContextType,
   CommentPostContextType,
   CommentReactionContextType,
+  CommentRepliesContextType,
 } from "@/types/context";
 import { createContext, useContext } from "react";
 
-export const CommentContext = createContext<CommentContextType | null>(null);
+const CommentContext = createContext<CommentContextType | null>(null);
 
 CommentContext.displayName = "CommentContext";
 
-export const useComment = () => {
+const useComment = () => {
   const ctx = useContext(CommentContext);
   if (!ctx)
     throw new Error("Comment components must be used within CommentContext");
   return ctx;
 };
 
-export const CommentPostContext = createContext<CommentPostContextType | null>(
-  null,
-);
+const CommentPostContext = createContext<CommentPostContextType | null>(null);
 
-export const useCommentPost = () => {
+const useCommentPost = () => {
   const ctx = useContext(CommentPostContext);
   if (!ctx)
     throw new Error(
@@ -29,14 +28,41 @@ export const useCommentPost = () => {
   return ctx;
 };
 
-export const CommentReactionContext =
-  createContext<CommentReactionContextType | null>(null);
+const CommentReactionContext = createContext<CommentReactionContextType | null>(
+  null,
+);
 
-export const useCommentReaction = () => {
+const useCommentReaction = () => {
   const ctx = useContext(CommentReactionContext);
   if (!ctx)
     throw new Error(
       "CommentReactions components must be used within CommentReaction",
     );
   return ctx;
+};
+
+const CommentRepliesContext = createContext<CommentRepliesContextType | null>(
+  null,
+);
+
+const useCommentReplies = () => {
+  const ctx = useContext(CommentRepliesContext);
+
+  if (!ctx)
+    throw new Error(
+      "CommentReplies components most be used within CommentRepliesProvider",
+    );
+
+  return ctx;
+};
+
+export {
+  CommentContext,
+  useComment,
+  CommentPostContext,
+  useCommentPost,
+  CommentReactionContext,
+  useCommentReaction,
+  CommentRepliesContext,
+  useCommentReplies,
 };

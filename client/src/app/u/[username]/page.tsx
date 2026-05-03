@@ -14,7 +14,7 @@ import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { UserStatsType } from "@/types/global";
 import { Post, UserFollowJoinType } from "@/types/neon";
 import clsx from "clsx";

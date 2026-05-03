@@ -1,6 +1,8 @@
 import React, {
   DetailedHTMLProps,
   InputHTMLAttributes,
+  useCallback,
+  useEffect,
   useReducer,
   useRef,
   useState,
@@ -13,6 +15,7 @@ import {
   useComment,
   useCommentPost,
   useCommentReaction,
+  useCommentReplies,
 } from "@/store/contexts/CommentCntext";
 import { Input } from "../ui/input";
 import {
@@ -24,13 +27,13 @@ import {
 import { Spinner } from "../ui/spinner";
 import { apiFetch } from "@/lib/apiFetch";
 import {
+  CommentReplyApiGetResSchema,
   CommentReplyAPIResSchema,
   CommentReplyAPISchema,
   CommentReplyType,
 } from "@/schemas/comment/reply.schema";
-import { useAlertStore } from "@/store/zustand/alertStore";
+import { useAlertStore } from "@/store/zustand/alert.store";
 import { ERRORS } from "@/constants/error-handling";
-import useReplies from "@/hook/useReplies";
 import { SkeletonReplyComment } from "../ui/Skeleton-examples";
 import { ChevronDown, ChevronUp, Ellipsis, Send } from "lucide-react";
 import { Button } from "../ui/button";
@@ -39,7 +42,6 @@ import { timeAgo } from "@/utils/functions/timeAgo";
 import Image from "next/image";
 import { Skeleton } from "../ui/skeleton";
 import { useRouter } from "next/navigation";
-import { RepliesCache } from "@/lib/cache/replies.cache";
 import { useContentToggle } from "@/store/contexts/ContentToggle.context";
 import {
   DropdownMenu,
@@ -49,7 +51,7 @@ import {
 } from "../ui/dropdown-menu";
 import { ApiConfig } from "@/configs/api-configs";
 import clsx from "clsx";
-import { Children } from "@/types/global";
+import { Children, GenericStatus } from "@/types/global";
 import {
   CommentsReactions,
   ReactionContent,
@@ -62,6 +64,7 @@ import {
   HoverCardContent,
 } from "../ui/hover-card";
 import { commentsReactions } from "@/app/post/[postId]/ClientPostPage";
+import { useCommentsStore } from "@/store/zustand/comments.store";
 
 type CommentContainerProps = {
   className?: string;
@@ -101,8 +104,12 @@ const CommentReplies = ({
   className?: string;
   comment_id: string;
 }) => {
+  const { repliesCache, dispatch } = useCommentReplies();
+  const replies = repliesCache.get(comment_id);
+
   const { openReplies } = useComment();
-  const { status, data, setData } = useReplies(comment_id, openReplies, true);
+  const [status, setStatus] = useState<GenericStatus>("idle");
+  const { comments, decrementReplies } = useCommentsStore();
   const router = useRouter();
   const { addAlert } = useAlertStore();
 
@@ -119,18 +126,20 @@ const CommentReplies = ({
       const data = await res?.json();
 
       if (data.ok) {
-        setData((prev) =>
-          prev ? prev.filter((c) => c.id !== commentId) : prev,
-        );
-        const cachedReplies = RepliesCache.get(parentId);
-        if (cachedReplies) {
-          for (const item of cachedReplies) {
-            if (item.id === commentId) {
-              cachedReplies.delete(item);
-              break;
-            }
-          }
+        const existing = comments.find((c) => c.id === comment_id);
+        if (existing) {
+          decrementReplies(existing.id);
+        } else {
+          dispatch({
+            type: "DECREMENT_REPLY_COUNT",
+            reply_id: parentId,
+          });
         }
+        dispatch({
+          type: "DEL_REPLY",
+          comment_id: parentId,
+          reply_id: commentId,
+        });
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -144,11 +153,71 @@ const CommentReplies = ({
     }
   };
 
+  const fetchReplies = useCallback(async () => {
+    try {
+      setStatus("loading");
+
+      const res = await apiFetch(
+        `/api/post/comment/reply?comment_id=${comment_id}&limit=20`,
+      );
+      const data = await res?.json();
+
+      const parsed = CommentReplyApiGetResSchema.safeParse(data);
+
+      if (!parsed.success || !parsed.data.ok) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...(parsed.data?.error || ERRORS.GENERIC_ERROR),
+        });
+        return null;
+      }
+
+      const replies = parsed.data.comments;
+
+      if (!replies) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...ERRORS.GENERIC_ERROR,
+        });
+        return null;
+      }
+      setStatus("success");
+      return replies;
+    } catch {
+      setStatus("error");
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+      return null;
+    }
+  }, [addAlert, comment_id]);
+
+  useEffect(() => {
+    if (repliesCache.has(comment_id) || !openReplies) return;
+
+    (async () => {
+      const data = await fetchReplies();
+
+      if (!data) return;
+
+      dispatch({
+        type: "SET_REPLIES",
+        comment_id,
+        replies: new Set(data),
+      });
+    })();
+  }, [openReplies, comment_id, dispatch, repliesCache, fetchReplies]);
+
   return (
     <div className={className} hidden={!openReplies}>
       {status === "loading" && <SkeletonReplyComment />}
       {status === "success" &&
-        data?.map((c: CommentReplyType) => (
+        replies &&
+        Array.from(replies).map((c: CommentReplyType) => (
           <CommentContainer key={c.id}>
             <Comment className="flex flex-col gap-2.5">
               <div className="flex justify-between items-center">
@@ -234,7 +303,7 @@ const CommentReplies = ({
                                 className="px-2 py-1 text-xs"
                                 placeholder="Write a reply..."
                               />
-                              <CommentPost.Button onSuccess={() => {}}>
+                              <CommentPost.Button>
                                 <Button
                                   variant={"outline"}
                                   className="cursor-pointer w-fit"
@@ -400,14 +469,13 @@ const CommentPostContainer = ({
 
 const CommentPostContainerButton = ({
   children,
-  onSuccess,
 }: {
   children: React.ReactNode;
-  onSuccess?: () => void;
 }) => {
   const { ref, setStatus, status, comment_id, post_id } = useCommentPost();
+  const { dispatch } = useCommentReplies();
   const { addAlert } = useAlertStore();
-  const { setOpenReplies } = useComment();
+  const { comments, incrementReplies } = useCommentsStore();
   const { setExpanded } = useContentToggle();
 
   const handleClick = async () => {
@@ -456,17 +524,24 @@ const CommentPostContainerButton = ({
           return;
         }
 
-        const cacheKey = comment.parent_id || comment_id;
-        const existing = RepliesCache.get(cacheKey);
+        const existing = comments.find((c) => c.id === comment_id);
 
         if (existing) {
-          existing.add(comment);
+          incrementReplies(existing.id);
+        } else {
+          dispatch({
+            type: "INCREMENT_REPLY_COUNT",
+            reply_id: comment_id,
+          });
         }
 
-        setOpenReplies(true);
+        dispatch({
+          type: "ADD_REPLY",
+          comment_id,
+          payload: comment,
+        });
         setExpanded(false);
       }
-      onSuccess?.();
     } catch {
       setStatus("idle");
     } finally {
