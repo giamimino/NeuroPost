@@ -8,11 +8,11 @@ export async function POST(req: Request) {
   try {
     const { query }: { query: string } = await req.json();
 
-    if(!query.trim()) {
-      return NextResponse.json({ ok: true, users: []}, { status: 200 })
+    if (!query.trim()) {
+      return NextResponse.json({ ok: true, users: [] }, { status: 200 });
     }
 
-    const search = `%${String(query).toLowerCase()}%`
+    const search = `%${String(query).toLowerCase()}%`;
 
     const users = await sql`
       SELECT name, id, bio, username, profile_url
@@ -23,20 +23,28 @@ export async function POST(req: Request) {
       LIMIT 20
     `;
 
-    const keys = users.map(u => u.profile_url ?? "")
+    const keys = users.map((u) => u.profile_url ?? "");
 
-    const signed_urls = await Promise.all(keys.map(key => {
-      const command = new GetObjectCommand({
-        Key: key,
-        Bucket: "neuropost"
-      })
+    const signed_urls = await Promise.all(
+      keys.map((key) => {
+        const command = new GetObjectCommand({
+          Key: key,
+          Bucket: "neuropost",
+        });
 
-      return getSignedUrl(s3, command, { expiresIn: 5 * 60 })
-    }))
+        return getSignedUrl(s3, command, { expiresIn: 5 * 60 });
+      }),
+    );
 
-    const signed_users = users.map((u, i) => ({ ...u, profile_url: u.profile_url ? signed_urls[i] : "/user.jpg"}))
+    const signed_users = users.map((u, i) => ({
+      ...u,
+      profile_url: u.profile_url ? signed_urls[i] : "/user.jpg",
+    }));
 
-    return NextResponse.json({ ok: true, users: signed_users }, { status: 200 });
+    return NextResponse.json(
+      { ok: true, users: signed_users },
+      { status: 200 },
+    );
   } catch (err) {
     console.error(err);
     return NextResponse.json({ ok: false, message: "" }, { status: 500 });

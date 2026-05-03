@@ -19,7 +19,13 @@ import React, { useEffect, useState } from "react";
 
 const SearchUsersPage = () => {
   const [users, setUsers] = useState<
-    { name: string; username: string; id: string; bio: string | null, profile_url: string }[]
+    {
+      name: string;
+      username: string;
+      id: string;
+      bio: string | null;
+      profile_url: string;
+    }[]
   >([]);
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
