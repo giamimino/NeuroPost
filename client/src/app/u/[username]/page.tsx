@@ -214,7 +214,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     if (!username || !addAlert) return;
     const fetchData = async () => {
       setLoading(true);
-      apiFetch(`/api/user/${username}?stats=true&friend_status=true`)
+      apiFetch(`/api/user/u/${username}?stats=true&friend_status=true`)
         .then((res) => res?.json())
         .then((data) => {
           if (data.ok) {
