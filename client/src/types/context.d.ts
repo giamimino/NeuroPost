@@ -1,7 +1,9 @@
 import React, { ActionDispatch } from "react";
 import { CommentReactionEnum } from "./enums";
-import { ForyouPost } from "./global";
+import { ForyouPost, GenericStatus } from "./global";
 import { RepliesAction, RepliesState } from "./reducer";
+import { StatsEndpointType } from "@/schemas/common/enums.schema";
+import { UserStatsPreviewType } from "./neon";
 
 export interface ToggleContextType {
   checked: boolean;
@@ -74,4 +76,25 @@ export interface CommentReactionContextType {
 export interface CommentRepliesContextType {
   repliesCache: RepliesState;
   dispatch: ActionDispatch<[action: RepliesAction]>;
+}
+
+export type UserStatsPreviewType =
+  | {
+      type: "LIKES";
+      payload: UserStatsPreviewUserType & { likes_count: string };
+    }
+  | {
+      type: "FOLLOWERS";
+      payload: UserStatsPreviewUserType;
+    }
+  | {
+      type: "FOLLOWING";
+      payload: UserStatsPreviewUserType;
+    }
+  | {
+      type: "none";
+    };
+
+export interface UserStatsPreviewContextType extends UserStatsPreviewType {
+  status: GenericStatus;
 }

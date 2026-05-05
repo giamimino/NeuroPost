@@ -14,6 +14,7 @@ import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
+import { StatsEndpointType } from "@/schemas/common/enums.schema";
 import { useAlertStore } from "@/store/zustand/alert.store";
 import { UserStatsType } from "@/types/global";
 import { Post, UserFollowJoinType } from "@/types/neon";
@@ -47,6 +48,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   const router = useRouter();
   const { addAlert } = useAlertStore();
   const tickingRef = useRef(false);
+  const [preview, setPreview] = useState<StatsEndpointType | "none">("none");
 
   const handleRequestResponse = async (
     action: "accept" | "reject",
