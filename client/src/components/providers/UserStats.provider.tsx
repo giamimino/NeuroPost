@@ -14,6 +14,7 @@ import { UserStatsPreviewUserType } from "@/types/neon";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { SkeletonUser } from "../ui/Skeleton-examples";
 
 type Props = {
   preview: StatsPreviewType;
@@ -194,17 +195,24 @@ const UserStatsList = () => {
     );
 
   return (
-    <div>
+    <div data-lenis-prevent className="flex flex-col gap-1 overflow-y-auto h-full">
       {data?.map((item, i) => (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: ((i % 10) + 1) * 0.1, type: "spring", stiffness: 110, damping: 18}}
+          transition={{
+            delay: ((i % 10) + 1) * 0.1,
+            type: "spring",
+            stiffness: 110,
+            damping: 18,
+          }}
           key={item.username}
         >
           {UserStatsUserComponents[type](item)}
         </motion.div>
       ))}
+      {status === "loading" &&
+        Array.from({ length: 6 }).map((_, i) => <SkeletonUser className="w-full p-2" key={i} />)}
     </div>
   );
 };
