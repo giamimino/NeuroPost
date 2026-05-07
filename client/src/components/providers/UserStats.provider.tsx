@@ -13,6 +13,7 @@ import { X } from "lucide-react";
 import { UserStatsPreviewUserType } from "@/types/neon";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 
 type Props = {
   preview: StatsPreviewType;
@@ -88,27 +89,37 @@ const UserStatsContent = ({ children }: Children) => {
     return () => document.removeEventListener("click", handleClick);
   }, [open]);
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 flex justify-center items-center p-3">
-      <Card ref={wrapperRef} className="w-full h-[60vh] max-w-100 p-6">
-        <div className="flex flex-col gap-2 border-b border-accent pb-2">
-          <div className="text-center">
-            <CardTitle>{user.username}</CardTitle>
-          </div>
-          <div className="flex justify-between gap-2">
-            <div>
-              {user.count[type]} {type}
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 flex justify-center items-center p-3"
+        >
+          <Card ref={wrapperRef} className="w-full h-[60vh] max-w-100 p-6">
+            <div className="flex flex-col gap-2 border-b border-accent pb-2">
+              <div className="text-center">
+                <CardTitle>{user.username}</CardTitle>
+              </div>
+              <div className="flex justify-between gap-2">
+                <div>
+                  {user.count[type]} {type}
+                </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="cursor-pointer"
+                >
+                  <X />
+                </button>
+              </div>
             </div>
-            <button onClick={() => setOpen(false)} className="cursor-pointer">
-              <X />
-            </button>
-          </div>
-        </div>
-        {children}
-      </Card>
-    </div>
+            {children}
+          </Card>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
@@ -131,19 +142,13 @@ const UserStatsUserComponents = {
             height={42}
             className="w-8 h-8 object-cover rounded-full"
           />
-          <CardTitle>
-            {name}
-          </CardTitle>
+          <CardTitle>{name}</CardTitle>
         </div>
         <CardDescription>{likes_count}</CardDescription>
       </div>
     );
   },
-  following: ({
-    name,
-    profile_url,
-    username,
-  }: UserStatsPreviewUserType) => {
+  following: ({ name, profile_url, username }: UserStatsPreviewUserType) => {
     return (
       <div className="p-2 flex justify-between">
         <div className="flex gap-2.5 items-center">
@@ -154,18 +159,12 @@ const UserStatsUserComponents = {
             height={42}
             className="w-8 h-8 object-cover rounded-full"
           />
-          <CardTitle>
-            {name}
-          </CardTitle>
+          <CardTitle>{name}</CardTitle>
         </div>
       </div>
     );
   },
-  followers: ({
-    name,
-    profile_url,
-    username,
-  }: UserStatsPreviewUserType) => {
+  followers: ({ name, profile_url, username }: UserStatsPreviewUserType) => {
     return (
       <div className="p-2 flex justify-between">
         <div className="flex gap-2.5 items-center">
@@ -176,9 +175,7 @@ const UserStatsUserComponents = {
             height={42}
             className="w-8 h-8 object-cover rounded-full"
           />
-          <CardTitle>
-            {name}
-          </CardTitle>
+          <CardTitle>{name}</CardTitle>
         </div>
       </div>
     );
@@ -188,7 +185,7 @@ const UserStatsUserComponents = {
 const UserStatsList = () => {
   const { type, open, user } = useUserStatsPreviewCtx();
   const { data, status } = useUserStatsPreview(type, user.username, open, true);
-  
+
   if (data === null && status !== "loading")
     return (
       <div>
@@ -196,7 +193,20 @@ const UserStatsList = () => {
       </div>
     );
 
-  return <div>{data?.map((item) => UserStatsUserComponents[type](item))}</div>;
+  return (
+    <div>
+      {data?.map((item, i) => (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: ((i % 10) + 1) * 0.1, type: "spring", stiffness: 110, damping: 18}}
+          key={item.username}
+        >
+          {UserStatsUserComponents[type](item)}
+        </motion.div>
+      ))}
+    </div>
+  );
 };
 
 type UserStatsPreviewCompound = React.FC<
