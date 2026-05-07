@@ -1,30 +1,219 @@
-import useUserStatsPreview from "@/hook/useUserStatsPreview"
+import useUserStatsPreview from "@/hook/useUserStatsPreview";
+import {
+  UserStatsPreviewContext,
+  useUserStatsPreviewCtx,
+} from "@/store/contexts/UserStats.context";
+import { Children, StatsPreviewType } from "@/types/global";
+import clsx from "clsx";
+import React, { useEffect, useRef, useState } from "react";
+import { Card, CardDescription, CardTitle } from "../ui/card";
 import { StatsEndpointType } from "@/schemas/common/enums.schema";
-import { UserStatsPreviewContext } from "@/store/contexts/UserStats.context";
-import React from "react";
+import { UserStatsPreviewContextType } from "@/types/context";
+import { X } from "lucide-react";
+import { UserStatsPreviewUserType } from "@/types/neon";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
-export default function UserStatsPreviewProvider({
-  preview,
-  username,
-  children
-}: {
-  preview: StatsEndpointType & "none";
+type Props = {
+  preview: StatsPreviewType;
   username: string;
-  children: React.ReactNode
-}) {
-  const { data, status } = useUserStatsPreview(preview, username, true, false)
+  children: React.ReactNode;
+  count: number;
+};
 
-  const values = data ? {
-    type: preview,
-    payload: data,
-    status
-  } : null
+const UserStatsProvider = ({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  user: UserStatsPreviewContextType["user"];
+}) => {
+  const [open, setOpen] = useState(false);
+  const [type, setType] = useState<Lowercase<StatsPreviewType>>();
 
-  if(preview === "none") return null
+  const values = {
+    open,
+    type,
+    setOpen: (value) => setOpen(value),
+    setType: (type) => setType(type),
+    user,
+  } as UserStatsPreviewContextType;
 
   return (
-    <UserStatsPreviewContext value={values}>
+    <UserStatsPreviewContext value={values}>{children}</UserStatsPreviewContext>
+  );
+};
+
+const UserStatsTrigger = ({
+  children,
+  type,
+  className,
+}: Children & {
+  type: Lowercase<StatsPreviewType>;
+  className?: string;
+}) => {
+  const { setType, setOpen } = useUserStatsPreviewCtx();
+
+  const handleTrigger = () => {
+    setOpen(true);
+    setType(type);
+  };
+
+  return (
+    <div className={className} onClick={handleTrigger}>
       {children}
-    </UserStatsPreviewContext>
-  )
-}
+    </div>
+  );
+};
+
+const UserStatsContent = ({ children }: Children) => {
+  const { type, open, setOpen, user } = useUserStatsPreviewCtx();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = wrapperRef.current;
+    if (!open || !element) return;
+
+    const handleClick = (e: PointerEvent) => {
+      e.preventDefault();
+
+      if (!element.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handleClick);
+
+    return () => document.removeEventListener("click", handleClick);
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 flex justify-center items-center p-3">
+      <Card ref={wrapperRef} className="w-full h-[60vh] max-w-100 p-6">
+        <div className="flex flex-col gap-2 border-b border-accent pb-2">
+          <div className="text-center">
+            <CardTitle>{user.username}</CardTitle>
+          </div>
+          <div className="flex justify-between gap-2">
+            <div>
+              {user.count[type]} {type}
+            </div>
+            <button onClick={() => setOpen(false)} className="cursor-pointer">
+              <X />
+            </button>
+          </div>
+        </div>
+        {children}
+      </Card>
+    </div>
+  );
+};
+
+const UserStatsUserComponents = {
+  likes: ({
+    name,
+    profile_url,
+    username,
+    likes_count,
+  }: UserStatsPreviewUserType & { likes_count?: string }) => {
+    if (!likes_count) return;
+
+    return (
+      <div className="p-2 flex justify-between">
+        <div className="flex gap-2.5 items-center">
+          <Image
+            src={profile_url}
+            alt={username}
+            width={42}
+            height={42}
+            className="w-8 h-8 object-cover rounded-full"
+          />
+          <CardTitle>
+            {name}
+          </CardTitle>
+        </div>
+        <CardDescription>{likes_count}</CardDescription>
+      </div>
+    );
+  },
+  following: ({
+    name,
+    profile_url,
+    username,
+  }: UserStatsPreviewUserType) => {
+    return (
+      <div className="p-2 flex justify-between">
+        <div className="flex gap-2.5 items-center">
+          <Image
+            src={profile_url}
+            alt={username}
+            width={42}
+            height={42}
+            className="w-8 h-8 object-cover rounded-full"
+          />
+          <CardTitle>
+            {name}
+          </CardTitle>
+        </div>
+      </div>
+    );
+  },
+  followers: ({
+    name,
+    profile_url,
+    username,
+  }: UserStatsPreviewUserType) => {
+    return (
+      <div className="p-2 flex justify-between">
+        <div className="flex gap-2.5 items-center">
+          <Image
+            src={profile_url}
+            alt={username}
+            width={42}
+            height={42}
+            className="w-8 h-8 object-cover rounded-full"
+          />
+          <CardTitle>
+            {name}
+          </CardTitle>
+        </div>
+      </div>
+    );
+  },
+};
+
+const UserStatsList = () => {
+  const { type, open, user } = useUserStatsPreviewCtx();
+  const { data, status } = useUserStatsPreview(type, user.username, open, true);
+  
+  if (data === null && status !== "loading")
+    return (
+      <div>
+        <CardDescription>No users found.</CardDescription>
+      </div>
+    );
+
+  return <div>{data?.map((item) => UserStatsUserComponents[type](item))}</div>;
+};
+
+type UserStatsPreviewCompound = React.FC<
+  Children & {
+    className?: string;
+    user: UserStatsPreviewContextType["user"];
+  }
+> & {
+  Trigger: typeof UserStatsTrigger;
+  Content: typeof UserStatsContent;
+  List: typeof UserStatsList;
+};
+
+const UserStats = Object.assign(UserStatsProvider, {
+  Trigger: UserStatsTrigger,
+  Content: UserStatsContent,
+  List: UserStatsList,
+}) as UserStatsPreviewCompound;
+
+export { UserStats };
