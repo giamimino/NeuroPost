@@ -1,10 +1,9 @@
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
-import { StatsEndpointType } from "@/schemas/common/enums.schema";
 import { useAlertStore } from "@/store/zustand/alert.store";
 import { GenericStatus, StatsPreviewType } from "@/types/global";
 import { UserStatsPreviewUserType } from "@/types/neon";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function useUserStatsPreview(
   type: Lowercase<StatsPreviewType>,
@@ -17,12 +16,15 @@ export default function useUserStatsPreview(
     (UserStatsPreviewUserType & { likes_count?: string })[] | null
   >(null);
   const { addAlert } = useAlertStore();
+  const tickingRef = useRef(false)
 
   useEffect(() => {
     if (!enabled) return;
 
     const fetchUserStats = async () => {
       try {
+        if(tickingRef.current) return
+        tickingRef.current = true
         setStatus("loading");
         const url = `/api/user/u/${username}/stats?type=${type.toUpperCase()}&limit=20`;
         const res = await apiFetch(url);
@@ -51,6 +53,7 @@ export default function useUserStatsPreview(
 
         setData(stats);
         setStatus("success");
+        tickingRef.current = false
       } catch (error) {
         setStatus("error");
         addAlert({
