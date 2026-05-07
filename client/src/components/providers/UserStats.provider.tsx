@@ -15,6 +15,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { SkeletonUser } from "../ui/Skeleton-examples";
+import { Button } from "../ui/button";
 
 type Props = {
   preview: StatsPreviewType;
@@ -106,7 +107,7 @@ const UserStatsContent = ({ children }: Children) => {
               </div>
               <div className="flex justify-between gap-2">
                 <div>
-                  {user.count[type]} {type}
+                  {user.count[type]} {`${type[0].toUpperCase()}${type.slice(1, type.length)}`}
                 </div>
                 <button
                   onClick={() => setOpen(false)}
