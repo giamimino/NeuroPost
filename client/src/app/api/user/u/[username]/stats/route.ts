@@ -67,7 +67,28 @@ export async function GET(
           [author[0].id, limit],
         );
 
-        return NextResponse.json({ ok: true, stats, likes }, { status: 200 });
+        const keys = likes.map((l) => l.profile_url ?? "");
+        const signed_urls = await Promise.all(
+          keys.map((key) => {
+            const command = new GetObjectCommand({
+              Key: key,
+              Bucket: "neuropost",
+            });
+
+            return getSignedUrl(s3, command, { expiresIn: 5 * 60 });
+          }),
+        );
+
+        const signed_likes = likes.map((l, i) => ({
+          ...l,
+          profile_url:
+            l.profile_url && !l.isPrivate ? signed_urls[i] : "/user.jpg",
+        }));
+
+        return NextResponse.json(
+          { ok: true, stats: { likes: signed_likes } },
+          { status: 200 },
+        );
       }
       case "FOLLOWERS": {
         const followers = await sql.query(
