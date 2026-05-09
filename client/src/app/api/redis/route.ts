@@ -1,4 +1,4 @@
-import client from "@/lib/client";
+import client from "@/lib/redis/client";
 import { NextResponse } from "next/server";
 
 export async function GET() {

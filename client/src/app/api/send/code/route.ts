@@ -1,7 +1,7 @@
 import { EmailChangeTemplate } from "@/components/email-templates";
 import { ERRORS } from "@/constants/error-handling";
 import { getAuthUser } from "@/lib/auth";
-import client from "@/lib/client";
+import client from "@/lib/redis/client";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
