@@ -4,25 +4,15 @@ import {
   useUserStatsPreviewCtx,
 } from "@/store/contexts/UserStats.context";
 import { Children, StatsPreviewType } from "@/types/global";
-import clsx from "clsx";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useReducer, useRef, useState } from "react";
 import { Card, CardDescription, CardTitle } from "../ui/card";
-import { StatsEndpointType } from "@/schemas/common/enums.schema";
 import { UserStatsPreviewContextType } from "@/types/context";
 import { X } from "lucide-react";
 import { UserStatsPreviewUserType } from "@/types/neon";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { SkeletonUser } from "../ui/Skeleton-examples";
-import { Button } from "../ui/button";
-
-type Props = {
-  preview: StatsPreviewType;
-  username: string;
-  children: React.ReactNode;
-  count: number;
-};
+import { userStatsReducer } from "@/reducers/userStats.reducer";
 
 const UserStatsProvider = ({
   children,
@@ -34,6 +24,13 @@ const UserStatsProvider = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<Lowercase<StatsPreviewType>>();
+  const [statsCache, dispatch] = useReducer(
+    userStatsReducer,
+    new Map<
+      Lowercase<StatsPreviewType>,
+      Set<UserStatsPreviewUserType & { likes_count?: number }>
+    >(),
+  );
 
   const values = {
     open,
@@ -107,7 +104,8 @@ const UserStatsContent = ({ children }: Children) => {
               </div>
               <div className="flex justify-between gap-2">
                 <div>
-                  {user.count[type]} {`${type[0].toUpperCase()}${type.slice(1, type.length)}`}
+                  {user.count[type]}{" "}
+                  {`${type[0].toUpperCase()}${type.slice(1, type.length)}`}
                 </div>
                 <button
                   onClick={() => setOpen(false)}
@@ -142,7 +140,7 @@ const UserStatsUserComponents = {
             alt={username}
             width={42}
             height={42}
-            className="w-8 h-8 object-cover rounded-full"
+            className="w-8 h-8 object-cover rounded-full select-none"
           />
           <CardTitle>{name}</CardTitle>
         </div>
@@ -159,7 +157,7 @@ const UserStatsUserComponents = {
             alt={username}
             width={42}
             height={42}
-            className="w-8 h-8 object-cover rounded-full"
+            className="w-8 h-8 object-cover rounded-full select-none"
           />
           <CardTitle>{name}</CardTitle>
         </div>
@@ -175,7 +173,7 @@ const UserStatsUserComponents = {
             alt={username}
             width={42}
             height={42}
-            className="w-8 h-8 object-cover rounded-full"
+            className="w-8 h-8 object-cover rounded-full select-none"
           />
           <CardTitle>{name}</CardTitle>
         </div>
@@ -196,7 +194,10 @@ const UserStatsList = () => {
     );
 
   return (
-    <div data-lenis-prevent className="flex flex-col gap-1 overflow-y-auto h-full">
+    <div
+      data-lenis-prevent
+      className="flex flex-col gap-1 overflow-y-auto h-full"
+    >
       {data?.map((item, i) => (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -213,7 +214,9 @@ const UserStatsList = () => {
         </motion.div>
       ))}
       {status === "loading" &&
-        Array.from({ length: 6 }).map((_, i) => <SkeletonUser className="w-full p-2" key={i} />)}
+        Array.from({ length: 6 }).map((_, i) => (
+          <SkeletonUser className="w-full p-2" key={i} />
+        ))}
     </div>
   );
 };

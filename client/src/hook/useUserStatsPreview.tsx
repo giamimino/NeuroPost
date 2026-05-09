@@ -26,7 +26,7 @@ export default function useUserStatsPreview(
         if(tickingRef.current) return
         tickingRef.current = true
         setStatus("loading");
-        const url = `/api/user/u/${username}/stats?type=${type.toUpperCase()}&limit=20`;
+        const url = `/api/user/u/${username}/stats?type=${type.toUpperCase()}&limit=8`;
         const res = await apiFetch(url);
         const data = await res?.json();
 
