@@ -8,7 +8,7 @@ export default async function indexPost(post: {
   title: string;
   description: string;
 }) {
-  const start = new Date()
+  const start = new Date();
   try {
     const fields = ["title", "description"] as const;
 
@@ -67,13 +67,12 @@ export default async function indexPost(post: {
       .join(", ");
     const insertParams: string[] = [];
 
-    for(const [indexKey, index] of indexedWords) {
-      
-      if(index) {
-        insertParams.push(indexKey)
+    for (const [indexKey, index] of indexedWords) {
+      if (index) {
+        insertParams.push(indexKey);
 
-        const value = JSON.stringify(MapToObject(index))
-        insertParams.push(value)
+        const value = JSON.stringify(MapToObject(index));
+        insertParams.push(value);
       }
     }
 
@@ -84,13 +83,10 @@ export default async function indexPost(post: {
       DO UPDATE SET refs = EXCLUDED.refs
     `;
 
-    await sql.query(
-      rawSql,
-      insertParams
-    )
+    await sql.query(rawSql, insertParams);
 
     console.log(`${Date.now() - start.getTime()}ms`);
-    
+
     return { indexedWords };
   } catch (err) {
     console.log(err);

@@ -1,4 +1,4 @@
-import IORedis from 'ioredis';
+import IORedis from "ioredis";
 
 const connection = new IORedis({
   host: process.env.REDIS_SOCKET_HOST,
@@ -6,6 +6,6 @@ const connection = new IORedis({
   password: process.env.REDIS_PASSWORD,
   username: "default",
   maxRetriesPerRequest: null,
-})
+});
 
 export default connection;
