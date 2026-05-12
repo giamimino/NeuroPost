@@ -37,7 +37,9 @@
     "test:server": "npm run test -w server",
     "test:server:run": "npm run test:run -w server",
     "test:client": "npm run test -w client",
-    "test:client:run": "npm run test:run -w client"
+    "test:client:run": "npm run test:run -w client",
+    "worker": "npm run worker -w server",
+    "worker:dev": "npm run worker:dev -w server"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
