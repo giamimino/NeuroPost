@@ -1,6 +1,7 @@
 import { Worker } from "bullmq";
 import { sql } from "../db";
 import connection from "../redis/connection";
+import indexPost from "@/utils/indexPost";
 
 const searchIndexWorker = new Worker(
   "search-index",
@@ -13,6 +14,12 @@ const searchIndexWorker = new Worker(
     );
 
     if (!post) throw new Error(`Post with id ${postId} not found`);
+
+    await indexPost(
+      post[0] as { id: number; title: string; description: string },
+    );
+
+
   },
   {
     connection,
