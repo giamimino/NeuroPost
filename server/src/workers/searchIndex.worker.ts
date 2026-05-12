@@ -36,4 +36,8 @@ searchIndexWorker.on("failed", (job, err) => {
   console.log(`Failed job ${job?.id}:`, err.message);
 })
 
+worker.process(async (job) => {
+  console.log("processing:", job.data);
+});
+
 console.log("Search indexing worker running");
