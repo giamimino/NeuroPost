@@ -1,7 +1,10 @@
 import { Worker } from "bullmq";
-import { sql } from "../db";
-import connection from "../redis/connection";
-import indexPost from "@/utils/indexPost";
+import { sql } from "../lib/db.js";
+import connection from "../lib/redis.js";
+import indexPost from "../utils/indexPost.js";
+import dotenv from "dotenv"
+
+dotenv.config()
 
 const searchIndexWorker = new Worker(
   "search-index",
@@ -18,8 +21,6 @@ const searchIndexWorker = new Worker(
     await indexPost(
       post[0] as { id: number; title: string; description: string },
     );
-
-
   },
   {
     connection,
@@ -27,4 +28,12 @@ const searchIndexWorker = new Worker(
   },
 );
 
-export default searchIndexWorker;
+searchIndexWorker.on("completed", (job) => {
+  console.log(`Completed job ${job.id}`);
+})
+
+searchIndexWorker.on("failed", (job, err) => {
+  console.log(`Failed job ${job?.id}:`, err.message);
+})
+
+console.log("Search indexing worker running");

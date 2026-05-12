@@ -1,6 +1,6 @@
-import IORedis from "ioredis";
+import { Redis } from "ioredis";
 
-const connection = new IORedis({
+const connection = new Redis({
   host: process.env.REDIS_SOCKET_HOST,
   port: Number(process.env.REDIS_SOCKET_PORT),
   password: process.env.REDIS_PASSWORD,

@@ -1,5 +1,5 @@
 import { Queue } from "bullmq";
-import connection from "../redis/connection";
+import connection from "../lib/redis.js";
 
 const searchIndexQueue = new Queue("search-index", { connection });
 

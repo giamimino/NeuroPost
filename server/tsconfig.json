@@ -7,7 +7,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "types": ["node"],
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "./"
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
