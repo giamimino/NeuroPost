@@ -15,7 +15,7 @@
     "test:run": "vitest run",
     "prettier:check": "prettier --check 'src/**/*.{ts,js}'",
     "prettier:fix": "prettier --write \"src/**/*.{ts,js}\"",
-    "worker": "node dist/workers/searchIndex.worker.js",
+    "worker": "node dist/src/workers/searchIndex.worker.js",
     "worker:dev": "node --loader ts-node/esm src/workers/searchIndex.worker.ts"
   },
   "dependencies": {
