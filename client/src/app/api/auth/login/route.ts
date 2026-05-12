@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { createAccessToken, createRefreshToken } from "@/lib/jwt";
 import { ERRORS } from "@/constants/error-handling";
-import client from "@/lib/client";
+import client from "@/lib/redis/client";
 import { getIP } from "@/utils/getIp";
 import { LoginSchema } from "@/schemas/auth/login.schema";
 

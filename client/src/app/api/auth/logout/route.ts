@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { ERRORS } from "@/constants/error-handling";
 import { JWTUserPaylaod } from "@/types/global";
 import { getIP } from "@/utils/getIp";
-import client from "@/lib/client";
+import client from "@/lib/redis/client";
 
 export async function POST(req: Request) {
   try {
