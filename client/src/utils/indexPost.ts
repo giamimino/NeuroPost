@@ -87,7 +87,7 @@ export default async function indexPost(post: {
 
     console.log(`${Date.now() - start.getTime()}ms`);
 
-    return { ok: true }
+    return { ok: true };
   } catch (err) {
     console.log(err);
     console.log(`${Date.now() - start.getTime()}ms`);
