@@ -9,7 +9,6 @@ export function checkSearchIndexRefs(
       result.push(initialValue[i]);
     }
   }
-  
 
   return result;
 }

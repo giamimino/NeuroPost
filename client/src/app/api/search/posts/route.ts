@@ -122,13 +122,13 @@ export async function GET(req: Request) {
     });
 
     const postScores = new Map<number, number>();
-    
+
     if (searchIndexCache) {
       for (const word of words) {
         const cachedIndex = searchIndexCache.get(word);
 
         if (!cachedIndex) continue;
-        
+
         for (const [postId, post] of Object.entries(cachedIndex.refs)) {
           const id = Number(postId);
 
@@ -148,8 +148,8 @@ export async function GET(req: Request) {
       `SELECT * FROM posts WHERE id = ANY($1) LIMIT $2`,
       [postIds.map((post) => post[0]), parsedLimit],
     );
-    
-    const hasMore = !(postIds.length < parsedLimit)
+
+    const hasMore = !(postIds.length < parsedLimit);
 
     return NextResponse.json({ ok: true, posts, hasMore }, { status: 200 });
   } catch (err) {

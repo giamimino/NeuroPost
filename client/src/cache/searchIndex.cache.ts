@@ -5,5 +5,5 @@ type searchIndex = Map<string, RedisSearchIndexKeyword>;
 export let searchIndexCache: searchIndex | null = null;
 
 export const setSearchIndexCache = (cache: searchIndex) => {
-  searchIndexCache = cache
-}
+  searchIndexCache = cache;
+};
