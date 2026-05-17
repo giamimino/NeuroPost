@@ -158,3 +158,15 @@ export type CommentReactionPreview = Pick<
   CommentReactionType,
   "comment_id" | "type" | "user_id"
 >;
+
+export interface SearchIndexRefType {
+  title?: boolean;
+  description?: boolean;
+}
+
+export type SearchIndexRefsType = Record<number, SearchIndexRefType>;
+
+export interface SearchIndexType {
+  word: string;
+  refs: SearchIndexRefsType;
+}
