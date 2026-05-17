@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { SkeletonPost } from "@/components/ui/Skeleton-examples";
 import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
+import { ERRORS } from "@/constants/error-handling";
 import useDebounce from "@/hook/useDebounce";
 import { useAlertStore } from "@/store/zustand/alert.store";
 import { GenericStatus } from "@/types/global";
@@ -28,6 +29,8 @@ const SearchPostsPage = () => {
   const { addAlert } = useAlertStore();
   const tickingRef = useRef(false);
   const router = useRouter();
+  const debouncedSearchRef = useRef(debouncedSearch);
+  const [hasMore, setHasMore] = useState<boolean>(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -54,29 +57,81 @@ const SearchPostsPage = () => {
     return () => controller.abort();
   }, []);
 
-  const fetchPosts = async (query: string, limit: number) => {
-    if (tickingRef.current || !query || !query.trim()) return;
+  const fetchPosts = async (
+    query: string,
+    limit: number,
+    offset: number,
+  ): Promise<{ posts: Post[] } | null> => {
+    try {
+      if (tickingRef.current || !query || !query.trim()) return null;
+      setStatus("loading");
+      const url = `/api/search/posts?query=${query}&limit=${limit}&offset=${offset}`;
+      const res = await fetch(url);
+      const data = await res.json();
 
-    const url = `/api/search/posts?query=${query}&limit=${limit}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    console.log(data);
-    
+      if (data.ok) {
+        console.log(data);
+        
+        setStatus("success");
+        setHasMore(data.hasMore)
+        return { posts: data.posts };
+      } else if (data.error) {
+        setStatus("error");
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+        return null;
+      }
 
-    if (data.ok) {
-      // setPosts(data.posts);
-    } else if (data.error) {
+      return null;
+    } catch {
       addAlert({
         id: crypto.randomUUID(),
         type: "error",
-        ...data.error,
+        ...ERRORS.GENERIC_ERROR,
       });
+      setStatus("error");
+      return null;
     }
   };
 
+  const loadMore = async () => {
+    if (!hasMore || status === "loading") return;
+
+    const res = await fetchPosts(debouncedSearchRef.current, 12, posts.length);
+
+    if (!res) return;
+
+    setPosts((prev) => [...prev, ...res.posts]);
+  };
+
   useEffect(() => {
-    fetchPosts(debouncedSearch, 20)
+    fetchPosts(debouncedSearch, 20, 0).then(res => {
+      if(!res) return
+      setPosts(res.posts)
+      debouncedSearchRef.current = debouncedSearch;
+    })
   }, [debouncedSearch]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollClient = document.documentElement.clientHeight;
+      const target = 0.85;
+
+
+      if (scrollTop + scrollClient >= scrollHeight * target) {
+        loadMore();
+      }
+    }
+
+    window.addEventListener("scroll", onScroll)
+
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [loadMore])
 
   return (
     <div className="w-full pt-32">
@@ -91,18 +146,7 @@ const SearchPostsPage = () => {
         </div>
       </div>
       <div className="w-full grid grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 gap-8 px-10 justify-center mt-10">
-        {status === "loading" && (
-          <>
-            {Array.from({ length: 6 })
-              .fill("")
-              .map((_, index) => (
-                <div key={index}>
-                  <SkeletonPost />
-                </div>
-              ))}
-          </>
-        )}
-        {/* {posts.map((post) => (
+        {posts.map((post) => (
           <Card
             className="gap-1.5 pb-0 overflow-hidden justify-between"
             key={post.id}
@@ -130,7 +174,25 @@ const SearchPostsPage = () => {
               </div>
             </CardFooter>
           </Card>
-        ))} */}
+        ))}
+
+        {status === "loading" && (
+          <>
+            {Array.from({ length: 6 })
+              .fill("")
+              .map((_, index) => (
+                <div key={index}>
+                  <SkeletonPost />
+                </div>
+              ))}
+          </>
+        )}
+
+        {status === "error" && (
+          <div>
+            <CardDescription>Failed to load posts</CardDescription>
+          </div>
+        )}
       </div>
     </div>
   );
