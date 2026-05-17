@@ -1,7 +1,9 @@
-function getScore(id: number, wordData: any) {
+import { SearchIndexRefType } from "@/types/neon";
+
+function getScore(ref: SearchIndexRefType) {
   let score = 0;
-  if (wordData[id].title) score += 3;
-  if (wordData[id].description) score += 1;
+  if (ref.title) score += 3;
+  if (ref.description) score += 1;
   return score;
 }
 

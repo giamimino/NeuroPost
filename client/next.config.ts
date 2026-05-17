@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "neuropost.2ffafdbc8507c0285b109f7f49e53cb1.r2.cloudflarestorage.com", pathname: "/**"}
     ],
   },
+  experimental: {
+    middlewareClientMaxBodySize: 50 * 1048576
+  }
 };
 
 export default nextConfig;

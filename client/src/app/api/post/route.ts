@@ -200,7 +200,11 @@ export async function POST(req: Request) {
 
     await sql.query("COMMIT");
 
-    await searchIndexQueue.add("search-index", { postId: post.id });
+    await searchIndexQueue.add(
+      "search-index",
+      { postId: post.id },
+      { removeOnComplete: 10, removeOnFail: 100 },
+    );
 
     return NextResponse.json({ ok: true, post }, { status: 200 });
   } catch (error) {

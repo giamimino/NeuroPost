@@ -43,8 +43,8 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
-    "typescript": "^5.9.3",
     "eslint": "^9",
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3"
   }
 }
