@@ -19,7 +19,7 @@ import { GenericStatus } from "@/types/global";
 import { Post } from "@/types/neon";
 import { timeAgo } from "@/utils/functions/timeAgo";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 const SearchPostsPage = () => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -29,7 +29,6 @@ const SearchPostsPage = () => {
   const { addAlert } = useAlertStore();
   const tickingRef = useRef(false);
   const router = useRouter();
-  const debouncedSearchRef = useRef(debouncedSearch);
   const [hasMore, setHasMore] = useState<boolean>(false);
 
   useEffect(() => {
@@ -70,8 +69,6 @@ const SearchPostsPage = () => {
       const data = await res.json();
 
       if (data.ok) {
-        console.log(data);
-        
         setStatus("success");
         setHasMore(data.hasMore)
         return { posts: data.posts };
@@ -97,21 +94,20 @@ const SearchPostsPage = () => {
     }
   };
 
-  const loadMore = async () => {
+  const loadMore = useCallback(async () => {
     if (!hasMore || status === "loading") return;
 
-    const res = await fetchPosts(debouncedSearchRef.current, 12, posts.length);
+    const res = await fetchPosts(debouncedSearch, 12, posts.length);
 
     if (!res) return;
 
     setPosts((prev) => [...prev, ...res.posts]);
-  };
+  }, [hasMore, posts, status, debouncedSearch])
 
   useEffect(() => {
     fetchPosts(debouncedSearch, 20, 0).then(res => {
       if(!res) return
       setPosts(res.posts)
-      debouncedSearchRef.current = debouncedSearch;
     })
   }, [debouncedSearch]);
 
@@ -188,12 +184,12 @@ const SearchPostsPage = () => {
           </>
         )}
 
+      </div>
         {status === "error" && (
-          <div>
-            <CardDescription>Failed to load posts</CardDescription>
+          <div className="px-10 my-10 flex justify-center">
+            <CardDescription>No more results available.</CardDescription>
           </div>
         )}
-      </div>
     </div>
   );
 };
