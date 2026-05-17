@@ -1,4 +1,3 @@
-import { SearchIndexRefsType } from "@/types/neon";
 import { RedisSearchIndexKeyword } from "@/types/redis";
 
 type searchIndex = Map<string, RedisSearchIndexKeyword>;

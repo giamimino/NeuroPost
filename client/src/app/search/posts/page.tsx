@@ -31,6 +31,82 @@ const SearchPostsPage = () => {
   const router = useRouter();
   const [hasMore, setHasMore] = useState<boolean>(false);
 
+  const fetchPosts = useCallback(
+    async (
+      query: string,
+      limit: number,
+      offset: number,
+    ): Promise<{ posts: Post[] } | null> => {
+      try {
+        if (tickingRef.current || !query || !query.trim()) return null;
+
+        tickingRef.current = true;
+
+        setStatus("loading");
+        const url = `/api/search/posts?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.ok) {
+          setStatus("success");
+          setHasMore(data.hasMore);
+          return { posts: data.posts };
+        } else if (data.error) {
+          setStatus("error");
+          addAlert({
+            id: crypto.randomUUID(),
+            type: "error",
+            ...data.error,
+          });
+          return null;
+        }
+
+        return null;
+      } catch {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...ERRORS.GENERIC_ERROR,
+        });
+        setStatus("error");
+        return null;
+      } finally {
+        tickingRef.current = false;
+      }
+    },
+    [addAlert],
+  );
+
+  const loadMore = useCallback(async () => {
+    if (!hasMore || status === "loading") return;
+
+    const res = await fetchPosts(debouncedSearch, 12, posts.length);
+
+    if (!res) return;
+
+    setPosts((prev) => [...prev, ...res.posts]);
+  }, [hasMore, posts, status, debouncedSearch, fetchPosts]);
+
+  useEffect(() => {
+    if (!debouncedSearch.trim()) return;
+
+    let cancelled = false;
+
+    const fetchDebouncedSearch = async () => {
+      const res = await fetchPosts(debouncedSearch, 20, 0);
+
+      if (!res || cancelled) return;
+
+      setPosts(res.posts);
+    };
+
+    fetchDebouncedSearch();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch, fetchPosts]);
+
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
@@ -56,60 +132,11 @@ const SearchPostsPage = () => {
     return () => controller.abort();
   }, []);
 
-  const fetchPosts = async (
-    query: string,
-    limit: number,
-    offset: number,
-  ): Promise<{ posts: Post[] } | null> => {
-    try {
-      if (tickingRef.current || !query || !query.trim()) return null;
-      setStatus("loading");
-      const url = `/api/search/posts?query=${query}&limit=${limit}&offset=${offset}`;
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (data.ok) {
-        setStatus("success");
-        setHasMore(data.hasMore)
-        return { posts: data.posts };
-      } else if (data.error) {
-        setStatus("error");
-        addAlert({
-          id: crypto.randomUUID(),
-          type: "error",
-          ...data.error,
-        });
-        return null;
-      }
-
-      return null;
-    } catch {
-      addAlert({
-        id: crypto.randomUUID(),
-        type: "error",
-        ...ERRORS.GENERIC_ERROR,
-      });
-      setStatus("error");
-      return null;
-    }
-  };
-
-  const loadMore = useCallback(async () => {
-    if (!hasMore || status === "loading") return;
-
-    const res = await fetchPosts(debouncedSearch, 12, posts.length);
-
-    if (!res) return;
-
-    setPosts((prev) => [...prev, ...res.posts]);
-  }, [hasMore, posts, status, debouncedSearch])
+  const loadMoreRef = useRef(loadMore);
 
   useEffect(() => {
-    fetchPosts(debouncedSearch, 20, 0).then(res => {
-      if(!res) return
-      setPosts(res.posts)
-    })
-  }, [debouncedSearch]);
+    loadMoreRef.current = loadMore;
+  }, [loadMore]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -118,16 +145,15 @@ const SearchPostsPage = () => {
       const scrollClient = document.documentElement.clientHeight;
       const target = 0.85;
 
-
       if (scrollTop + scrollClient >= scrollHeight * target) {
-        loadMore();
+        loadMoreRef.current();
       }
-    }
+    };
 
-    window.addEventListener("scroll", onScroll)
+    window.addEventListener("scroll", onScroll);
 
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [loadMore])
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <div className="w-full pt-32">
@@ -183,13 +209,12 @@ const SearchPostsPage = () => {
               ))}
           </>
         )}
-
       </div>
-        {status === "error" && (
-          <div className="px-10 my-10 flex justify-center">
-            <CardDescription>No more results available.</CardDescription>
-          </div>
-        )}
+      {status === "error" && (
+        <div className="px-10 my-10 flex justify-center">
+          <CardDescription>No more results available.</CardDescription>
+        </div>
+      )}
     </div>
   );
 };

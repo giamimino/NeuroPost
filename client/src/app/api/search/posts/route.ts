@@ -5,12 +5,10 @@ import {
 import { ERRORS } from "@/constants/error-handling";
 import { sql } from "@/lib/db";
 import client from "@/lib/redis/client";
-import { SearchIndexRefsType, SearchIndexRefType } from "@/types/neon";
+import { SearchIndexRefsType } from "@/types/neon";
 import { RedisSearchIndexKeyword } from "@/types/redis";
-import { checkSearchIndexRefs } from "@/utils/functions/checkRefs";
 import { indexSearchWordNormalize } from "@/utils/functions/indexSearchWordNormalize";
 import { getScore } from "@/utils/getScore";
-import { MailOpen } from "lucide-react";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
@@ -148,9 +146,8 @@ export async function GET(req: Request) {
 
     const posts = await sql.query(
       `SELECT * FROM posts WHERE id = ANY($1) LIMIT $2`,
-      [postIds.map(([postId, _]) => postId), parsedLimit],
+      [postIds.map((post) => post[0]), parsedLimit],
     );
-    console.log(postIds.length);
     
     const hasMore = !(postIds.length < parsedLimit)
 
