@@ -1,17 +1,19 @@
 import { indexSearchWordNormalize } from "./indexSearchWordNormalize.js";
 import MapToObject from "./mapToObject.js";
 import { sql } from "../lib/db.js";
-import { SearchIndexWorkerPostType } from "../types/worker.js";
+import {
+  SearchIndexRefType,
+  SearchIndexWorkerPostType,
+} from "../types/worker.js";
+import SearchIndexEditCheckWord from "./validation/checkWord.validation.js";
 
-export default async function indexPost(post: SearchIndexWorkerPostType) {
-  const start = new Date();
+export default async function indexPostEdit(post: SearchIndexWorkerPostType) {
+  console.time("total");
+
   try {
     const fields = ["title", "description"] as const;
 
-    const indexedWords = new Map<
-      string,
-      Map<number, { title?: boolean; description?: boolean }>
-    >();
+    const indexedWords = new Map<string, Map<number, SearchIndexRefType>>();
 
     for (const field of fields) {
       const normalizedWords = indexSearchWordNormalize(post[field]).split(" ");
@@ -34,28 +36,27 @@ export default async function indexPost(post: SearchIndexWorkerPostType) {
       [params],
     );
 
-    for (const existing of existingWords) {
-      if (!existing) continue;
+    const checkWords = new Map<string, SearchIndexRefType>();
 
-      const next = new Map(indexedWords.get(existing.word));
+    for (const word of existingWords) {
+      let refs = word.refs;
 
-      if (next) {
-        let refs = existing.refs;
-
-        if (typeof refs === "string") {
-          try {
-            refs = JSON.parse(refs);
-          } catch {
-            refs = {};
-          }
-        }
-
-        for (const ref in refs) {
-          next.set(Number(ref), refs[ref]);
-        }
+      if (typeof refs === "string") {
+        refs = JSON.parse(refs);
       }
 
-      indexedWords.set(existing.word, next);
+      const ref = refs[post.id];
+      const index = indexedWords.get(word.word)
+      
+      if(!index || !ref) continue
+      
+      const indexedRef = index.get(post.id)
+
+      if(!indexedRef) continue
+
+      const check = SearchIndexEditCheckWord(indexedRef, ref)
+
+      checkWords.set(word.word, check)
     }
 
     const placeholder = Array.from(indexedWords.entries())
@@ -81,11 +82,9 @@ export default async function indexPost(post: SearchIndexWorkerPostType) {
 
     await sql.query(rawSql, insertParams);
 
-    console.log(`${Date.now() - start.getTime()}ms`);
-
     return { ok: true };
   } catch (err) {
     console.log(err);
-    console.log(`${Date.now() - start.getTime()}ms`);
+    console.timeEnd("total");
   }
 }
