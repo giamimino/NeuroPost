@@ -16,7 +16,7 @@
     "prettier:check": "prettier --check 'src/**/*.{ts,js}'",
     "prettier:fix": "prettier --write \"src/**/*.{ts,js}\"",
     "worker": "node dist/src/workers/searchIndex.worker.js",
-    "worker:dev": "node --loader ts-node/esm src/workers/searchIndex.worker.ts"
+    "worker:dev": "node --loader ts-node/esm 'src/workers/*.worker.{ts, js}'"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
