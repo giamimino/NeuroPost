@@ -23,11 +23,10 @@ export default async function indexPostEdit(
       const normalizedWords = indexSearchWordNormalize(post[field]).split(" ");
 
       for (const word of normalizedWords) {
-        const next = indexedWords.get(word) ?? {};
-
-        next[field] = true;
-
-        indexedWords.set(word, next);
+        indexedWords.set(word, {
+          ...indexedWords.get(word),
+          [field]: true,
+        });
       }
     }
 
@@ -38,21 +37,17 @@ export default async function indexPostEdit(
     const changedWords: SearchIndexWordMapType = new Map();
 
     for (const [key, value] of indexedWords) {
-      if (!oldIndexedWords.has(key)) {
+      const oldWord = oldIndexedWords.get(key);
+
+      if (!oldWord) {
         changedWords.set(key, value);
         continue;
       }
 
-      if (oldIndexedWords.has(key)) {
-        const oldWord = oldIndexedWords.get(key);
+      const check = SearchIndexEditCheckWord(value, oldWord);
 
-        if (!oldWord) continue;
-
-        const check = SearchIndexEditCheckWord(value, oldWord);
-
-        if (check.isChanged) {
-          changedWords.set(key, check.word);
-        }
+      if (check.isChanged) {
+        changedWords.set(key, check.word);
       }
     }
 
@@ -76,7 +71,7 @@ export default async function indexPostEdit(
 
     const query = new Set<string>();
 
-    for (const key of [...changedWords.keys(), ...changedWords.keys()]) {
+    for (const key of [...changedWords.keys(), ...deletedWords.keys()]) {
       query.add(key);
     }
 
@@ -101,7 +96,7 @@ export default async function indexPostEdit(
         const word = deletedWords.get(ref.word);
 
         if (!word) continue;
-        const updated = ref.refs;
+        const updated = { ...ref.refs };
 
         if (!word.title && !word.description) {
           delete updated[post.id];
@@ -115,17 +110,26 @@ export default async function indexPostEdit(
       }
     }
 
-    const placeholder = Array.from(indexedWords.entries()).map(
-      (_, i) => `($${i * 2 + 1}, $${i * 2 + 2}::jsonb)`,
-    ).join(", ")
-    const insertParams: string[] = []
+    for(const [word, ref] of changedWords) {
+      if(!updatedRefs.has(word)) {
+        updatedRefs.set(
+          word,
+          new Map([[String(post.id), ref]])
+        )
+      } 
+    }
 
-    for(const [indexKey, index] of updatedRefs) {
-      if(index) {
-        insertParams.push(indexKey)
+    const placeholder = Array.from(updatedRefs.entries())
+      .map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2}::jsonb)`)
+      .join(", ");
+    const insertParams: string[] = [];
 
-        const value = JSON.stringify(MapToObject(index))
-        insertParams.push(value)
+    for (const [indexKey, index] of updatedRefs) {
+      if (index) {
+        insertParams.push(indexKey);
+
+        const value = JSON.stringify(MapToObject(index));
+        insertParams.push(value);
       }
     }
 
@@ -136,7 +140,7 @@ export default async function indexPostEdit(
       DO UPDATE SET refs = EXCLUDED.refs
     `;
 
-    await sql.query(rawSql, insertParams)
+    await sql.query(rawSql, insertParams);
 
     return { ok: true };
   } catch (err) {
