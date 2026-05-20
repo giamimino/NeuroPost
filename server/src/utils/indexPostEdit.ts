@@ -3,88 +3,145 @@ import MapToObject from "./mapToObject.js";
 import { sql } from "../lib/db.js";
 import {
   SearchIndexRefType,
+  SearchIndexWordMapType,
+  SearchIndexWordType,
   SearchIndexWorkerPostType,
 } from "../types/worker.js";
 import SearchIndexEditCheckWord from "./validation/checkWord.validation.js";
 
-export default async function indexPostEdit(post: SearchIndexWorkerPostType) {
+export default async function indexPostEdit(
+  post: SearchIndexWorkerPostType,
+  oldWords: SearchIndexWordType,
+) {
   console.time("total");
 
   try {
     const fields = ["title", "description"] as const;
-
-    const indexedWords = new Map<string, Map<number, SearchIndexRefType>>();
+    const indexedWords: SearchIndexWordMapType = new Map();
 
     for (const field of fields) {
       const normalizedWords = indexSearchWordNormalize(post[field]).split(" ");
 
       for (const word of normalizedWords) {
-        indexedWords.set(word, new Map());
+        const next = indexedWords.get(word) ?? {};
 
-        const next = new Map(indexedWords.get(word));
-
-        next.set(post.id, { [field]: true });
+        next[field] = true;
 
         indexedWords.set(word, next);
       }
     }
 
-    const params = Array.from(indexedWords.keys());
-
-    const existingWords = await sql.query(
-      `SELECT refs, word FROM search_index WHERE word = ANY($1)`,
-      [params],
+    const oldIndexedWords: SearchIndexWordMapType = new Map(
+      Object.entries(oldWords),
     );
 
-    const checkWords = new Map<string, SearchIndexRefType>();
+    const changedWords: SearchIndexWordMapType = new Map();
 
-    for (const word of existingWords) {
-      let refs = word.refs;
-
-      if (typeof refs === "string") {
-        refs = JSON.parse(refs);
+    for (const [key, value] of indexedWords) {
+      if (!oldIndexedWords.has(key)) {
+        changedWords.set(key, value);
+        continue;
       }
 
-      const ref = refs[post.id];
-      const index = indexedWords.get(word.word)
-      
-      if(!index || !ref) continue
-      
-      const indexedRef = index.get(post.id)
+      if (oldIndexedWords.has(key)) {
+        const oldWord = oldIndexedWords.get(key);
 
-      if(!indexedRef) continue
+        if (!oldWord) continue;
 
-      const check = SearchIndexEditCheckWord(indexedRef, ref)
+        const check = SearchIndexEditCheckWord(value, oldWord);
 
-      checkWords.set(word.word, check)
+        if (check.isChanged) {
+          changedWords.set(key, check.word);
+        }
+      }
     }
 
-    const placeholder = Array.from(indexedWords.entries())
-      .map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2}::jsonb)`)
-      .join(", ");
-    const insertParams: string[] = [];
+    const deletedWords = new Map<string, SearchIndexRefType>();
 
-    for (const [indexKey, index] of indexedWords) {
-      if (index) {
-        insertParams.push(indexKey);
+    for (const [key, value] of oldIndexedWords) {
+      if (!indexedWords.has(key)) {
+        deletedWords.set(key, {});
+        continue;
+      }
+      const index = indexedWords.get(key);
 
-        const value = JSON.stringify(MapToObject(index));
-        insertParams.push(value);
+      if (!index) continue;
+
+      const check = SearchIndexEditCheckWord(value, index);
+
+      if (check.isChanged) {
+        deletedWords.set(key, check.word);
+      }
+    }
+
+    const query = new Set<string>();
+
+    for (const key of [...changedWords.keys(), ...changedWords.keys()]) {
+      query.add(key);
+    }
+
+    const refs = (await sql.query(
+      `SELECT refs, word FROM search_index WHERE word = ANY($1)`,
+      [[...query]],
+    )) as { refs: Record<number, SearchIndexRefType>; word: string }[];
+
+    const updatedRefs = new Map<string, Map<string, SearchIndexRefType>>();
+
+    for (const ref of refs) {
+      if (changedWords.has(ref.word)) {
+        const word = changedWords.get(ref.word);
+
+        if (!word) continue;
+
+        const updated = { ...ref.refs, [post.id]: word };
+        const next = new Map(Object.entries(updated));
+
+        updatedRefs.set(ref.word, next);
+      } else if (deletedWords.has(ref.word)) {
+        const word = deletedWords.get(ref.word);
+
+        if (!word) continue;
+        const updated = ref.refs;
+
+        if (!word.title && !word.description) {
+          delete updated[post.id];
+        } else {
+          updated[post.id] = word;
+        }
+
+        const next = new Map(Object.entries(updated));
+
+        updatedRefs.set(ref.word, next);
+      }
+    }
+
+    const placeholder = Array.from(indexedWords.entries()).map(
+      (_, i) => `($${i * 2 + 1}, $${i * 2 + 2}::jsonb)`,
+    ).join(", ")
+    const insertParams: string[] = []
+
+    for(const [indexKey, index] of updatedRefs) {
+      if(index) {
+        insertParams.push(indexKey)
+
+        const value = JSON.stringify(MapToObject(index))
+        insertParams.push(value)
       }
     }
 
     const rawSql = `
-      INSERT INTO search_index (word, refs) 
+      INSERT INTO search_index (word, refs)
       VALUES ${placeholder}
       ON CONFLICT (word)
       DO UPDATE SET refs = EXCLUDED.refs
     `;
 
-    await sql.query(rawSql, insertParams);
+    await sql.query(rawSql, insertParams)
 
     return { ok: true };
   } catch (err) {
     console.log(err);
+  } finally {
     console.timeEnd("total");
   }
 }

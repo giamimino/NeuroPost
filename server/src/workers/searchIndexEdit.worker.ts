@@ -2,22 +2,27 @@ import { Worker } from "bullmq"
 import { sql } from "../lib/db.js";
 import connection from "../lib/redis.js";
 import dotenv from "dotenv"
+import indexPostEdit from "../utils/indexPostEdit.js";
+import { SearchIndexWorkerPostType } from "../types/worker.js";
 
 dotenv.config()
 
 const searchIndexEditWorker = new Worker(
   "search-index-edit",
   async (job) => {
-    const { postId } = job.data;
+    const { postId, words } = job.data;
 
     const post = await sql.query(
       `SELECT id, title, description FROM posts WHERE id = $1`,
       [postId]
     )
 
-    if(!post) throw Error(`Post with id ${postId} not found`)
+    if(!post || !words) throw Error(`Post with id ${postId} not found`)
 
-    // there goes similar like await indexPost but edit
+    await indexPostEdit(
+      post[0] as SearchIndexWorkerPostType,
+      words
+    )
   },
   {
     connection,

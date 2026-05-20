@@ -1,16 +1,16 @@
 import { SearchIndexRefType } from "../../types/worker.js";
 
 const SearchIndexEditCheckWord = (
-  initialWord: SearchIndexRefType,
-  secondaryWord: SearchIndexRefType,
-): SearchIndexRefType => {
+  newWord: SearchIndexRefType,
+  oldWord: SearchIndexRefType,
+): { isChanged: boolean; word: SearchIndexRefType } => {
   if (
-    initialWord.title !== secondaryWord.title ||
-    initialWord.description !== secondaryWord.description
+    newWord.title !== oldWord.title ||
+    newWord.description !== oldWord.description
   )
-    return initialWord;
-  
-  return secondaryWord
+    return { isChanged: true, word: newWord };
+
+  return { isChanged: false, word: oldWord };
 };
 
 export default SearchIndexEditCheckWord;
