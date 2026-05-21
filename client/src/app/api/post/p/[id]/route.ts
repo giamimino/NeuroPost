@@ -171,9 +171,7 @@ export async function PUT(
     const fields = ["title", "description"] as ("title" | "description")[];
     for (const field of fields) {
       if (!post[field]) continue;
-      const normalizedWords = indexSearchWordNormalize(post[field]).split(
-        " ",
-      );
+      const normalizedWords = indexSearchWordNormalize(post[field]).split(" ");
 
       for (const word of normalizedWords) {
         if (!words[word]) words[word] = {};

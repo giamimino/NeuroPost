@@ -110,13 +110,10 @@ export default async function indexPostEdit(
       }
     }
 
-    for(const [word, ref] of changedWords) {
-      if(!updatedRefs.has(word)) {
-        updatedRefs.set(
-          word,
-          new Map([[String(post.id), ref]])
-        )
-      } 
+    for (const [word, ref] of changedWords) {
+      if (!updatedRefs.has(word)) {
+        updatedRefs.set(word, new Map([[String(post.id), ref]]));
+      }
     }
 
     const placeholder = Array.from(updatedRefs.entries())

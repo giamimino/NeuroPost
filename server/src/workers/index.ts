@@ -1,2 +1,2 @@
-import "./searchIndex.worker.js"
-import "./searchIndexEdit.worker.js"
+import "./searchIndex.worker.js";
+import "./searchIndexEdit.worker.js";

@@ -1,11 +1,11 @@
-import { Worker } from "bullmq"
+import { Worker } from "bullmq";
 import { sql } from "../lib/db.js";
 import connection from "../lib/redis.js";
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 import indexPostEdit from "../utils/indexPostEdit.js";
 import { SearchIndexWorkerPostType } from "../types/worker.js";
 
-dotenv.config()
+dotenv.config();
 
 const searchIndexEditWorker = new Worker(
   "search-index-edit",
@@ -14,21 +14,18 @@ const searchIndexEditWorker = new Worker(
 
     const post = await sql.query(
       `SELECT id, title, description FROM posts WHERE id = $1`,
-      [postId]
-    )
+      [postId],
+    );
 
-    if(!post || !words) throw Error(`Post with id ${postId} not found`)
+    if (!post || !words) throw Error(`Post with id ${postId} not found`);
 
-    await indexPostEdit(
-      post[0] as SearchIndexWorkerPostType,
-      words
-    )
+    await indexPostEdit(post[0] as SearchIndexWorkerPostType, words);
   },
   {
     connection,
-    concurrency: 2
-  }
-)
+    concurrency: 2,
+  },
+);
 
 searchIndexEditWorker.on("completed", (job) => {
   console.log(`Completed job ${job.id}`);
