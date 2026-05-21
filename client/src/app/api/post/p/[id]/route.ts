@@ -10,6 +10,8 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 import { MediaValidator } from "@/utils/validator";
+import { indexSearchWordNormalize } from "@/utils/functions/indexSearchWordNormalize";
+import searchIndexEditQueue from "@/lib/queue/searchIndexEdit.queue";
 
 export async function PUT(
   req: Request,
@@ -29,7 +31,8 @@ export async function PUT(
     const description = formData.get("description") as string | undefined;
     const media = formData.get("media") as File | undefined;
     const $tags = formData.get("tags") as string | undefined;
-    if (!title && !description && !media)
+
+    if (!title && !description)
       return NextResponse.json({ ok: false, error: ERRORS.GENERIC_ERROR });
 
     const auth = await getAuthUser();
@@ -46,7 +49,7 @@ export async function PUT(
     const payload = auth.user;
 
     const posts = await sql.query(
-      `SELECT id, author_id, title, description FROM posts WHERE id = $1 LIMIT 1`,
+      `SELECT author_id, title, description FROM posts WHERE id = $1 LIMIT 1`,
       [id],
     );
     const post = posts[0];
@@ -57,7 +60,7 @@ export async function PUT(
         { status: 403 },
       );
 
-    if (title || description) {
+    if (title !== post.title || description !== post.description) {
       const editedValues = {
         title: title || post.title,
         description: description || post.description,
@@ -162,6 +165,27 @@ export async function PUT(
 
       await sql.query(rawSql, [id, ...tagsResult.map((t) => t.id)]);
     }
+
+    const words: Record<string, { title?: boolean; description?: boolean }> =
+      {};
+    const fields = ["title", "description"] as ("title" | "description")[];
+    for (const field of fields) {
+      if (!post[field]) continue;
+      const normalizedWords = indexSearchWordNormalize(post[field]).split(
+        " ",
+      );
+
+      for (const word of normalizedWords) {
+        if (!words[word]) words[word] = {};
+        words[word] = { [field]: true };
+      }
+    }
+
+    await searchIndexEditQueue.add(
+      "search-index-edit",
+      { postId: id, words },
+      { removeOnComplete: 5, removeOnFail: 30 },
+    );
 
     return NextResponse.json({
       ok: true,
@@ -273,7 +297,6 @@ export async function GET(
         return getSignedUrl(s3, command, { expiresIn: 60 * 5 });
       }),
     );
-    console.log(likes[0].count);
 
     return NextResponse.json(
       {
