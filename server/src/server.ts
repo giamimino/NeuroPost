@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { createWebSocketServer } from "./ws/index.js";
-import "./workers/searchIndex.worker.js";
+import "./workers/index.js";
 
 dotenv.config();
 

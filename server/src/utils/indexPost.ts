@@ -1,12 +1,9 @@
 import { indexSearchWordNormalize } from "./indexSearchWordNormalize.js";
 import MapToObject from "./mapToObject.js";
 import { sql } from "../lib/db.js";
+import { SearchIndexWorkerPostType } from "../types/worker.js";
 
-export default async function indexPost(post: {
-  id: number;
-  title: string;
-  description: string;
-}) {
+export default async function indexPost(post: SearchIndexWorkerPostType) {
   const start = new Date();
   try {
     const fields = ["title", "description"] as const;
