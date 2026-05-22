@@ -22,6 +22,12 @@ export async function GET(
 
     const type = StatsEndpointEnum.parse(queryParams.type);
     const limit = Number(queryParams.limit ?? 10);
+    const cursor = queryParams.cursor
+
+    const date = cursor && !isNaN(new Date(cursor).getTime()) 
+      ? new Date(cursor).toISOString()
+      : new Date(Date.now()).toISOString()
+
 
     const auth = await getAuthUser();
     if (auth.error)
@@ -57,14 +63,23 @@ export async function GET(
             u.username,
             u.profile_url,
             u."isPrivate",
-            COUNT(l.id) as likes_count
+            COUNT(l.id) as likes_count,
+            u.created_at
           FROM posts p
           JOIN likes l ON l.post_id = p.id
           JOIN users u ON l.user_id = u.id
-          WHERE p.author_id = $1
-          GROUP BY u.name, u.username, u.profile_url, u."isPrivate"
+          WHERE p.author_id = $1 AND u.created_at < $3
+          GROUP BY 
+            u.name, 
+            u.username, 
+            u.profile_url, 
+            u."isPrivate",
+            u.created_at
+
+          ORDER BY u.created_at DESC
+
           LIMIT $2`,
-          [author[0].id, limit],
+          [author[0].id, limit, date],
         );
 
         const keys = likes.map((l) => l.profile_url ?? "");
@@ -85,8 +100,10 @@ export async function GET(
             l.profile_url && !l.isPrivate ? signed_urls[i] : "/user.jpg",
         }));
 
+        const hasMore = !(signed_likes.length < limit)
+
         return NextResponse.json(
-          { ok: true, stats: { likes: signed_likes } },
+          { ok: true, stats: { likes: signed_likes }, hasMore },
           { status: 200 },
         );
       }
@@ -96,12 +113,13 @@ export async function GET(
             u.username,
             u.name,
             u.profile_url,
-            u."isPrivate"
+            u."isPrivate",
+            f.created_at
           FROM follows f
           JOIN users u ON u.id = f.follower_id
-          WHERE f.follow_id = $1
+          WHERE f.follow_id = $1 AND f.created_at < $3
           LIMIT $2`,
-          [author[0].id, limit],
+          [author[0].id, limit, date],
         );
 
         const keys = followers.map((f) => f.profile_url ?? "");
@@ -124,8 +142,10 @@ export async function GET(
             f.profile_url && !f.isPrivate ? signed_urls[i] : "/user.jpg",
         }));
 
+        const hasMore = !(signedFollowers.length < limit)
+
         return NextResponse.json(
-          { ok: true, stats: { followers: signedFollowers } },
+          { ok: true, stats: { followers: signedFollowers }, hasMore },
           { status: 200 },
         );
       }
@@ -135,12 +155,13 @@ export async function GET(
             u.username,
             u.name,
             u.profile_url,
-            u."isPrivate"
+            u."isPrivate",
+            f.created_at
           FROM follows f
           JOIN users u ON u.id = f.follow_id
-          WHERE f.follower_id = $1
+          WHERE f.follower_id = $1 AND f.created_at < $3
           LIMIT $2`,
-          [author[0].id, limit],
+          [author[0].id, limit, date],
         );
 
         const keys = following.map((f) => f.profile_url ?? "");
@@ -163,8 +184,10 @@ export async function GET(
             f.profile_url && !f.isPrivate ? signed_urls[i] : "/user.jpg",
         }));
 
+        const hasMore = !(signedFollowing.length < limit)
+
         return NextResponse.json(
-          { ok: true, stats: { following: signedFollowing } },
+          { ok: true, stats: { following: signedFollowing }, hasMore },
           { status: 200 },
         );
       }
