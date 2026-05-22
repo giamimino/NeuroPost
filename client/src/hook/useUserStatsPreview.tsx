@@ -3,30 +3,43 @@ import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alert.store";
 import { GenericStatus, StatsPreviewType } from "@/types/global";
 import { UserStatsPreviewUserType } from "@/types/neon";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+
+type User = UserStatsPreviewUserType & {
+  likes_count?: string;
+  created_at: string;
+};
 
 export default function useUserStatsPreview(
   type: Lowercase<StatsPreviewType>,
   username: string,
   enabled: boolean,
-  cached: boolean,
 ) {
   const [status, setStatus] = useState<GenericStatus>("idle");
-  const [data, setData] = useState<
-    (UserStatsPreviewUserType & { likes_count?: string })[] | null
-  >(null);
+  const [data, setData] = useState<User[]>([]);
   const { addAlert } = useAlertStore();
-  const tickingRef = useRef(false)
 
-  useEffect(() => {
-    if (!enabled) return;
+  const cacheRef = useRef(new Map<string, User[]>());
+  const hasMoreRef = useRef(true);
+  const tickingRef = useRef(false);
 
-    const fetchUserStats = async () => {
+  const cursor = data ? data[0].created_at : new Date().toISOString();
+  const key = `${username}:${type}`;
+
+  const reset = () => {
+    setData([]);
+    hasMoreRef.current = true;
+    tickingRef.current = false;
+  };
+
+  const fetchUserStats = useCallback(
+    async (append: boolean) => {
       try {
-        if(tickingRef.current) return
-        tickingRef.current = true
+        if (tickingRef.current || !enabled) return;
+        if (!hasMoreRef.current && append) return;
+        tickingRef.current = true;
         setStatus("loading");
-        const url = `/api/user/u/${username}/stats?type=${type.toUpperCase()}&limit=8`;
+        const url = `/api/user/u/${username}/stats?type=${type.toUpperCase()}&limit=8&cursor=${cursor}`;
         const res = await apiFetch(url);
         const data = await res?.json();
 
@@ -38,22 +51,22 @@ export default function useUserStatsPreview(
           });
           return;
         }
+        const stats = data?.stats?.[type] ?? [];
 
-        const stats = data.stats[type];
-
-        if (!stats) {
-          addAlert({
-            id: crypto.randomUUID(),
-            type: "error",
-            ...ERRORS.GENERIC_ERROR,
-          });
-
-          return;
+        if (!append) {
+          setData(stats);
+        } else {
+          setData((prev) => [...prev, ...stats]);
         }
 
-        setData(stats);
+        cacheRef.current.set(
+          key,
+          append ? [...(cacheRef.current.get(key) ?? []), ...stats] : stats,
+        );
+
+        hasMoreRef.current = data.hasMore;
+
         setStatus("success");
-        tickingRef.current = false
       } catch (error) {
         setStatus("error");
         addAlert({
@@ -61,11 +74,32 @@ export default function useUserStatsPreview(
           type: "error",
           ...ERRORS.GENERIC_ERROR,
         });
+      } finally {
+        tickingRef.current = false;
       }
-    };
+    },
+    [username, type, addAlert, key, cursor, enabled],
+  );
 
-    fetchUserStats();
-  }, [type, username, enabled, addAlert]);
+  useEffect(() => {
+    if (!enabled) return;
 
-  return { status, data };
+    const cached = cacheRef.current.get(key);
+
+    if (cached?.length) {
+      setData(cached);
+      setStatus("success");
+      return;
+    }
+
+    reset();
+    fetchUserStats(false);
+  }, [fetchUserStats, enabled, reset, key]);
+
+  const loadMore = useCallback(() => {
+    if(!enabled) return;
+    fetchUserStats(true)
+  }, [fetchUserStats, enabled])
+
+  return { status, data, loadMore, hasMore: hasMoreRef.current };
 }
