@@ -4,7 +4,7 @@ import {
   useUserStatsPreviewCtx,
 } from "@/store/contexts/UserStats.context";
 import { Children, StatsPreviewType } from "@/types/global";
-import React, { useEffect, useReducer, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardDescription, CardTitle } from "../ui/card";
 import { UserStatsPreviewContextType } from "@/types/context";
 import { X } from "lucide-react";
@@ -12,7 +12,6 @@ import { UserStatsPreviewUserType } from "@/types/neon";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { SkeletonUser } from "../ui/Skeleton-examples";
-import { userStatsReducer } from "@/reducers/userStats.reducer";
 
 const UserStatsProvider = ({
   children,
@@ -24,21 +23,18 @@ const UserStatsProvider = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<Lowercase<StatsPreviewType>>();
-  const [statsCache, dispatch] = useReducer(
-    userStatsReducer,
-    new Map<
-      Lowercase<StatsPreviewType>,
-      Set<UserStatsPreviewUserType & { likes_count?: number }>
-    >(),
-  );
 
-  const values = {
-    open,
-    type,
-    setOpen: (value) => setOpen(value),
-    setType: (type) => setType(type),
-    user,
-  } as UserStatsPreviewContextType;
+  const values = useMemo(
+    () =>
+      ({
+        open,
+        type,
+        setOpen: (value) => setOpen(value),
+        setType: (type) => setType(type),
+        user,
+      }) as UserStatsPreviewContextType,
+    [open, type, user],
+  );
 
   return (
     <UserStatsPreviewContext value={values}>{children}</UserStatsPreviewContext>
@@ -184,7 +180,7 @@ const UserStatsUserComponents = {
 
 const UserStatsList = () => {
   const { type, open, user } = useUserStatsPreviewCtx();
-  const { data, status } = useUserStatsPreview(type, user.username, open, true);
+  const { data, status } = useUserStatsPreview(type, user.username, open);
 
   if (data === null && status !== "loading")
     return (
