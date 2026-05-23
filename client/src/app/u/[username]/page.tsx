@@ -1,4 +1,5 @@
 "use client";
+import { UserStats } from "@/components/providers/UserStats.provider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,7 +16,7 @@ import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alert.store";
-import { UserStatsType } from "@/types/global";
+import { StatsPreviewType, UserStatsType } from "@/types/global";
 import { Post, UserFollowJoinType } from "@/types/neon";
 import clsx from "clsx";
 import Image from "next/image";
@@ -214,7 +215,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     if (!username || !addAlert) return;
     const fetchData = async () => {
       setLoading(true);
-      apiFetch(`/api/user/${username}?stats=true&friend_status=true`)
+      apiFetch(`/api/user/u/${username}?stats=true&friend_status=true`)
         .then((res) => res?.json())
         .then((data) => {
           if (data.ok) {
@@ -337,14 +338,29 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
               </div>
               <div className="flex gap-5">
                 {user?.stats ? (
-                  Object.entries(user.stats).map(([key, value]) => (
-                    <div key={`${key}`} className="flex gap-1.5">
-                      <CardTitle>{value}</CardTitle>
-                      <CardDescription className="cursor-pointer">
-                        {`${key.charAt(0).toUpperCase()}${key.slice(1, key.length)}`}
-                      </CardDescription>
-                    </div>
-                  ))
+                  <div className="flex gap-5">
+                    <UserStats
+                      user={{ username: user.username, count: user.stats }}
+                    >
+                      {Object.entries(user.stats).map(([key, value]) => (
+                        <UserStats.Trigger
+                          type={
+                            key.toLowerCase() as Lowercase<StatsPreviewType>
+                          }
+                          key={`${key}`}
+                          className="flex gap-1.5"
+                        >
+                          <CardTitle>{value}</CardTitle>
+                          <CardDescription className="cursor-pointer">
+                            {`${key.charAt(0).toUpperCase()}${key.slice(1, key.length)}`}
+                          </CardDescription>
+                        </UserStats.Trigger>
+                      ))}
+                      <UserStats.Content>
+                        <UserStats.List />
+                      </UserStats.Content>
+                    </UserStats>
+                  </div>
                 ) : (
                   <>
                     <div className="flex gap-1.5">

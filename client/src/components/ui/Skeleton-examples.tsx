@@ -158,10 +158,10 @@ function SkeletonFriendRequests({
   ));
 }
 
-function SkeletonUser() {
+function SkeletonUser({ className }: { className?: string }) {
   return (
-    <div className={"flex gap-1.5"}>
-      <Skeleton className="w-10 h-10 rounded-full" />
+    <div className={clsx("flex gap-1.5", className)}>
+      <Skeleton className="w-8 h-8 rounded-full" />
       <div className="flex flex-col gap-2">
         <Skeleton className="w-16 h-3.5" />
         <Skeleton className="w-16 h-3.5" />

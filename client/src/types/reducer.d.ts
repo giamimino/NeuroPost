@@ -1,6 +1,8 @@
-// repliesReducer
-
 import { CommentReplyType } from "@/schemas/comment/reply.schema";
+import { StatsPreviewType } from "./global";
+import { UserStatsPreviewUserType } from "./neon";
+
+// repliesReducer
 
 export type RepliesState = Map<string, Set<CommentReplyType>>;
 
@@ -28,3 +30,16 @@ export type RepliesAction =
       type: "DECREMENT_REPLY_COUNT";
       reply_id: string;
     };
+
+// user stats reducer
+
+export type UserStatsState = Map<
+  Lowercase<StatsPreviewType>,
+  Set<UserStatsPreviewUserType & { likes_count?: number }>
+>;
+
+export type UserStatsAction = {
+  type: "ADD_STATS";
+  key: Lowercase<StatsPreviewType>;
+  newStats: (UserStatsPreviewUserType & { likes_count?: number })[];
+};

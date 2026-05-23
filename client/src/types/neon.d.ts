@@ -159,6 +159,12 @@ export type CommentReactionPreview = Pick<
   "comment_id" | "type" | "user_id"
 >;
 
+export interface UserStatsPreviewUserType {
+  name: string;
+  profile_url: string;
+  username: string;
+  isPrivate: boolean;
+  created_at: string;
 export interface SearchIndexRefType {
   title?: boolean;
   description?: boolean;

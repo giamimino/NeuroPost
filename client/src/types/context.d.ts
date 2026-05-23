@@ -1,7 +1,8 @@
 import React, { ActionDispatch } from "react";
 import { CommentReactionEnum } from "./enums";
-import { ForyouPost } from "./global";
+import { ForyouPost, StatsPreviewType, UserStatsType } from "./global";
 import { RepliesAction, RepliesState } from "./reducer";
+import { UserStatsPreviewUserType } from "./neon";
 
 export interface ToggleContextType {
   checked: boolean;
@@ -74,4 +75,18 @@ export interface CommentReactionContextType {
 export interface CommentRepliesContextType {
   repliesCache: RepliesState;
   dispatch: ActionDispatch<[action: RepliesAction]>;
+}
+
+export interface UserStatsPreviewContextType {
+  user: {
+    username: string;
+    count: UserStatsType;
+  };
+  open: boolean;
+  type: Lowercase<StatsPreviewType>;
+  setOpen: (value: boolean) => void;
+  setType: (type: Lowercase<StatsPreviewType>) => void;
+  cacheRef: React.RefObject<
+    Map<string, (UserStatsPreviewUserType & { likes_count?: string })[]>
+  >;
 }

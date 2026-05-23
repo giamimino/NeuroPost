@@ -14,5 +14,7 @@ export const RateLimitRules = [
   { match: /^\/api\/send/, limit: 4 },
   { match: /^\/api\/tags/, limit: 10 },
   { match: /^\/api\/user/, limit: 10 },
+  { match: /^\/api\/user\/u\/[^/]+$/, limit: 25 },
+  { match: /^\/api\/user\/u\/[^/]+\/stats$/, limit: 300 },
   { match: /^\/api\/cron-jobs/, limit: 1 },
 ];

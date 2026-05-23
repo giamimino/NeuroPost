@@ -45,3 +45,5 @@ src/app/component_preview
 
 dublicateDates.js
 .env*.local
+
+/src/app/apiTest

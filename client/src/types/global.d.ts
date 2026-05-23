@@ -36,3 +36,5 @@ export interface ForyouPost extends Post {
 export interface ClassName {
   className?: string;
 }
+
+export type StatsPreviewType = "LIKES" | "FOLLOWERS" | "FOLLOWING";

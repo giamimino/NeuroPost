@@ -48,3 +48,7 @@ dublicateDates.js
 
 local/
 server/dist/
+
+# workspace
+
+.vscode/
