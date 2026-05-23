@@ -165,6 +165,8 @@ export interface UserStatsPreviewUserType {
   username: string;
   isPrivate: boolean;
   created_at: string;
+}
+
 export interface SearchIndexRefType {
   title?: boolean;
   description?: boolean;
