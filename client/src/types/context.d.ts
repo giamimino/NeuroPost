@@ -92,4 +92,7 @@ export interface UserStatsPreviewContextType {
   type: Lowercase<StatsPreviewType>;
   setOpen: (value: boolean) => void;
   setType: (type: Lowercase<StatsPreviewType>) => void;
+  cacheRef: React.RefObject<
+    Map<string, (UserStatsPreviewUserType & { likes_count?: string })[]>
+  >;
 }

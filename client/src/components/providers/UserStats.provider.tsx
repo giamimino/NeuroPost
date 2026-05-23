@@ -23,6 +23,13 @@ const UserStatsProvider = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<Lowercase<StatsPreviewType>>();
+  const cacheRef = useRef(
+    new Map<string, (UserStatsPreviewUserType & { likes_count?: string })[]>(),
+  );
+
+  useEffect(() => {
+    cacheRef.current.clear();
+  }, [user.username]);
 
   const values = useMemo(
     () =>
@@ -31,6 +38,7 @@ const UserStatsProvider = ({
         type,
         setOpen: (value) => setOpen(value),
         setType: (type) => setType(type),
+        cacheRef,
         user,
       }) as UserStatsPreviewContextType,
     [open, type, user],
@@ -179,27 +187,73 @@ const UserStatsUserComponents = {
 };
 
 const UserStatsList = () => {
-  const { type, open, user } = useUserStatsPreviewCtx();
-  const { data, status } = useUserStatsPreview(type, user.username, open);
+  const { type, open, user, cacheRef } = useUserStatsPreviewCtx();
+  const { data, status, loadMore, hasMore } = useUserStatsPreview(
+    type,
+    user.username,
+    open,
+    cacheRef,
+  );
 
-  if (data === null && status !== "loading")
-    return (
-      <div>
-        <CardDescription>No users found.</CardDescription>
-      </div>
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loaderRef = useRef<HTMLDivElement>(null);
+  const hasMoreRef = useRef(true);
+  const loadingRef = useRef(false);
+  const firstFireRef = useRef(true);
+
+  useEffect(() => {
+    hasMoreRef.current = hasMore;
+  }, [hasMore]);
+
+  const handleLoadMore = async () => {
+    if (loadingRef.current) return;
+
+    loadingRef.current = true;
+
+    try {
+      await loadMore();
+    } finally {
+      loadingRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    const el = loaderRef.current;
+    
+    if (!el) return;
+
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    observerRef.current = new IntersectionObserver(
+      ([entry]) => {
+        if (firstFireRef.current) {
+          firstFireRef.current = false;
+          return;
+        }
+        if (entry.isIntersecting && hasMoreRef.current) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 },
     );
 
+    observerRef.current.observe(el);
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, []);
+
   return (
-    <div
-      data-lenis-prevent
-      className="flex flex-col gap-1 overflow-y-auto h-full"
-    >
+    <div data-lenis-prevent className="flex flex-col gap-1 overflow-y-auto">
       {data?.map((item, i) => (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
-            delay: ((i % 10) + 1) * 0.1,
+            delay: (i % 10) * 0.08,
             type: "spring",
             stiffness: 110,
             damping: 18,
@@ -209,6 +263,7 @@ const UserStatsList = () => {
           {UserStatsUserComponents[type](item)}
         </motion.div>
       ))}
+      <div ref={loaderRef} className="w-full min-h-10 shrink-0" />
       {status === "loading" &&
         Array.from({ length: 6 }).map((_, i) => (
           <SkeletonUser className="w-full p-2" key={i} />

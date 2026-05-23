@@ -1,92 +1,101 @@
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alert.store";
+import { UserStatsPreviewContextType } from "@/types/context";
 import { GenericStatus, StatsPreviewType } from "@/types/global";
 import { UserStatsPreviewUserType } from "@/types/neon";
 import { useState, useEffect, useRef, useCallback } from "react";
 
 type User = UserStatsPreviewUserType & {
   likes_count?: string;
-  created_at: string;
 };
 
 export default function useUserStatsPreview(
   type: Lowercase<StatsPreviewType>,
   username: string,
   enabled: boolean,
+  cacheRef: UserStatsPreviewContextType["cacheRef"]
 ) {
   const [status, setStatus] = useState<GenericStatus>("idle");
   const [data, setData] = useState<User[]>([]);
+  const [hasMore, setHasMore] = useState(true);
   const { addAlert } = useAlertStore();
 
-  const cacheRef = useRef(new Map<string, User[]>());
-  const hasMoreRef = useRef(true);
   const tickingRef = useRef(false);
+  const hasMoreRef = useRef(true);
+  const loadMoreRef = useRef<() => Promise<any> | null>(null);
 
-  const cursor = data ? data[0].created_at : new Date().toISOString();
   const key = `${username}:${type}`;
 
   const reset = () => {
     setData([]);
-    hasMoreRef.current = true;
+    setHasMore(true);
+    
     tickingRef.current = false;
+    hasMoreRef.current = true;
   };
 
-  const fetchUserStats = useCallback(
-    async (append: boolean) => {
-      try {
-        if (tickingRef.current || !enabled) return;
-        if (!hasMoreRef.current && append) return;
-        tickingRef.current = true;
-        setStatus("loading");
-        const url = `/api/user/u/${username}/stats?type=${type.toUpperCase()}&limit=8&cursor=${cursor}`;
-        const res = await apiFetch(url);
-        const data = await res?.json();
+  const fetchUserStats = async (append: boolean) => {
+    if (tickingRef.current || !enabled) return;
+    if (!hasMoreRef.current && append) return;
 
-        if (data.error) {
-          addAlert({
-            id: crypto.randomUUID(),
-            type: "error",
-            ...data.error,
-          });
-          return;
-        }
-        const stats = data?.stats?.[type] ?? [];
+    tickingRef.current = true;
 
-        if (!append) {
-          setData(stats);
-        } else {
-          setData((prev) => [...prev, ...stats]);
-        }
+    if (!append) setStatus("loading");
 
-        cacheRef.current.set(
-          key,
-          append ? [...(cacheRef.current.get(key) ?? []), ...stats] : stats,
-        );
+    const cursor =
+      append && data.length
+        ? data[data.length - 1].created_at
+        : new Date().toISOString();
 
-        hasMoreRef.current = data.hasMore;
+    try {
+      const url = `/api/user/u/${username}/stats?type=${type.toUpperCase()}&limit=8&cursor=${cursor}`;
+      const res = await apiFetch(url);
+      const data = await res?.json();
 
-        setStatus("success");
-      } catch (error) {
-        setStatus("error");
+      if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
           type: "error",
-          ...ERRORS.GENERIC_ERROR,
+          ...data.error,
         });
-      } finally {
-        tickingRef.current = false;
+        return;
       }
-    },
-    [username, type, addAlert, key, cursor, enabled],
-  );
+      const stats = data?.stats?.[type] ?? [];
+
+      if (!append) {
+        setData(stats);
+      } else {
+        setData((prev) => [...prev, ...stats]);
+      }
+
+      cacheRef.current.set(
+        key,
+        append ? [...(cacheRef.current.get(key) ?? []), ...stats] : stats,
+      );
+
+      setHasMore(data.hasMore);
+
+      setStatus("success");
+    } catch (error) {
+      setStatus("error");
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        ...ERRORS.GENERIC_ERROR,
+      });
+    } finally {
+      tickingRef.current = false;
+    }
+  };
 
   useEffect(() => {
     if (!enabled) return;
+    if(tickingRef.current) return
 
     const cached = cacheRef.current.get(key);
 
-    if (cached?.length) {
+    if (cached && cached.length > 0) {
       setData(cached);
       setStatus("success");
       return;
@@ -94,12 +103,13 @@ export default function useUserStatsPreview(
 
     reset();
     fetchUserStats(false);
-  }, [fetchUserStats, enabled, reset, key]);
+  }, [enabled, key]);
 
-  const loadMore = useCallback(() => {
-    if(!enabled) return;
-    fetchUserStats(true)
-  }, [fetchUserStats, enabled])
+  loadMoreRef.current = async () => {
+    if (!enabled) return;
+    if (tickingRef.current) return;
+    await fetchUserStats(true);
+  };
 
-  return { status, data, loadMore, hasMore: hasMoreRef.current };
+  return { status, data, loadMore: () => loadMoreRef.current?.(), hasMore };
 }

@@ -164,5 +164,6 @@ export interface UserStatsPreviewUserType {
   name: string,
   profile_url: string,
   username: string,
-  isPrivate: boolean
+  isPrivate: boolean,
+  created_at: string
 }

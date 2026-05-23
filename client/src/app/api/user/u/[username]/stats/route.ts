@@ -118,6 +118,7 @@ export async function GET(
           FROM follows f
           JOIN users u ON u.id = f.follower_id
           WHERE f.follow_id = $1 AND f.created_at < $3
+          ORDER BY f.created_at DESC
           LIMIT $2`,
           [author[0].id, limit, date],
         );
@@ -160,6 +161,7 @@ export async function GET(
           FROM follows f
           JOIN users u ON u.id = f.follow_id
           WHERE f.follower_id = $1 AND f.created_at < $3
+          ORDER BY f.created_at DESC
           LIMIT $2`,
           [author[0].id, limit, date],
         );

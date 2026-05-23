@@ -15,7 +15,6 @@ import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
-import { StatsEndpointType } from "@/schemas/common/enums.schema";
 import { useAlertStore } from "@/store/zustand/alert.store";
 import { StatsPreviewType, UserStatsType } from "@/types/global";
 import { Post, UserFollowJoinType } from "@/types/neon";
