@@ -35,59 +35,62 @@ export default function useUserStatsPreview(
     hasMoreRef.current = true;
   };
 
-  const fetchUserStats = useCallback(async (append: boolean) => {
-    if (tickingRef.current || !enabled) return;
-    if (!hasMoreRef.current && append) return;
+  const fetchUserStats = useCallback(
+    async (append: boolean) => {
+      if (tickingRef.current || !enabled) return;
+      if (!hasMoreRef.current && append) return;
 
-    tickingRef.current = true;
+      tickingRef.current = true;
 
-    if (!append) setStatus("loading");
+      if (!append) setStatus("loading");
 
-    const cursor =
-      append && data.length
-        ? data[data.length - 1].created_at
-        : new Date().toISOString();
+      const cursor =
+        append && data.length
+          ? data[data.length - 1].created_at
+          : new Date().toISOString();
 
-    try {
-      const url = `/api/user/u/${username}/stats?type=${type.toUpperCase()}&limit=8&cursor=${cursor}`;
-      const res = await apiFetch(url);
-      const data = await res?.json();
+      try {
+        const url = `/api/user/u/${username}/stats?type=${type.toUpperCase()}&limit=8&cursor=${cursor}`;
+        const res = await apiFetch(url);
+        const data = await res?.json();
 
-      if (data.error) {
+        if (data.error) {
+          addAlert({
+            id: crypto.randomUUID(),
+            type: "error",
+            ...data.error,
+          });
+          return;
+        }
+        const stats = data?.stats?.[type] ?? [];
+
+        if (!append) {
+          setData(stats);
+        } else {
+          setData((prev) => [...prev, ...stats]);
+        }
+
+        cacheRef.current.set(
+          key,
+          append ? [...(cacheRef.current.get(key) ?? []), ...stats] : stats,
+        );
+
+        setHasMore(data.hasMore);
+
+        setStatus("success");
+      } catch {
+        setStatus("error");
         addAlert({
           id: crypto.randomUUID(),
           type: "error",
-          ...data.error,
+          ...ERRORS.GENERIC_ERROR,
         });
-        return;
+      } finally {
+        tickingRef.current = false;
       }
-      const stats = data?.stats?.[type] ?? [];
-
-      if (!append) {
-        setData(stats);
-      } else {
-        setData((prev) => [...prev, ...stats]);
-      }
-
-      cacheRef.current.set(
-        key,
-        append ? [...(cacheRef.current.get(key) ?? []), ...stats] : stats,
-      );
-
-      setHasMore(data.hasMore);
-
-      setStatus("success");
-    } catch {
-      setStatus("error");
-      addAlert({
-        id: crypto.randomUUID(),
-        type: "error",
-        ...ERRORS.GENERIC_ERROR,
-      });
-    } finally {
-      tickingRef.current = false;
-    }
-  }, [addAlert, cacheRef, data, enabled, key, type, username]);
+    },
+    [addAlert, cacheRef, data, enabled, key, type, username],
+  );
 
   useEffect(() => {
     if (!enabled) return;

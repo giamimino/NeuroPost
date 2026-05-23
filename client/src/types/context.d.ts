@@ -1,10 +1,6 @@
 import React, { ActionDispatch } from "react";
 import { CommentReactionEnum } from "./enums";
-import {
-  ForyouPost,
-  StatsPreviewType,
-  UserStatsType,
-} from "./global";
+import { ForyouPost, StatsPreviewType, UserStatsType } from "./global";
 import { RepliesAction, RepliesState } from "./reducer";
 import { UserStatsPreviewUserType } from "./neon";
 

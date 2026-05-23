@@ -4,7 +4,13 @@ import {
   useUserStatsPreviewCtx,
 } from "@/store/contexts/UserStats.context";
 import { Children, StatsPreviewType } from "@/types/global";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Card, CardDescription, CardTitle } from "../ui/card";
 import { UserStatsPreviewContextType } from "@/types/context";
 import { X } from "lucide-react";
@@ -205,7 +211,7 @@ const UserStatsList = () => {
     hasMoreRef.current = hasMore;
   }, [hasMore]);
 
-  const handleLoadMore = useCallback( async () => {
+  const handleLoadMore = useCallback(async () => {
     if (loadingRef.current) return;
 
     loadingRef.current = true;
@@ -215,7 +221,7 @@ const UserStatsList = () => {
     } finally {
       loadingRef.current = false;
     }
-  }, [loadMore])
+  }, [loadMore]);
 
   useEffect(() => {
     const el = loaderRef.current;
