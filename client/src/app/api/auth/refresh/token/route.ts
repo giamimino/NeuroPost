@@ -5,7 +5,7 @@ import { createAccessToken } from "@/lib/jwt";
 import { JWTUserPaylaod } from "@/types/global";
 import { ERRORS } from "@/constants/error-handling";
 import { getIP } from "@/utils/getIp";
-import client from "@/lib/client";
+import client from "@/lib/redis/client";
 
 function errorResponse(message: string) {
   return NextResponse.json({

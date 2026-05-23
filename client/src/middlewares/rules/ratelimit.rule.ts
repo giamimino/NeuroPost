@@ -10,7 +10,7 @@ export const RateLimitRules = [
   { match: /^\/api\/r2/, limit: 20 },
   { match: /^\/api\/redis/, limit: 5 },
   { match: /^\/api\/redis/, limit: 5 },
-  { match: /^\/api\/search/, limit: 13 },
+  { match: /^\/api\/search/, limit: 30 },
   { match: /^\/api\/send/, limit: 4 },
   { match: /^\/api\/tags/, limit: 10 },
   { match: /^\/api\/user/, limit: 10 },

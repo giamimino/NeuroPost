@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import client from "@/lib/client";
+import client from "@/lib/redis/client";
 import { ERRORS } from "@/constants/error-handling";
 import { cookies } from "next/headers";
 import { createPasswordResetToken } from "@/lib/jwt";

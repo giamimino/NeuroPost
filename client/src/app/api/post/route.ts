@@ -5,6 +5,7 @@ import { MediaValidator } from "@/utils/validator";
 import { s3 } from "@/lib/aws-sdk";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getAuthUser } from "@/lib/auth";
+import searchIndexQueue from "@/lib/queue/searchIndex.queue";
 
 interface TagInput {
   id?: number;
@@ -198,6 +199,12 @@ export async function POST(req: Request) {
     }
 
     await sql.query("COMMIT");
+
+    await searchIndexQueue.add(
+      "search-index",
+      { postId: post.id },
+      { removeOnComplete: 10, removeOnFail: 100 },
+    );
 
     return NextResponse.json({ ok: true, post }, { status: 200 });
   } catch (error) {

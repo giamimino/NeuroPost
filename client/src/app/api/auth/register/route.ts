@@ -5,7 +5,7 @@ import { createAccessToken, createRefreshToken } from "@/lib/jwt";
 import { ERRORS } from "@/constants/error-handling";
 import { NeonDbError } from "@neondatabase/serverless";
 import { getIP } from "@/utils/getIp";
-import client from "@/lib/client";
+import client from "@/lib/redis/client";
 import { RegisterSchema } from "@/schemas/auth/register.schema";
 
 export async function POST(req: Request) {

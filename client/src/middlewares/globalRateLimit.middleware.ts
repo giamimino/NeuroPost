@@ -1,5 +1,5 @@
 import { ERRORS } from "@/constants/error-handling";
-import client from "@/lib/client";
+import client from "@/lib/redis/client";
 import { NextResponse } from "next/server";
 
 const REQUESTS_REDIS_KEY = `GLOBAL_MAX_RATE_LIMIT`;

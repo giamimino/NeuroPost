@@ -34,13 +34,17 @@
     "clean": "npm run clean:server && npm run clean:client && rimraf node_modules",
     "clean:client": "npm run clean --workspace=client",
     "clean:server": "npm run clean --workspace=server",
-    "test": "npm run test -w server",
-    "test:run": "npm run test:run -w server"
+    "test:server": "npm run test -w server",
+    "test:server:run": "npm run test:run -w server",
+    "test:client": "npm run test -w client",
+    "test:client:run": "npm run test:run -w client",
+    "worker": "npm run worker -w server",
+    "worker:dev": "npm run worker:dev -w server"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
-    "typescript": "^5.9.3",
     "eslint": "^9",
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3"
   }
 }

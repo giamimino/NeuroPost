@@ -6,7 +6,7 @@ import {
 } from "@/schemas/auth/auth.schema";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import client from "@/lib/client";
+import client from "@/lib/redis/client";
 import { Resend } from "resend";
 import { PasswordResetEmailTemplate } from "@/components/email-templates";
 import { cookies } from "next/headers";

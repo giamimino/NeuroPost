@@ -1,4 +1,4 @@
-import client from "@/lib/client";
+import client from "@/lib/redis/client";
 import { sql } from "@/lib/db";
 import { Index } from "@/types/neon";
 import { NormalizedIndex } from "@/types/search";
