@@ -2,13 +2,11 @@ import React, { ActionDispatch } from "react";
 import { CommentReactionEnum } from "./enums";
 import {
   ForyouPost,
-  GenericStatus,
   StatsPreviewType,
   UserStatsType,
 } from "./global";
 import { RepliesAction, RepliesState } from "./reducer";
-import { StatsEndpointType } from "@/schemas/common/enums.schema";
-import { UserStatsPreviewType, UserStatsPreviewUserType } from "./neon";
+import { UserStatsPreviewUserType } from "./neon";
 
 export interface ToggleContextType {
   checked: boolean;

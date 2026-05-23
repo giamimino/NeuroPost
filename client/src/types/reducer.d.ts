@@ -41,5 +41,5 @@ export type UserStatsState = Map<
 export type UserStatsAction = {
   type: "ADD_STATS";
   key: Lowercase<StatsPreviewType>;
-  newStats: (UserStatsPreviewUserType & { likes_count?: number })[]
-}
+  newStats: (UserStatsPreviewUserType & { likes_count?: number })[];
+};

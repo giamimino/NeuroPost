@@ -14,7 +14,7 @@ export default function useUserStatsPreview(
   type: Lowercase<StatsPreviewType>,
   username: string,
   enabled: boolean,
-  cacheRef: UserStatsPreviewContextType["cacheRef"]
+  cacheRef: UserStatsPreviewContextType["cacheRef"],
 ) {
   const [status, setStatus] = useState<GenericStatus>("idle");
   const [data, setData] = useState<User[]>([]);
@@ -30,12 +30,12 @@ export default function useUserStatsPreview(
   const reset = () => {
     setData([]);
     setHasMore(true);
-    
+
     tickingRef.current = false;
     hasMoreRef.current = true;
   };
 
-  const fetchUserStats = async (append: boolean) => {
+  const fetchUserStats = useCallback(async (append: boolean) => {
     if (tickingRef.current || !enabled) return;
     if (!hasMoreRef.current && append) return;
 
@@ -77,7 +77,7 @@ export default function useUserStatsPreview(
       setHasMore(data.hasMore);
 
       setStatus("success");
-    } catch (error) {
+    } catch {
       setStatus("error");
       addAlert({
         id: crypto.randomUUID(),
@@ -87,11 +87,11 @@ export default function useUserStatsPreview(
     } finally {
       tickingRef.current = false;
     }
-  };
+  }, [addAlert, cacheRef, data, enabled, key, type, username]);
 
   useEffect(() => {
     if (!enabled) return;
-    if(tickingRef.current) return
+    if (tickingRef.current) return;
 
     const cached = cacheRef.current.get(key);
 
@@ -103,13 +103,16 @@ export default function useUserStatsPreview(
 
     reset();
     fetchUserStats(false);
-  }, [enabled, key]);
+  }, [enabled, key, cacheRef, fetchUserStats]);
 
-  loadMoreRef.current = async () => {
-    if (!enabled) return;
-    if (tickingRef.current) return;
-    await fetchUserStats(true);
-  };
+  useEffect(() => {
+    loadMoreRef.current = async () => {
+      if (!enabled) return;
+      if (tickingRef.current) return;
+
+      await fetchUserStats(true);
+    };
+  }, [enabled, fetchUserStats]);
 
   return { status, data, loadMore: () => loadMoreRef.current?.(), hasMore };
 }

@@ -1,5 +1,4 @@
 import { ERRORS } from "@/constants/error-handling";
-import { getAuthUser } from "@/lib/auth";
 import { s3 } from "@/lib/aws-sdk";
 import { sql } from "@/lib/db";
 import { UsernameSchema } from "@/schemas/auth/auth.schema";
@@ -22,25 +21,12 @@ export async function GET(
 
     const type = StatsEndpointEnum.parse(queryParams.type);
     const limit = Number(queryParams.limit ?? 10);
-    const cursor = queryParams.cursor
+    const cursor = queryParams.cursor;
 
-    const date = cursor && !isNaN(new Date(cursor).getTime()) 
-      ? new Date(cursor).toISOString()
-      : new Date(Date.now()).toISOString()
-
-
-    const auth = await getAuthUser();
-    if (auth.error)
-      return NextResponse.json(
-        { ok: false, error: auth.error },
-        { status: 401 },
-      );
-    if (auth.status === "inactive")
-      return NextResponse.json(
-        { ok: false, error: ERRORS.ACCOUNT_INACTIVE },
-        { status: 423 },
-      );
-    const payload = auth.user;
+    const date =
+      cursor && !isNaN(new Date(cursor).getTime())
+        ? new Date(cursor).toISOString()
+        : new Date(Date.now()).toISOString();
 
     let stats;
 
@@ -100,7 +86,7 @@ export async function GET(
             l.profile_url && !l.isPrivate ? signed_urls[i] : "/user.jpg",
         }));
 
-        const hasMore = !(signed_likes.length < limit)
+        const hasMore = !(signed_likes.length < limit);
 
         return NextResponse.json(
           { ok: true, stats: { likes: signed_likes }, hasMore },
@@ -143,7 +129,7 @@ export async function GET(
             f.profile_url && !f.isPrivate ? signed_urls[i] : "/user.jpg",
         }));
 
-        const hasMore = !(signedFollowers.length < limit)
+        const hasMore = !(signedFollowers.length < limit);
 
         return NextResponse.json(
           { ok: true, stats: { followers: signedFollowers }, hasMore },
@@ -186,7 +172,7 @@ export async function GET(
             f.profile_url && !f.isPrivate ? signed_urls[i] : "/user.jpg",
         }));
 
-        const hasMore = !(signedFollowing.length < limit)
+        const hasMore = !(signedFollowing.length < limit);
 
         return NextResponse.json(
           { ok: true, stats: { following: signedFollowing }, hasMore },

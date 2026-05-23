@@ -160,7 +160,7 @@ function SkeletonFriendRequests({
 
 function SkeletonUser({ className }: { className?: string }) {
   return (
-    <div className={clsx("flex gap-1.5", className) }>
+    <div className={clsx("flex gap-1.5", className)}>
       <Skeleton className="w-8 h-8 rounded-full" />
       <div className="flex flex-col gap-2">
         <Skeleton className="w-16 h-3.5" />

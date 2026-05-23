@@ -1,4 +1,3 @@
-import { StatsEndpointType } from "@/schemas/common/enums.schema";
 import { CommentReactionEnum, FriendRequestStatusType } from "./enums";
 
 export interface Post {
@@ -161,9 +160,9 @@ export type CommentReactionPreview = Pick<
 >;
 
 export interface UserStatsPreviewUserType {
-  name: string,
-  profile_url: string,
-  username: string,
-  isPrivate: boolean,
-  created_at: string
+  name: string;
+  profile_url: string;
+  username: string;
+  isPrivate: boolean;
+  created_at: string;
 }

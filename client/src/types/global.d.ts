@@ -1,7 +1,6 @@
 import React from "react";
 import { UserStatusType } from "./enums";
 import { MediaEnumType, Post, UserJoin } from "./neon";
-import { StatsEndpointType } from "@/schemas/common/enums.schema";
 
 export interface Children {
   children: React.ReactNode;
@@ -38,4 +37,4 @@ export interface ClassName {
   className?: string;
 }
 
-export type StatsPreviewType = "LIKES" | "FOLLOWERS" | "FOLLOWING"
+export type StatsPreviewType = "LIKES" | "FOLLOWERS" | "FOLLOWING";

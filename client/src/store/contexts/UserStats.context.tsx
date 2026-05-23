@@ -11,7 +11,4 @@ const useUserStatsPreviewCtx = () => {
   return ctx;
 };
 
-export {
-  UserStatsPreviewContext,
-  useUserStatsPreviewCtx
-}
+export { UserStatsPreviewContext, useUserStatsPreviewCtx };

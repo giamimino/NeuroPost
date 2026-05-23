@@ -4,7 +4,7 @@ import {
   useUserStatsPreviewCtx,
 } from "@/store/contexts/UserStats.context";
 import { Children, StatsPreviewType } from "@/types/global";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardDescription, CardTitle } from "../ui/card";
 import { UserStatsPreviewContextType } from "@/types/context";
 import { X } from "lucide-react";
@@ -90,7 +90,7 @@ const UserStatsContent = ({ children }: Children) => {
     document.addEventListener("click", handleClick);
 
     return () => document.removeEventListener("click", handleClick);
-  }, [open]);
+  }, [open, setOpen]);
 
   return (
     <AnimatePresence>
@@ -205,7 +205,7 @@ const UserStatsList = () => {
     hasMoreRef.current = hasMore;
   }, [hasMore]);
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = useCallback( async () => {
     if (loadingRef.current) return;
 
     loadingRef.current = true;
@@ -215,11 +215,11 @@ const UserStatsList = () => {
     } finally {
       loadingRef.current = false;
     }
-  };
+  }, [loadMore])
 
   useEffect(() => {
     const el = loaderRef.current;
-    
+
     if (!el) return;
 
     if (observerRef.current) {
@@ -244,7 +244,7 @@ const UserStatsList = () => {
     return () => {
       observerRef.current?.disconnect();
     };
-  }, []);
+  }, [handleLoadMore]);
 
   return (
     <div data-lenis-prevent className="flex flex-col gap-1 overflow-y-auto">
