@@ -39,7 +39,7 @@ const thumbnailWorker = new Worker(
         .frames(1)
         .format("image2")
         .on("end", () => resolve())
-        .on("error", (err) => reject(err))
+        .on("error", (err: any) => reject(err))
         .pipe(memoryWritableStream);
     });
 
