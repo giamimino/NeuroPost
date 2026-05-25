@@ -1,0 +1,57 @@
+name: Auto Close Linked Issues
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  pull-requests: read
+  issues: write
+
+concurrency:
+  cancel-in-progress: true
+  group: auto-close-issues-${{ github.ref }}
+
+jobs:
+  close-issues:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Close referenced issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || "";
+
+            const issueNumbers = [...body.matchAll(/#(\d+)/g)].map(m => m[1]);
+
+            if(!issueNumbers.length) {
+              core.info("No issues found. Bot goes back to sleep.");
+              return;
+            }
+
+            for(const issue of issueNumbers) {
+              const issue_number = parseInt(issue, 10)
+
+              try {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number,
+                  body: `Closed automatically by PR #${context.payload.pull_request.number}.`  
+                })
+
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number,
+                  state: "closed"
+                });
+
+                console.log(`Closed issue #${issue_number}`);
+              } catch (err) {
+                console.log(`Failed for #${issue_number}`, err);
+              }
+            }
