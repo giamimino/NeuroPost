@@ -31,6 +31,7 @@ export interface CommentsStoreType {
   comments: CommentsType[];
   setComments: (comments: CommentsType[]) => void;
   pushComments: (comments: CommentsType[]) => void;
+  newComment: (comment: CommentsType) => void;
   incrementReplies: (commentId: string) => void;
   decrementReplies: (commentId: string) => void;
   deleteComment: (commentId: string) => void;
