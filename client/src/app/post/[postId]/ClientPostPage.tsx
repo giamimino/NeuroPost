@@ -107,7 +107,8 @@ const ClientPostPage = ({
     | null
   >(null);
   const [loading, setLoading] = useState(true);
-  const { comments, pushComments, deleteComment } = useCommentsStore();
+  const { comments, pushComments, deleteComment, newComment } =
+    useCommentsStore();
   const [deleted, setDeleted] = useState(false);
   const [editing, setEditing] = useState(false);
   const [media, setMedia] = useState<File | null>(null);
@@ -214,7 +215,9 @@ const ClientPostPage = ({
     });
     const data = await res?.json();
     if (data.ok) {
-      pushComments(data.comment);
+      console.log(data);
+
+      newComment(data.comment);
     } else {
       addAlert({
         id: crypto.randomUUID(),
@@ -552,7 +555,7 @@ const ClientPostPage = ({
             )}
           </div>
           {/* comments */}
-          {comments.length > 0 && openComments && (
+          {openComments && (
             <div className="w-full flex items-center justify-center">
               <Card className="w-full">
                 <CardHeader>
@@ -866,9 +869,7 @@ const ClientPostPage = ({
                   }
                 }}
               >
-                <MessageCircle
-                  {...(comments.length > 0 ? { fill: "#fff" } : {})}
-                />
+                <MessageCircle {...(openComments ? { fill: "#fff" } : {})} />
               </Button>
               <ToggleController
                 whatToShow={({ handleShow }) => (
