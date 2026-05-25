@@ -42,9 +42,13 @@
     "worker:dev": "npm run worker:dev -w server"
   },
   "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.28",
     "concurrently": "^9.2.1",
     "eslint": "^9",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "fluent-ffmpeg": "^2.1.3"
   }
 }

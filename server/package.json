@@ -19,6 +19,9 @@
     "worker:dev": "node --loader ts-node/esm 'src/workers/*.worker.{ts, js}'"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1053.0",
+    "@aws-sdk/lib-storage": "^3.1053.0",
+    "@aws-sdk/s3-request-presigner": "^3.1053.0",
     "@neondatabase/serverless": "^1.1.0",
     "bullmq": "^5.76.8",
     "cookie": "^1.1.1",
