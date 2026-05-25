@@ -6,6 +6,8 @@ import { s3 } from "@/lib/aws-sdk";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getAuthUser } from "@/lib/auth";
 import searchIndexQueue from "@/lib/queue/searchIndex.queue";
+import thumbnailQueue from "@/lib/queue/thumbnail.queue";
+import { ALLOWED_VIDEO_TYPES } from "@/constants/validators";
 
 interface TagInput {
   id?: number;
@@ -184,6 +186,18 @@ export async function POST(req: Request) {
             ContentType: file.type,
           }),
         );
+        
+        if(ALLOWED_VIDEO_TYPES.includes(type)) {
+          await thumbnailQueue.add(
+            "thumbnail-worker",
+            {
+              postId: post.id,
+              videoUrl: key,
+              postUrl: `media/${payload.userId}/${post.id}/`
+            },
+            { removeOnComplete: 10, removeOnFail: 100 }
+          )
+        }
       } catch (error) {
         return NextResponse.json(
           { ok: false, message: "Media upload failed.", dev: error },
