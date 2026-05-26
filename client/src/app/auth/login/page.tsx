@@ -78,14 +78,7 @@ const LoginPage = () => {
               />
             </div>
             <div className="flex justify-between text-foreground">
-              <label className="cursor-pointer flex gap-2 items-center select-none">
-                <input type="checkbox" className="hidden peer" />
-                <div className="w-4 h-4 rounded-sm border border-input-stroke peer-checked:bg-input-stroke flex justify-center items-center"></div>
-
-                <p className="font-inter font-medium text-sm tracking-tight">
-                  Remember me
-                </p>
-              </label>
+              <div></div>
               <button
                 type="button"
                 onClick={() => router.push("/auth/password_reset")}
@@ -103,7 +96,7 @@ const LoginPage = () => {
           </form>
           <div className="flex items-center gap-1">
             <p className="text-white font-plusJakartaSans text-sm">
-              {`Don't`} an account?
+              {`Don't`} have an account?
             </p>
             <button
               className="text-blue-400 hover:text-blue-500 cursor-pointer underline"

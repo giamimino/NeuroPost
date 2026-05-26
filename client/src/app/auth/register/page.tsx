@@ -96,7 +96,7 @@ const RegisterPage = () => {
           </form>
           <div className="flex items-center gap-1">
             <p className="text-white font-plusJakartaSans text-sm">
-              Alreadt have an account?
+              Already have an account?
             </p>
             <button
               className="text-blue-400 hover:text-blue-500 cursor-pointer underline"
