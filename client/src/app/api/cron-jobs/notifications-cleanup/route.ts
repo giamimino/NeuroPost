@@ -14,8 +14,8 @@ export async function GET(req: Request) {
 
     await sql.query(
       `DELETE FROM notifications WHERE 
-        (NOW() > created_at + INTERVAL '30 days' AND isread = true) OR 
-        (NOW() > created_at + INTERVAL '60 days' AND isread = false)`,
+        (NOW() > created_at + INTERVAL '18 days' AND isread = true) OR 
+        (NOW() > created_at + INTERVAL '31 days' AND isread = false)`,
     );
 
     await sql.query(

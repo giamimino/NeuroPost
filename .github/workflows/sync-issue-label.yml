@@ -3,10 +3,11 @@ name: Sync Issue Labels to PR
 on:
   pull_request:
     types: [opened, edited, synchronize]
+  workflow_dispatch:
 
 permissions:
   pull-requests: write
-  issues: read
+  issues: write
 
 concurrency:
   cancel-in-progress: true
@@ -25,14 +26,16 @@ jobs:
             const pr = context.payload.pull_request
             const body = pr.body || "";
 
-            const match = body.match(/#(\d+)/);
+            core.info(`PR body: ${body}`);
+
+            const match = body.match(/(?:close|closes|fix|fixes|resolve|resolves)\s+#(\d+)/i);
 
             if (!match) {
               core.info("No linked issue found");
               return;
             }
 
-            const issue_number = match[1]
+            const issue_number = Number(match[1])
 
             const { data: issue } = await github.rest.issues.get({
               owner: context.repo.owner,
