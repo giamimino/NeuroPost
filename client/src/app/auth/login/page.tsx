@@ -1,6 +1,7 @@
 "use client";
 import BlurWrapper from "@/components/BlurWrapper";
 import DefaultInput from "@/components/common/DefaultInput";
+import PasswordInput from "@/components/common/PasswordInput";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { LoginSchema } from "@/schemas/auth/login.schema";
@@ -19,7 +20,7 @@ const LoginPage = () => {
       const formData = new FormData(e.currentTarget);
 
       const email = (formData.get("email") as string) || "";
-      const password = (formData.get("password") as string) || "";
+      const password = (formData.get("current-password") as string) || "";
 
       const parsed = LoginSchema.safeParse({ email, password });
       if (!parsed.success) {
@@ -67,16 +68,13 @@ const LoginPage = () => {
           <form className="flex flex-col gap-6" onSubmit={handleLogin}>
             <div className="flex flex-col gap-4.5">
               <DefaultInput
-                name="email"
                 icon="eva:email-outline"
                 placeholder="Email"
+                name="email"
                 autoComplete="email"
+                type="email"
               />
-              <DefaultInput
-                name="password"
-                icon="gg:lock"
-                placeholder="Password"
-                autoComplete="current-password"
+              <PasswordInput
               />
             </div>
             <div className="flex justify-between text-foreground">
