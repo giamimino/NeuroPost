@@ -23,11 +23,11 @@ export async function GET() {
         { status: 423 },
       );
 
-    const signedUrl = await getSignedUrl(
+    const signedUrl = user.user.profile_url ? await getSignedUrl(
       s3,
       new GetObjectCommand({ Bucket: "neuropost", Key: user.user.profile_url }),
       { expiresIn: 5 * 60 },
-    );
+    ) : "/user.jpg"
 
     return NextResponse.json(
       {
@@ -42,7 +42,7 @@ export async function GET() {
       },
       { status: 200 },
     );
-  } catch (error) {
+  } catch (error) {    
     return NextResponse.json({ ok: false, dev: error }, { status: 500 });
   }
 }
