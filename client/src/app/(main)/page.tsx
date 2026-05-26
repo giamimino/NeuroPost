@@ -7,14 +7,12 @@ import { motion } from "framer-motion";
 
 export default function Home() {
   const [posts, setPosts] = useState<ForyouPost[]>([]);
-  const [took, setTook] = useState<number>(0);
   const tickingRef = useRef(false);
   const reachedRef = useRef(false);
   const latestPost = useRef<Date>(null);
 
   const fetchPosts = () => {
     if (tickingRef.current || reachedRef.current) return;
-    const now = new Date().getTime();
 
     tickingRef.current = true;
     const url = `/api/post/foryou?limit=20&col=created_at&dir=DESC&withMedia=true&user=true&cursor=${latestPost.current || ""}`;
@@ -30,7 +28,6 @@ export default function Home() {
       .catch((err) => console.error(err))
       .finally(() => {
         tickingRef.current = false;
-        setTook(new Date().getTime() - now);
       });
   };
 
@@ -95,9 +92,6 @@ export default function Home() {
           </Post>
         ))}
       </PostsContainer>
-      <div className="fixed top-0 left-0 text-white z-99">
-        {posts.length} / {took}ms
-      </div>
     </motion.div>
   );
 }
