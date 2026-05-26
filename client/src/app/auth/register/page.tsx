@@ -1,6 +1,7 @@
 "use client";
 import BlurWrapper from "@/components/BlurWrapper";
 import DefaultInput from "@/components/common/DefaultInput";
+import PasswordInput from "@/components/common/PasswordInput";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
@@ -73,20 +74,18 @@ const RegisterPage = () => {
           <form onSubmit={handleRegister} className="flex flex-col gap-6">
             <div className="flex flex-col gap-4.5">
               <DefaultInput
-                name="username"
                 icon="humbleicons:user"
+                name="username"
                 placeholder="Username"
+                autoComplete="username"
               />
               <DefaultInput
-                name="email"
                 icon="eva:email-outline"
+                name="email"
                 placeholder="Email"
+                autoComplete="email"
               />
-              <DefaultInput
-                name="password"
-                icon="gg:lock"
-                placeholder="Password"
-              />
+              <PasswordInput name="password" autoComplete="new-password" />
             </div>
             <button
               type="submit"
