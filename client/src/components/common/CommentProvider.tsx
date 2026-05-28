@@ -6,15 +6,12 @@ import {
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,
   CardTitle,
 } from "../ui/card";
 import { Button } from "../ui/button";
 import { ChevronDown, ChevronUp, Ellipsis, Send, XIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CommentType, CommentUserType } from "@/types/neon";
 import { apiFetch } from "@/lib/apiFetch";
-import ToggleController from "./ToggleController";
 import { Input } from "../ui/input";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
@@ -44,7 +41,6 @@ import {
   HoverCardContent,
   HoverCard,
 } from "../ui/hover-card";
-import { CommentsType } from "@/types/zustand.store";
 import { useCommentsStore } from "@/store/zustand/comments.store";
 
 const CommentProvider = () => {
@@ -107,6 +103,7 @@ const CommentProvider = () => {
       console.error(error);
     }
   };
+
   const handleFetchComments = useCallback(
     async (postId: number, append: boolean) => {
       if (loadingRef.current || reachedRef.current) return;
@@ -159,26 +156,32 @@ const CommentProvider = () => {
         setLoading(false);
       }
     },
-    [addAlert],
+    [addAlert, pushComments],
   );
 
-  const reset = () => {
+  const reset = useCallback(() => {
     firstFireRef.current = true;
     loadingRef.current = false;
     reachedRef.current = false;
-    commentsCursorRef.current = null
+    commentsCursorRef.current = null;
 
     clearComments();
-  };
+  }, [clearComments]);
 
   useEffect(() => {
     if (!post?.id) return;
-    if(post.append) {
-      reset()
-    }
-    handleFetchComments(Number(post.id), false);
-    setAppend(false)
-  }, [post?.id, handleFetchComments, comments]);
+    const fetchData = async () => {
+      if (post.append) {
+        reset();
+      }
+
+      await handleFetchComments(Number(post.id), false);
+
+      setAppend(false);
+    };
+
+    fetchData();
+  }, [post?.id, post?.append, reset, handleFetchComments, setAppend]);
 
   useEffect(() => {
     const el = loadMoreRef.current;

@@ -74,8 +74,7 @@ const LoginPage = () => {
                 autoComplete="email"
                 type="email"
               />
-              <PasswordInput
-              />
+              <PasswordInput />
             </div>
             <div className="flex justify-between text-foreground">
               <div></div>

@@ -65,14 +65,16 @@ export async function POST(req: Request) {
         { status: 500 },
       );
 
-    const signedUrl = comment.user.profile_url ? await getSignedUrl(
-      s3,
-      new GetObjectCommand({
-        Bucket: "neuropost",
-        Key: comment.user.profile_url,
-      }),
-      { expiresIn: 5 * 60 },
-    ) : "/user.jpg";
+    const signedUrl = comment.user.profile_url
+      ? await getSignedUrl(
+          s3,
+          new GetObjectCommand({
+            Bucket: "neuropost",
+            Key: comment.user.profile_url,
+          }),
+          { expiresIn: 5 * 60 },
+        )
+      : "/user.jpg";
 
     const signedComment = {
       ...comment,

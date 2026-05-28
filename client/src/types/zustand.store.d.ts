@@ -16,9 +16,9 @@ export interface AlertStoreType {
 }
 
 export interface CommentToggleStoreType {
-  post: { id: number, append: boolean } | null;
+  post: { id: number; append: boolean } | null;
   onClose: () => void;
-  setAppend: (append: boolean) => void
+  setAppend: (append: boolean) => void;
   onOpen: (id: number, append: boolean) => void;
   onHandle: (id?: number) => void;
 }

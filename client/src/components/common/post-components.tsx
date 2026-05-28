@@ -14,7 +14,6 @@ import { TagItem } from "../ui/tag";
 import { Button } from "../ui/button";
 import { PostContextType } from "@/types/context";
 import Video from "./video";
-import { useCommentsStore } from "@/store/zustand/comments.store";
 
 interface GenericType extends Children, ClassName {}
 
@@ -204,16 +203,12 @@ const PostCommentBtn = () => {
   const { post } = usePostContext();
 
   const handleClick = () => {
-    onOpen(post.id, true)
-  }
+    onOpen(post.id, true);
+  };
 
   return (
     <button className={`cursor-pointer w-fit`}>
-      <MessageCircleMore
-        width={18}
-        height={18}
-        onClick={handleClick}
-      />
+      <MessageCircleMore width={18} height={18} onClick={handleClick} />
     </button>
   );
 };
