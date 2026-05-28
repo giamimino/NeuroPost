@@ -1,7 +1,7 @@
 "use client";
 
 import { Children } from "@/types/global";
-import { useContext, useEffect, useState, createContext } from "react";
+import { useContext, useEffect, createContext, useRef } from "react";
 import Lenis from "lenis";
 
 const SmoothScrollerContext = createContext<Lenis | null>(null);
@@ -9,30 +9,29 @@ const SmoothScrollerContext = createContext<Lenis | null>(null);
 export const useSmoothScroller = () => useContext(SmoothScrollerContext);
 
 export const ScrollContextProvider = ({ children }: Children) => {
-  const [lenisRef, setLenis] = useState<Lenis | null>(null);
+  const lenisRef = useRef<Lenis | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const scroller = new Lenis();
+    const lenis = new Lenis();
+    lenisRef.current = lenis;
 
     const raf = (time: number) => {
-      scroller.raf(time);
-      requestAnimationFrame(raf);
+      lenis.raf(time);
+      rafRef.current = requestAnimationFrame(raf);
     };
 
-    const rf = requestAnimationFrame(raf);
-
-    (() => {
-      setLenis(scroller);
-    })();
+    rafRef.current = requestAnimationFrame(raf);
 
     return () => {
-      cancelAnimationFrame(rf);
-      scroller.destroy();
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      lenis.destroy();
+      lenisRef.current = null;
     };
   }, []);
 
   return (
-    <SmoothScrollerContext.Provider value={lenisRef}>
+    <SmoothScrollerContext.Provider value={lenisRef.current}>
       {children}
     </SmoothScrollerContext.Provider>
   );
