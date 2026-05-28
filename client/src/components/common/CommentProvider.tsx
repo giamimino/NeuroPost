@@ -45,11 +45,11 @@ import {
   HoverCard,
 } from "../ui/hover-card";
 import { CommentsType } from "@/types/zustand.store";
+import { useCommentsStore } from "@/store/zustand/comments.store";
 
 const CommentProvider = () => {
-  const { comment, onClose } = useCommentToggleStore();
+  const { post, onClose, setAppend } = useCommentToggleStore();
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState<CommentsType[]>([]);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const reachedRef = useRef(false);
   const loadingRef = useRef(false);
@@ -59,30 +59,22 @@ const CommentProvider = () => {
   } | null>(null);
   const { addAlert } = useAlertStore();
   const router = useRouter();
+  const { comments, pushComments, deleteComment, newComment, clearComments } =
+    useCommentsStore();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const firstFireRef = useRef(true);
 
   const addComment = async () => {
-    if (!comment) return;
+    if (!post) return;
 
     const content = commentInputRef.current?.value;
     const res = await apiFetch("/api/post/comment", {
       ...ApiConfig.post,
-      body: JSON.stringify({ post_id: comment, content }),
+      body: JSON.stringify({ post_id: post.id, content }),
     });
     const data = await res?.json();
     if (data.ok) {
-      setComments((prev) => [
-        {
-          ...data.comment,
-          reactions: {
-            LIKE: { count: 0 },
-            LAUGH: { count: 0 },
-            WOW: { count: 0 },
-            ANGRY: { count: 0 },
-            HEART: { count: 0 },
-          },
-        },
-        ...prev,
-      ]);
+      newComment(data.comment);
     } else {
       addAlert({
         id: crypto.randomUUID(),
@@ -102,7 +94,7 @@ const CommentProvider = () => {
       const data = await res?.json();
 
       if (data.ok) {
-        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        deleteComment(commentId);
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -145,11 +137,7 @@ const CommentProvider = () => {
             ...data.error,
           });
         } else if (data.ok && data.comments) {
-          if (!append) {
-            setComments(data.comments);
-          } else {
-            setComments((prev) => [...prev, ...data.comment]);
-          }
+          pushComments(data.comments);
 
           const isLastPage = !data.nextCursor || data.comments.length < 10;
 
@@ -168,21 +156,63 @@ const CommentProvider = () => {
       } finally {
         loadingRef.current = false;
 
-        if(!append) setLoading(false)
+        setLoading(false);
       }
     },
     [addAlert],
   );
 
+  const reset = () => {
+    firstFireRef.current = true;
+    loadingRef.current = false;
+    reachedRef.current = false;
+    commentsCursorRef.current = null
+
+    clearComments();
+  };
+
   useEffect(() => {
-    if (!comment || !addAlert) return;
-    handleFetchComments(Number(comment), false);
-  }, [comment, addAlert, handleFetchComments]);
+    if (!post?.id) return;
+    if(post.append) {
+      reset()
+    }
+    handleFetchComments(Number(post.id), false);
+    setAppend(false)
+  }, [post?.id, handleFetchComments, comments]);
+
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el || !post?.id || comments.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (firstFireRef.current) {
+          firstFireRef.current = false;
+          return;
+        }
+
+        if (
+          entry.isIntersecting &&
+          !reachedRef.current &&
+          !loadingRef.current
+        ) {
+          handleFetchComments(post.id, true);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [handleFetchComments, post?.id, comments.length]);
 
   return (
     <>
       <AnimatePresence>
-        {comment && (
+        {post && (
           <motion.div
             className="w-1/3 max-sm:w-0"
             layout
@@ -203,7 +233,10 @@ const CommentProvider = () => {
                   <XIcon />
                 </Button>
               </div>
-              <CardContent className="overflow-auto pt-5" data-lenis-prevent>
+              <CardContent
+                className="overflow-auto pt-5 flex flex-col gap-5"
+                data-lenis-prevent
+              >
                 <CommentRepliesProvider>
                   {comments.map((c) => (
                     <CommentContainer key={c.id}>
@@ -412,6 +445,10 @@ const CommentProvider = () => {
                     </CommentContainer>
                   ))}
                 </CommentRepliesProvider>
+
+                {loading && <SkeletonComments />}
+
+                <div ref={loadMoreRef} className="min-h-20" />
               </CardContent>
               <CardFooter className="pt-3 border-t mt-auto">
                 <div className="flex gap-2 items-center">
