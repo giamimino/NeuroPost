@@ -9,7 +9,7 @@ export default function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { comment } = useCommentToggleStore();
+  const { post } = useCommentToggleStore();
 
   const responsive =
     typeof window !== "undefined"
@@ -24,7 +24,7 @@ export default function MainLayout({
     <div className="flex">
       <motion.div
         className="min-w-0"
-        animate={{ flexBasis: comment ? responsive : "100%" }}
+        animate={{ flexBasis: post ? responsive : "100%" }}
         transition={{ type: "spring", stiffness: 120, damping: 20 }}
       >
         {children}

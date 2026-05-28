@@ -2,9 +2,12 @@ import { Icon } from "@iconify/react";
 import { InputHTMLAttributes, useId, useRef, useState } from "react";
 import { Button } from "../ui/button";
 
-export default function PasswordInput({ name, autoComplete }: { name?: string;
-  autoComplete?: InputHTMLAttributes<HTMLInputElement>["autoComplete"]
-
+export default function PasswordInput({
+  name,
+  autoComplete,
+}: {
+  name?: string;
+  autoComplete?: InputHTMLAttributes<HTMLInputElement>["autoComplete"];
 }) {
   const [visible, setVisible] = useState(false);
   const inputId = useId();

@@ -1,20 +1,17 @@
 "use client";
 import { useCommentToggleStore } from "@/store/zustand/commentsToggle.store";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,
   CardTitle,
 } from "../ui/card";
 import { Button } from "../ui/button";
-import { Ellipsis, Send, XIcon } from "lucide-react";
+import { ChevronDown, ChevronUp, Ellipsis, Send, XIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CommentType, CommentUserType } from "@/types/neon";
 import { apiFetch } from "@/lib/apiFetch";
-import ToggleController from "./ToggleController";
 import { Input } from "../ui/input";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
@@ -24,28 +21,56 @@ import { SkeletonComments } from "../ui/Skeleton-examples";
 import { timeAgo } from "@/utils/functions/timeAgo";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import {
+  Comment,
+  CommentContainer,
+  CommentPost,
+  CommentReaction,
+} from "./CommentsContainer";
+import { commentsReactions } from "@/app/post/[postId]/ClientPostPage";
+import { ContentToggleContainer, ContentToggle } from "../ContentToggle";
+import CommentRepliesProvider from "../providers/commentReplies.provider";
+import {
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenu,
+} from "../ui/dropdown-menu";
+import {
+  HoverCardTrigger,
+  HoverCardContent,
+  HoverCard,
+} from "../ui/hover-card";
+import { useCommentsStore } from "@/store/zustand/comments.store";
 
 const CommentProvider = () => {
-  const { comment, onClose } = useCommentToggleStore();
+  const { post, onClose, setAppend } = useCommentToggleStore();
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState<
-    (CommentType & { user: CommentUserType; role: "creator" | "guest" })[]
-  >([]);
   const commentInputRef = useRef<HTMLInputElement>(null);
+  const reachedRef = useRef(false);
+  const loadingRef = useRef(false);
+  const commentsCursorRef = useRef<{
+    created_at: string;
+    id: string;
+  } | null>(null);
   const { addAlert } = useAlertStore();
   const router = useRouter();
+  const { comments, pushComments, deleteComment, newComment, clearComments } =
+    useCommentsStore();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const firstFireRef = useRef(true);
 
   const addComment = async () => {
-    if (!comment) return;
+    if (!post) return;
 
     const content = commentInputRef.current?.value;
     const res = await apiFetch("/api/post/comment", {
       ...ApiConfig.post,
-      body: JSON.stringify({ post_id: comment, content }),
+      body: JSON.stringify({ post_id: post.id, content }),
     });
     const data = await res?.json();
     if (data.ok) {
-      setComments((prev) => [data.comment, ...prev]);
+      newComment(data.comment);
     } else {
       addAlert({
         id: crypto.randomUUID(),
@@ -65,7 +90,7 @@ const CommentProvider = () => {
       const data = await res?.json();
 
       if (data.ok) {
-        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        deleteComment(commentId);
       } else if (data.error) {
         addAlert({
           id: crypto.randomUUID(),
@@ -78,37 +103,119 @@ const CommentProvider = () => {
       console.error(error);
     }
   };
-  useEffect(() => {
-    if (!comment || !addAlert) return;
-    const fethData = async () => {
-      setLoading(true);
-      const url = `/api/post/comment?postId=${Number(comment)}&limit=20&withProfile=true`;
-      apiFetch(url)
-        .then((res) => res?.json())
-        .then((data) => {
-          if (data.ok) {
-            setComments(data.comments);
-          }
-        })
-        .finally(() => setLoading(false))
-        .catch((error) => {
-          console.error(error);
+
+  const handleFetchComments = useCallback(
+    async (postId: number, append: boolean) => {
+      if (loadingRef.current || reachedRef.current) return;
+
+      loadingRef.current = true;
+
+      if (!append) setLoading(true);
+
+      try {
+        const params = new URLSearchParams({
+          postId: postId.toString(),
+          limit: String(10),
+          ...(commentsCursorRef.current
+            ? {
+                cursorCreatedAt: commentsCursorRef.current.created_at,
+                cursorId: commentsCursorRef.current.id,
+              }
+            : {}),
+        });
+
+        const res = await apiFetch(`/api/post/comment?${params}`);
+        const data = await res?.json();
+
+        if (!data.ok && data.error) {
           addAlert({
             id: crypto.randomUUID(),
             type: "error",
-            ...ERRORS.GENERIC_ERROR,
-            duration: 2 * 2000,
+            ...data.error,
           });
+        } else if (data.ok && data.comments) {
+          pushComments(data.comments);
+
+          const isLastPage = !data.nextCursor || data.comments.length < 10;
+
+          if (isLastPage) {
+            reachedRef.current = true;
+          } else if (data.nextCursor?.id && data.nextCursor?.created_at) {
+            commentsCursorRef.current = data.nextCursor;
+          }
+        }
+      } catch {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...ERRORS.GENERIC_ERROR,
         });
+      } finally {
+        loadingRef.current = false;
+
+        setLoading(false);
+      }
+    },
+    [addAlert, pushComments],
+  );
+
+  const reset = useCallback(() => {
+    firstFireRef.current = true;
+    loadingRef.current = false;
+    reachedRef.current = false;
+    commentsCursorRef.current = null;
+
+    clearComments();
+  }, [clearComments]);
+
+  useEffect(() => {
+    if (!post?.id) return;
+    const fetchData = async () => {
+      if (post.append) {
+        reset();
+      }
+
+      await handleFetchComments(Number(post.id), false);
+
+      setAppend(false);
     };
 
-    fethData();
-  }, [comment, addAlert]);
+    fetchData();
+  }, [post?.id, post?.append, reset, handleFetchComments, setAppend]);
+
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el || !post?.id || comments.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (firstFireRef.current) {
+          firstFireRef.current = false;
+          return;
+        }
+
+        if (
+          entry.isIntersecting &&
+          !reachedRef.current &&
+          !loadingRef.current
+        ) {
+          handleFetchComments(post.id, true);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [handleFetchComments, post?.id, comments.length]);
 
   return (
     <>
       <AnimatePresence>
-        {comment && (
+        {post && (
           <motion.div
             className="w-1/3 max-sm:w-0"
             layout
@@ -129,134 +236,222 @@ const CommentProvider = () => {
                   <XIcon />
                 </Button>
               </div>
-              <CardContent className="overflow-auto" data-lenis-prevent>
-                {loading ? (
-                  <SkeletonComments />
-                ) : (
-                  comments.map((c) => (
-                    <Card
-                      key={`${c.id}-${c.post_id}`}
-                      className={`rounded-none border-t-0 border-l-0 border-r-0 ${c.role === "creator" ? "p-0" : "p-3"} relative`}
-                    >
-                      {c.role === "creator" && (
-                        <ToggleController
-                          animatePresence
-                          whatToShow={() => (
-                            <motion.div
-                              initial={{ opacity: 0, y: 10, scale: 0.5 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: 10 }}
-                              className="absolute right-15 top-1/2 -translate-y-1/2"
-                            >
-                              <Card className="p-0">
-                                <ToggleController
-                                  animatePresence
-                                  whatToShow={({ handleShow }) => (
-                                    <motion.div
-                                      initial={{
-                                        opacity: 0,
-                                        y: 50,
-                                        scale: 0.75,
-                                      }}
-                                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                                      exit={{ opacity: 0, y: 10 }}
-                                      className="absolute -top-4 -translate-y-1/2 right-0 z-10 min-w-100 w-full"
-                                    >
-                                      <Card className="">
-                                        <CardHeader>
-                                          <CardDescription>
-                                            Are you sure you want to delete this
-                                            comment?
-                                          </CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="flex gap-2.5">
+              <CardContent
+                className="overflow-auto pt-5 flex flex-col gap-5"
+                data-lenis-prevent
+              >
+                <CommentRepliesProvider>
+                  {comments.map((c) => (
+                    <CommentContainer key={c.id}>
+                      <Comment className="flex flex-col gap-2.5">
+                        <div className="flex justify-between items-center">
+                          <div className="flex gap-2.5">
+                            <Comment.Profile className="w-8 h-8">
+                              {typeof c.user.profile_url === "string" ? (
+                                <Image
+                                  src={c.user.profile_url}
+                                  width={40}
+                                  height={40}
+                                  alt="user-profile"
+                                  className="w-8 h-8 object-cover rounded-full"
+                                  style={{
+                                    width: 32,
+                                    height: 32,
+                                  }}
+                                />
+                              ) : (
+                                <Skeleton className="h-8 w-8 rounded-full" />
+                              )}
+                            </Comment.Profile>
+                            <div className="flex flex-col gap-1.5">
+                              <Comment.Header>
+                                <CardTitle
+                                  className="text-foreground cursor-pointer"
+                                  onClick={() =>
+                                    router.push(`/u/${c.user.username}`)
+                                  }
+                                >
+                                  {c.user.name}
+                                </CardTitle>
+                                <CardDescription className="text-sm">
+                                  {timeAgo(new Date(c.created_at))}
+                                </CardDescription>
+                              </Comment.Header>
+                              <Comment.Content>
+                                <CardDescription className="text-wrap w-full max-w-100">
+                                  {c.content}
+                                </CardDescription>
+                              </Comment.Content>
+                              <div className="flex gap-2.5">
+                                <div>
+                                  <CommentReaction
+                                    initialUserReaction={c.user_reaction}
+                                    initialReactions={{
+                                      LIKE: {
+                                        count: c.reactions.LIKE?.count || 0,
+                                      },
+                                      ANGRY: {
+                                        count: c.reactions.ANGRY?.count || 0,
+                                      },
+                                      HEART: {
+                                        count: c.reactions.HEART?.count || 0,
+                                      },
+                                      WOW: {
+                                        count: c.reactions.WOW?.count || 0,
+                                      },
+                                      LAUGH: {
+                                        count: c.reactions.LAUGH?.count || 0,
+                                      },
+                                    }}
+                                    commentId={c.id}
+                                  >
+                                    <HoverCard>
+                                      <HoverCardTrigger>
+                                        <CommentReaction.BaseReaction />
+                                      </HoverCardTrigger>
+                                      <HoverCardContent
+                                        side="top"
+                                        sideOffset={10}
+                                        className="flex gap-2.5 w-fit py-2"
+                                      >
+                                        {commentsReactions.map((c) => (
+                                          <CommentReaction.ReactionBtn
+                                            key={c.id}
+                                            reaction={c}
+                                          />
+                                        ))}
+                                      </HoverCardContent>
+                                    </HoverCard>
+                                  </CommentReaction>
+                                </div>
+                                <ContentToggleContainer>
+                                  <div className="flex gap-2.5 max-lg:flex-col">
+                                    <ContentToggle.Controller className="w-fit">
+                                      <Button
+                                        variant={"ghost"}
+                                        size={"md"}
+                                        className="cursor-pointer rounded-xl text-xs"
+                                      >
+                                        Reply
+                                      </Button>
+                                    </ContentToggle.Controller>
+                                    <ContentToggle.Content>
+                                      <CommentPost
+                                        post_id={c.post_id}
+                                        comment_id={c.id}
+                                        className="flex gap-2.5 items-center"
+                                      >
+                                        <CommentPost.Input
+                                          className="px-2 py-1 text-xs"
+                                          placeholder="Write a reply..."
+                                        />
+                                        <CommentPost.Button>
                                           <Button
                                             variant={"outline"}
-                                            className="cursor-pointer"
+                                            className="cursor-pointer w-fit"
+                                          >
+                                            <Send />
+                                          </Button>
+                                        </CommentPost.Button>
+                                      </CommentPost>
+                                    </ContentToggle.Content>
+                                  </div>
+                                </ContentToggleContainer>
+                              </div>
+                            </div>
+                          </div>
+                          {c.role === "creator" && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant={"ghost"}
+                                  size={"sm"}
+                                  className="cursor-pointer"
+                                >
+                                  <Ellipsis />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant={"none"}
+                                      className="w-full cursor-pointer border border-destructive text-destructive bg-destructive/4 hover:bg-destructive/10"
+                                    >
+                                      Delete
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    <div className="flex gap-3 flex-col p-3 w-75">
+                                      <CardDescription>
+                                        Are you sure you want to delete this
+                                        comment?
+                                      </CardDescription>
+                                      <div className="flex gap-3">
+                                        <DropdownMenuItem className="focus:bg-transparent focus:text-inherit p-0">
+                                          <Button
                                             onClick={() =>
                                               handleDeleteComment({
                                                 commentId: c.id,
                                               })
                                             }
+                                            variant={"none"}
+                                            className="w-full cursor-pointer border border-destructive text-destructive bg-destructive/4 hover:bg-destructive/10"
                                           >
-                                            Yes
+                                            Delete
                                           </Button>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="focus:bg-transparent focus:text-inherit p-0">
                                           <Button
                                             variant={"ghost"}
                                             className="cursor-pointer"
-                                            onClick={
-                                              handleShow
-                                                ? () => handleShow(false)
-                                                : undefined
-                                            }
                                           >
                                             cancel
                                           </Button>
-                                        </CardContent>
-                                      </Card>
-                                    </motion.div>
-                                  )}
-                                >
-                                  {({ setShow }) => (
-                                    <Button
-                                      onClick={() => setShow(true)}
-                                      className="hover:text-red-600 cursor-pointer"
-                                      variant={"outline"}
-                                    >
-                                      Delete
-                                    </Button>
-                                  )}
-                                </ToggleController>
-                              </Card>
-                            </motion.div>
+                                        </DropdownMenuItem>
+                                      </div>
+                                    </div>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           )}
-                        >
-                          {({ setShow }) => (
-                            <Button
-                              onClick={() => setShow((prev) => !prev)}
-                              className="w-fit cursor-pointer absolute top-1/2 -translate-y-1/2 right-5"
-                              variant={"ghost"}
-                              size={"sm"}
-                            >
-                              <Ellipsis />
-                            </Button>
-                          )}
-                        </ToggleController>
-                      )}
-                      <CardContent className="flex flex-col gap-3 px-0">
-                        <div className="flex gap-2.5 py-2">
-                          {c.user.profile_url ? (
-                            <Image
-                              src={c.user.profile_url}
-                              width={64}
-                              height={64}
-                              className="w-8 h-8 object-cover rounded-full self-start"
-                              alt={c.user.name}
-                            />
-                          ) : (
-                            <Skeleton className="w-8 h-8 rounded-full" />
-                          )}
-                          <div>
-                            <div className="flex gap-2">
-                              <CardTitle
-                                className="cursor-pointer"
-                                onClick={() =>
-                                  router.push(`/u/${c.user.username}`)
-                                }
-                              >
-                                {c.user.name}
-                              </CardTitle>
-                              <CardDescription>
-                                {timeAgo(new Date(c.created_at))}
-                              </CardDescription>
-                            </div>
-                            <CardDescription>{c.content}</CardDescription>
-                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
+                        {/* replies */}
+                        <Comment.Replies
+                          className="ml-10 flex flex-col gap-2"
+                          comment_id={c.id}
+                        />
+                        {c.replies_count > 0 && (
+                          <Comment.ReplyToggle className="w-fit">
+                            {({ status }) => (
+                              <Button
+                                variant={"outline"}
+                                className="cursor-pointer rounded-lg"
+                              >
+                                {status ? (
+                                  <>
+                                    <p>Hide Replies</p>
+                                    <ChevronUp className="size-4" />
+                                  </>
+                                ) : (
+                                  <>
+                                    <p>{c.replies_count} Replies</p>
+                                    <ChevronDown className="size-4" />
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </Comment.ReplyToggle>
+                        )}
+                      </Comment>
+                    </CommentContainer>
+                  ))}
+                </CommentRepliesProvider>
+
+                {loading && <SkeletonComments />}
+
+                <div ref={loadMoreRef} className="min-h-20" />
               </CardContent>
               <CardFooter className="pt-3 border-t mt-auto">
                 <div className="flex gap-2 items-center">

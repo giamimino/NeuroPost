@@ -202,13 +202,13 @@ const PostCommentBtn = () => {
   const { onOpen } = useCommentToggleStore();
   const { post } = usePostContext();
 
+  const handleClick = () => {
+    onOpen(post.id, true);
+  };
+
   return (
     <button className={`cursor-pointer w-fit`}>
-      <MessageCircleMore
-        width={18}
-        height={18}
-        onClick={() => onOpen(post.id)}
-      />
+      <MessageCircleMore width={18} height={18} onClick={handleClick} />
     </button>
   );
 };

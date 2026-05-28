@@ -65,20 +65,22 @@ export async function POST(req: Request) {
         { status: 500 },
       );
 
-    const signedUrl = await getSignedUrl(
-      s3,
-      new GetObjectCommand({
-        Bucket: "neuropost",
-        Key: comment.user.profile_url,
-      }),
-      { expiresIn: 5 * 60 },
-    );
+    const signedUrl = comment.user.profile_url
+      ? await getSignedUrl(
+          s3,
+          new GetObjectCommand({
+            Bucket: "neuropost",
+            Key: comment.user.profile_url,
+          }),
+          { expiresIn: 5 * 60 },
+        )
+      : "/user.jpg";
 
     const signedComment = {
       ...comment,
       user: {
         ...comment.user,
-        profile_url: comment.user.profile_url ? signedUrl : "/user.jpg",
+        profile_url: signedUrl,
       },
       role: comment.user_id === payload.userId ? "creator" : "guest",
       created_at: String(comment.created_at),
@@ -201,7 +203,7 @@ export async function GET(req: Request) {
       [comment_id, Number(limit) || 20],
     );
 
-    const keys = comments.map((c) => c.user.profile_url);
+    const keys = comments.map((c) => c.user.profile_url ?? "");
     const signedUrls = await Promise.all(
       keys.map((key) => {
         const command = new GetObjectCommand({

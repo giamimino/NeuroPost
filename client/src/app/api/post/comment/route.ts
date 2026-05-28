@@ -62,7 +62,7 @@ export async function POST(req: Request) {
         ok: true,
         comment: {
           ...comment[0],
-          user: { ...comment[0].user, profile_url: signedUrl || key },
+          user: { ...comment[0].user, profile_url: signedUrl || "/user.jpg" },
           role: "creator",
         },
       },

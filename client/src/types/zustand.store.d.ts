@@ -16,9 +16,10 @@ export interface AlertStoreType {
 }
 
 export interface CommentToggleStoreType {
-  comment: number | null;
+  post: { id: number; append: boolean } | null;
   onClose: () => void;
-  onOpen: (id: number) => void;
+  setAppend: (append: boolean) => void;
+  onOpen: (id: number, append: boolean) => void;
   onHandle: (id?: number) => void;
 }
 
@@ -35,4 +36,5 @@ export interface CommentsStoreType {
   incrementReplies: (commentId: string) => void;
   decrementReplies: (commentId: string) => void;
   deleteComment: (commentId: string) => void;
+  clearComments: () => void;
 }
