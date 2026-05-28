@@ -200,15 +200,11 @@ const PostLike = () => {
 PostLike.displayName = "Post.Like";
 
 const PostCommentBtn = () => {
-  const { onOpen, comment } = useCommentToggleStore();
-  const { clearComments } = useCommentsStore()
+  const { onOpen } = useCommentToggleStore();
   const { post } = usePostContext();
 
   const handleClick = () => {
-    if(comment && comment !== post.id) {
-      clearComments()
-    }
-    onOpen(post.id)
+    onOpen(post.id, true)
   }
 
   return (
