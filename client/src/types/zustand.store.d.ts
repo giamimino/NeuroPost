@@ -35,4 +35,5 @@ export interface CommentsStoreType {
   incrementReplies: (commentId: string) => void;
   decrementReplies: (commentId: string) => void;
   deleteComment: (commentId: string) => void;
+  clearComments: () => void
 }

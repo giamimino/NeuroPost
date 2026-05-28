@@ -42,4 +42,5 @@ export const useCommentsStore = create<CommentsStoreType>((set) => ({
     set((state) => ({
       comments: state.comments.filter((c) => c.id !== commentId),
     })),
+  clearComments: () => set(() => ({ comments: [] })),
 }));

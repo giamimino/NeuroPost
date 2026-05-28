@@ -14,6 +14,7 @@ import { TagItem } from "../ui/tag";
 import { Button } from "../ui/button";
 import { PostContextType } from "@/types/context";
 import Video from "./video";
+import { useCommentsStore } from "@/store/zustand/comments.store";
 
 interface GenericType extends Children, ClassName {}
 
@@ -199,15 +200,23 @@ const PostLike = () => {
 PostLike.displayName = "Post.Like";
 
 const PostCommentBtn = () => {
-  const { onOpen } = useCommentToggleStore();
+  const { onOpen, comment } = useCommentToggleStore();
+  const { clearComments } = useCommentsStore()
   const { post } = usePostContext();
+
+  const handleClick = () => {
+    if(comment && comment !== post.id) {
+      clearComments()
+    }
+    onOpen(post.id)
+  }
 
   return (
     <button className={`cursor-pointer w-fit`}>
       <MessageCircleMore
         width={18}
         height={18}
-        onClick={() => onOpen(post.id)}
+        onClick={handleClick}
       />
     </button>
   );
