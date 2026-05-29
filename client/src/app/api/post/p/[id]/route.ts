@@ -122,16 +122,16 @@ export async function PUT(
           );
         }
 
-        if(type === "video") {
+        if (type === "video") {
           await thumbnailQueue.add(
             "thumbnail-worker",
             {
               postId: id,
               videoUrl: key,
-              postUrl: `media/${payload.userId}/${id}/`
+              postUrl: `media/${payload.userId}/${id}/`,
             },
-            { removeOnComplete: 10, removeOnFail: 100 }
-          )
+            { removeOnComplete: 10, removeOnFail: 100 },
+          );
         }
       } catch (error) {
         console.error(error);

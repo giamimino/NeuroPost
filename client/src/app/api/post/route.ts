@@ -7,7 +7,6 @@ import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getAuthUser } from "@/lib/auth";
 import searchIndexQueue from "@/lib/queue/searchIndex.queue";
 import thumbnailQueue from "@/lib/queue/thumbnail.queue";
-import { ALLOWED_VIDEO_TYPES } from "@/constants/validators";
 
 interface TagInput {
   id?: number;
@@ -187,20 +186,27 @@ export async function POST(req: Request) {
           }),
         );
 
-        if(type === "video") {
+        if (type === "video") {
           await thumbnailQueue.add(
             "thumbnail-worker",
             {
               postId: post.id,
               videoUrl: key,
-              postUrl: `media/${payload.userId}/${post.id}/`
+              postUrl: `media/${payload.userId}/${post.id}/`,
             },
-            { removeOnComplete: 10, removeOnFail: 100 }
-          )
+            { removeOnComplete: 10, removeOnFail: 100 },
+          );
         }
       } catch (error) {
         return NextResponse.json(
-          { ok: false, error: type === "video" ? ERRORS.VIDEO_UPLOAD_FAILED : ERRORS.IMAGE_UPLOAD_FAILED, dev: error },
+          {
+            ok: false,
+            error:
+              type === "video"
+                ? ERRORS.VIDEO_UPLOAD_FAILED
+                : ERRORS.IMAGE_UPLOAD_FAILED,
+            dev: error,
+          },
           { status: 500 },
         );
       }
