@@ -205,11 +205,10 @@ export async function POST(req: Request) {
         );
       }
 
-      const media = await sql.query(
+      await sql.query(
         `INSERT INTO media (fileurl, type, post_id, user_id) VALUES ($1, $2, $3, $4)`,
         [key, type, post.id, payload.userId],
       );
-      console.log(media);
     }
 
     await sql.query("COMMIT");

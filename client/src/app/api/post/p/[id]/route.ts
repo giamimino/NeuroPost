@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 import { MediaValidator } from "@/utils/validator";
 import { indexSearchWordNormalize } from "@/utils/functions/indexSearchWordNormalize";
 import searchIndexEditQueue from "@/lib/queue/searchIndexEdit.queue";
+import thumbnailQueue from "@/lib/queue/thumbnail.queue";
 
 export async function PUT(
   req: Request,
@@ -119,6 +120,18 @@ export async function PUT(
             `INSERT INTO media (fileurl, type, post_id, user_id) VALUES ($1, $2, $3, $4) RETURNING *`,
             [key, type, id, payload.userId],
           );
+        }
+
+        if(type === "video") {
+          await thumbnailQueue.add(
+            "thumbnail-worker",
+            {
+              postId: id,
+              videoUrl: key,
+              postUrl: `media/${payload.userId}/${id}/`
+            },
+            { removeOnComplete: 10, removeOnFail: 100 }
+          )
         }
       } catch (error) {
         console.error(error);
