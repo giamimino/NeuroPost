@@ -186,8 +186,8 @@ export async function POST(req: Request) {
             ContentType: file.type,
           }),
         );
-        
-        if(ALLOWED_VIDEO_TYPES.includes(type)) {
+
+        if(type === "video") {
           await thumbnailQueue.add(
             "thumbnail-worker",
             {
@@ -200,7 +200,7 @@ export async function POST(req: Request) {
         }
       } catch (error) {
         return NextResponse.json(
-          { ok: false, message: "Media upload failed.", dev: error },
+          { ok: false, error: type === "video" ? ERRORS.VIDEO_UPLOAD_FAILED : ERRORS.IMAGE_UPLOAD_FAILED, dev: error },
           { status: 500 },
         );
       }

@@ -6,6 +6,7 @@ import { s3 } from "../lib/aws-sdk.js";
 import ffmpeg from "fluent-ffmpeg";
 import connection from "../lib/redis.js";
 import { Writable } from "stream";
+import { sql } from "../lib/db.js";
 
 dotenv.config();
 
@@ -53,6 +54,11 @@ const thumbnailWorker = new Worker(
         ContentType: "image/jpeg",
       }),
     );
+
+    await sql.query(`UPDATE media SET thumb_url = $1 WHERE post_id = $2`, [
+      thumbnailKey,
+      postId,
+    ]);
 
     return { thumbnailKey };
   },
