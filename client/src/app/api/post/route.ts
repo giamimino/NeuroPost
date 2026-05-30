@@ -6,6 +6,7 @@ import { s3 } from "@/lib/aws-sdk";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getAuthUser } from "@/lib/auth";
 import searchIndexQueue from "@/lib/queue/searchIndex.queue";
+import thumbnailQueue from "@/lib/queue/thumbnail.queue";
 
 interface TagInput {
   id?: number;
@@ -184,18 +185,36 @@ export async function POST(req: Request) {
             ContentType: file.type,
           }),
         );
+
+        if (type === "video") {
+          await thumbnailQueue.add(
+            "thumbnail-worker",
+            {
+              postId: post.id,
+              videoUrl: key,
+              postUrl: `media/${payload.userId}/${post.id}/`,
+            },
+            { removeOnComplete: 10, removeOnFail: 100 },
+          );
+        }
       } catch (error) {
         return NextResponse.json(
-          { ok: false, message: "Media upload failed.", dev: error },
+          {
+            ok: false,
+            error:
+              type === "video"
+                ? ERRORS.VIDEO_UPLOAD_FAILED
+                : ERRORS.IMAGE_UPLOAD_FAILED,
+            dev: error,
+          },
           { status: 500 },
         );
       }
 
-      const media = await sql.query(
+      await sql.query(
         `INSERT INTO media (fileurl, type, post_id, user_id) VALUES ($1, $2, $3, $4)`,
         [key, type, post.id, payload.userId],
       );
-      console.log(media);
     }
 
     await sql.query("COMMIT");
