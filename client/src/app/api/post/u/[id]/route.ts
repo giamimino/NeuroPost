@@ -10,8 +10,24 @@ export async function GET(
     const { searchParams } = new URL(req.url);
     const { limit } = Object.fromEntries(searchParams.entries());
 
-    const rawSql = `SELECT p.id, p.title, p.description, p.created_at, json_build_object('fileurl', m.fileurl, 'type', m.type, 'thumb_url', m.thumb_url) AS media FROM posts p JOIN media m ON m.post_id = p.id WHERE author_id = $1 LIMIT $2`;
-    const posts = await sql.query(rawSql, [id, Number(limit) || 18]);
+    const posts = await sql.query(
+      `
+      SELECT 
+        p.id, 
+        p.title, 
+        p.description, 
+        p.created_at, 
+        json_build_object(
+          'fileurl', m.fileurl, 
+          'type', m.type, 
+          'thumb_url', m.thumb_url
+        ) AS media 
+      FROM posts p 
+      JOIN media m ON m.post_id = p.id 
+      WHERE author_id = $1 
+      LIMIT $2`,
+      [id, Number(limit) || 18],
+    );
 
     return NextResponse.json({ ok: true, posts }, { status: 200 });
   } catch (err) {
