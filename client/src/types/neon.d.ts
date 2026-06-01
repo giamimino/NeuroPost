@@ -6,6 +6,7 @@ export interface Post {
   description: string | null;
   author_id: string;
   title: string;
+  media: Pick<MediaType, "fileurl" | "thumb_url" | "type"> | null
 }
 
 export interface UserJoin {
@@ -59,6 +60,7 @@ export interface MediaType {
   type: MediaEnumType;
   post_id: number;
   created_at: Date;
+  thumb_url: string | null
 }
 
 export interface CommentType {
