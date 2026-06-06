@@ -4,7 +4,6 @@ import { Post } from "@/types/neon";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextRequest, NextResponse } from "next/server";
-import { get } from "node:http";
 
 export async function GET(
   req: NextRequest,
@@ -15,7 +14,7 @@ export async function GET(
     const { searchParams } = new URL(req.url);
     const { limit } = Object.fromEntries(searchParams.entries());
 
-    const posts = await sql.query(
+    const posts = (await sql.query(
       `
       SELECT 
         p.id, 
@@ -32,41 +31,43 @@ export async function GET(
             )
         END AS media 
       FROM posts p 
-      JOIN media m ON m.post_id = p.id 
+      LEFT JOIN media m ON m.post_id = p.id 
       WHERE author_id = $1 
       LIMIT $2`,
-      [id, Number(limit) || 18],
-    ) as Post[]
+      [id, Number(limit) || 20],
+    )) as Post[];
 
     const keys = posts.map(({ media }) => {
       if (media?.type === "video" && media?.thumb_url) {
         return media.thumb_url;
-      } else if(media?.type === "image" && media.fileurl) {
-        return media.fileurl
+      } else if (media?.type === "image" && media.fileurl) {
+        return media.fileurl;
       }
       return "";
-    })
+    });
 
-    const signedUrls = await Promise.all(keys.map(key => {
-      const command = new GetObjectCommand({
-        Bucket: "neuropost",
-        Key: key,
-      })
+    const signedUrls = await Promise.all(
+      keys.map((key) => {
+        const command = new GetObjectCommand({
+          Bucket: "neuropost",
+          Key: key,
+        });
 
-      return getSignedUrl(s3, command, {
-        expiresIn: 5 * 60
-      })
-    }))
+        return getSignedUrl(s3, command, {
+          expiresIn: 5 * 60,
+        });
+      }),
+    );
 
     const signedPosts = posts.map((post, i) => {
-      const media = post.media
+      const media = post.media;
       if (media?.type === "video" && media?.thumb_url) {
-        return {...post, media: {...media, thumb_url: signedUrls[i]}};
-      } else if(media?.type === "image" && media.fileurl) {
-        return {...post, media: {...media, thumb_url: signedUrls[i]}};
+        return { ...post, media: { ...media, thumb_url: signedUrls[i] } };
+      } else if (media?.type === "image" && media.fileurl) {
+        return { ...post, media: { ...media, thumb_url: signedUrls[i] } };
       }
-      return null;
-    })
+      return { ...post, media: null };
+    });
 
     return NextResponse.json({ ok: true, posts: signedPosts }, { status: 200 });
   } catch (err) {

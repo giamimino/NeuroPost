@@ -1,5 +1,6 @@
 "use client";
 import NotificationsContainer from "@/components/common/containers/Notifications-container";
+import renderPostMediaPreview from "@/components/common/renderPostMediaPreview";
 import ToggleController from "@/components/common/ToggleController";
 import DataFetcher from "@/components/data-fetcher";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alert.store";
 import { Post } from "@/types/neon";
 import { useQuery } from "@tanstack/react-query";
+import clsx from "clsx";
 import { Bell } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -42,7 +44,7 @@ const ProfilePage = () => {
   const { addAlert } = useAlertStore();
   const { data: posts } = useQuery({
     queryFn: async () => {
-      const res = await fetch(`/api/post/u/${user?.id}`);
+      const res = await fetch(`/api/post/u/${user?.id}?limit=12`);
       const data = await res.json();
 
       if (!res.ok) {
@@ -55,7 +57,7 @@ const ProfilePage = () => {
         return null;
       }
 
-      setLoading(false)
+      setLoading(false);
 
       return data;
     },
@@ -77,10 +79,12 @@ const ProfilePage = () => {
           } else if (data.ok) {
             setUser({ id: data.user.payload.userId, ...data.user.user });
           }
-        })
+        });
     };
     fetchData();
   }, [addAlert]);
+
+  console.log(posts);
 
   return (
     <div className="pt-32 bg-background">
@@ -143,14 +147,16 @@ const ProfilePage = () => {
               )
               .map((post: Post) => (
                 <Card
-                  className="gap-2 pb-0 overflow-hidden justify-between"
+                  className={clsx(
+                    "gap-2 overflow-hidden justify-between",
+                    post.media ? "py-0" : "pb-0",
+                  )}
                   key={post.id}
                 >
-                  <CardHeader>
+                  {renderPostMediaPreview({ media: post.media })}
+                  <CardContent className="flex flex-col gap-2">
                     <CardTitle>{post.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className=" line-clamp-3">
+                    <CardDescription className="line-clamp-3">
                       {post.description}
                     </CardDescription>
                   </CardContent>
@@ -169,7 +175,9 @@ const ProfilePage = () => {
               ))
           ) : loading ? (
             <SkeletonPosts length={4} />
-          ) : posts === null && <CardDescription>No posts found.</CardDescription>}
+          ) : (
+            posts === null && <CardDescription>No posts found.</CardDescription>
+          )}
         </div>
       </div>
     </div>

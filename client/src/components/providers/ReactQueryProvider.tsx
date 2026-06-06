@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { Children } from "@/types/global";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React, { useState } from "react";
