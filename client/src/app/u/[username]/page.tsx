@@ -1,4 +1,5 @@
 "use client";
+import RenderPostMediaPreview from "@/components/common/renderPostMediaPreview";
 import { UserStats } from "@/components/providers/UserStats.provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Line from "@/components/ui/Line";
-import { SkeletonProfile } from "@/components/ui/Skeleton-examples";
+import {
+  SkeletonPosts,
+  SkeletonProfile,
+} from "@/components/ui/Skeleton-examples";
 import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
@@ -18,6 +22,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alert.store";
 import { StatsPreviewType, UserStatsType } from "@/types/global";
 import { Post, UserFollowJoinType } from "@/types/neon";
+import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -40,7 +45,6 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     friend_receive?: {
       id: string;
     };
-    posts?: Post[];
     follow: UserFollowJoinType;
     stats: UserStatsType;
   } | null>(null);
@@ -48,6 +52,31 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   const router = useRouter();
   const { addAlert } = useAlertStore();
   const tickingRef = useRef(false);
+  const { data: posts } = useQuery({
+    queryFn: async () => {
+      if (!user) return;
+      if (user.isPrivate && user.friend_status?.status !== "accepted") return;
+
+      const res = await fetch(`/api/post/u/${user?.id}?limit=12`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        addAlert({
+          id: crypto.randomUUID(),
+          type: "error",
+          ...data.error,
+        });
+
+        return null;
+      }
+
+      setLoading(false);
+
+      return data;
+    },
+    queryKey: ["user-posts", { user }],
+    enabled: !!user?.id,
+  });
 
   const handleRequestResponse = async (
     action: "accept" | "reject",
@@ -211,6 +240,10 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     }
   };
 
+  const handleViewPost = (id: number) => {
+    router.push(`/post/${id}`);
+  };
+
   useEffect(() => {
     if (!username || !addAlert) return;
     const fetchData = async () => {
@@ -234,21 +267,6 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     };
     fetchData();
   }, [addAlert, username]);
-
-  useEffect(() => {
-    if (!user || user.posts) return;
-    if (user.isPrivate && user.friend_status?.status !== "accepted") return;
-
-    (() => {
-      apiFetch(`/api/post/u/${user.id}`)
-        .then((res) => res?.json())
-        .then((data) => {
-          if (data.ok) {
-            setUser((prev: any) => ({ ...(prev ?? {}), posts: data.posts }));
-          }
-        });
-    })();
-  }, [user]);
 
   return (
     <div className="pt-32">
@@ -396,32 +414,46 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
         )}
         <Line />
         <div className="w-full gap-8 max-lg:gap-4 max-lg:mt-0 grid grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 mt-5">
-          {user?.posts?.map((post) => (
-            <Card
-              className="gap-2 pb-0 overflow-hidden justify-between"
-              key={post.id}
-            >
-              <CardHeader>
-                <CardTitle>{post.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="self-start line-clamp-3">
-                  {post.description}
-                </CardDescription>
-              </CardContent>
-              <CardFooter className="bg-card-footer/60 border-t border-card-border">
-                <div className="py-2 w-full">
-                  <Button
-                    variant={"outline"}
-                    className="bg-button-bg border border-button-border cursor-pointer w-full"
-                    onClick={() => router.push(`/post/${post.id}`)}
-                  >
-                    View
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
+          {posts ? (
+            posts.posts
+              .sort(
+                (a: any, b: any) =>
+                  new Date(b.created_at).getTime() -
+                  new Date(a.created_at).getTime(),
+              )
+              .map((post: Post) => (
+                <Card
+                  className={clsx(
+                    "gap-2 overflow-hidden justify-between",
+                    post.media ? "py-0" : "pb-0",
+                  )}
+                  key={post.id}
+                >
+                  {RenderPostMediaPreview({ media: post.media })}
+                  <CardContent className="flex flex-col gap-2">
+                    <CardTitle>{post.title}</CardTitle>
+                    <CardDescription className="line-clamp-3">
+                      {post.description}
+                    </CardDescription>
+                  </CardContent>
+                  <CardFooter className="bg-card-footer/60 border-t border-card-border max-h-15">
+                    <div className="py-2 w-full">
+                      <Button
+                        variant={"outline"}
+                        onClick={() => handleViewPost(post.id)}
+                        className="bg-button-bg border border-button-border cursor-pointer w-full"
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </CardFooter>
+                </Card>
+              ))
+          ) : loading ? (
+            <SkeletonPosts length={4} />
+          ) : (
+            posts === null && <CardDescription>No posts found.</CardDescription>
+          )}
           {user?.isPrivate && (
             <div>
               <CardDescription>Account is private</CardDescription>
