@@ -12,7 +12,13 @@ export async function GET(
   try {
     const { id } = await params;
     const { searchParams } = new URL(req.url);
-    const { limit } = Object.fromEntries(searchParams.entries());
+    const { limit, cursor } = Object.fromEntries(searchParams.entries());
+
+    const date = (
+      cursor && !isNaN(new Date(cursor).getTime())
+        ? new Date(cursor)
+        : new Date()
+    ).toISOString();
 
     const posts = (await sql.query(
       `
@@ -32,9 +38,10 @@ export async function GET(
         END AS media 
       FROM posts p 
       LEFT JOIN media m ON m.post_id = p.id 
-      WHERE author_id = $1 
+      WHERE author_id = $1 AND p.created_at < $3
+      ORDER BY p.created_at DESC
       LIMIT $2`,
-      [id, Number(limit) || 20],
+      [id, Number(limit) || 20, date],
     )) as Post[];
 
     const keys = posts.map(({ media }) => {
@@ -69,7 +76,12 @@ export async function GET(
       return { ...post, media: null };
     });
 
-    return NextResponse.json({ ok: true, posts: signedPosts }, { status: 200 });
+    const nextCursor = signedPosts.at(-1)?.created_at ?? null;
+
+    return NextResponse.json(
+      { ok: true, posts: signedPosts, nextCursor },
+      { status: 200 },
+    );
   } catch (err) {
     console.error(err);
     return NextResponse.json({ ok: false, message: "" }, { status: 500 });
