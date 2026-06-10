@@ -22,11 +22,16 @@ import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alert.store";
 import { StatsPreviewType, UserStatsType } from "@/types/global";
 import { Post, UserFollowJoinType } from "@/types/neon";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { use, useEffect, useRef, useState } from "react";
+import React, { use, useCallback, useEffect, useRef, useState } from "react";
+
+type PostsResponse = {
+  posts: Post[];
+  nextCursor: string | null;
+};
 
 const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   const { username } = use(params);
@@ -48,35 +53,43 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     follow: UserFollowJoinType;
     stats: UserStatsType;
   } | null>(null);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { addAlert } = useAlertStore();
   const tickingRef = useRef(false);
-  const { data: posts } = useQuery({
-    queryFn: async () => {
-      if (!user) return;
-      if (user.isPrivate && user.friend_status?.status !== "accepted") return;
+  const hasMoreRef = useRef(true);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-      const res = await fetch(`/api/post/u/${user?.id}?limit=12`);
-      const data = await res.json();
+  async function handleFetchPosts(
+    pageParam: string | null,
+  ): Promise<PostsResponse> {
+    if (!user) throw new Error();
 
-      if (!res.ok) {
-        addAlert({
-          id: crypto.randomUUID(),
-          type: "error",
-          ...data.error,
-        });
+    const url = pageParam
+      ? `/api/post/u/${user.id}?cursor=${pageParam}&limit=18`
+      : `/api/post/u/${user.id}?limit=18`;
+    const res = await fetch(url);
+    const data = await res.json();
 
-        return null;
-      }
+    if (data.error) {
+      throw new Error(data.error.description);
+    }
 
-      setLoading(false);
+    hasMoreRef.current = data.nextCursor !== null;
 
-      return data;
-    },
-    queryKey: ["user-posts", { user }],
-    enabled: !!user?.id,
-  });
+    console.log(data);
+
+    return data;
+  }
+
+  const { data, isLoading, error, isError, fetchNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["user-posts", user?.id],
+      queryFn: ({ pageParam }) => handleFetchPosts(pageParam),
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialPageParam: null as string | null,
+    });
+  const posts: Post[] = data?.pages.flatMap((page) => page.posts) ?? [];
+  console.log(data);
 
   const handleRequestResponse = async (
     action: "accept" | "reject",
@@ -247,7 +260,6 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   useEffect(() => {
     if (!username || !addAlert) return;
     const fetchData = async () => {
-      setLoading(true);
       apiFetch(`/api/user/u/${username}?stats=true&friend_status=true`)
         .then((res) => res?.json())
         .then((data) => {
@@ -262,16 +274,51 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
             });
           }
         })
-        .catch((err) => console.error(err))
-        .finally(() => setLoading(false));
+        .catch((err) => console.error(err));
     };
     fetchData();
   }, [addAlert, username]);
 
+  useEffect(() => {
+    if (error && isError) {
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  }, [error, isError]);
+
+  useEffect(() => {
+    const el = loadMoreRef.current;
+
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (hasMoreRef.current) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(el);
+
+    return () => {
+      if (loadMoreRef.current) {
+        observer.unobserve(el);
+      } else {
+        observer.disconnect();
+      }
+    };
+  }, []);
+
   return (
     <div className="pt-32">
       <div className="flex flex-col items-start gap-1 px-10 max-lg:px-5">
-        {loading ? (
+        {isLoading ? (
           <SkeletonProfile />
         ) : user ? (
           <div className="flex pl-20 max-md:pl-0 gap-4 max-md:flex-col">
@@ -414,8 +461,8 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
         )}
         <Line />
         <div className="w-full gap-8 max-lg:gap-4 max-lg:mt-0 grid grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 mt-5">
-          {posts ? (
-            posts.posts
+          {data ? (
+            posts
               .sort(
                 (a: any, b: any) =>
                   new Date(b.created_at).getTime() -
@@ -449,16 +496,22 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
                   </CardFooter>
                 </Card>
               ))
-          ) : loading ? (
+          ) : isLoading ? (
             <SkeletonPosts length={4} />
           ) : (
-            posts === null && <CardDescription>No posts found.</CardDescription>
+            data === null && <CardDescription>No posts found.</CardDescription>
           )}
           {user?.isPrivate && (
             <div>
               <CardDescription>Account is private</CardDescription>
             </div>
           )}
+        </div>
+        <div
+          ref={loadMoreRef}
+          className="min-h-20 w-full gap-8 max-lg:gap-4 max-lg:mt-0 grid grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 mt-2"
+        >
+          {isFetchingNextPage && <SkeletonPosts length={4} />}
         </div>
       </div>
     </div>
