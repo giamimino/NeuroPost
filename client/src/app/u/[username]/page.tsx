@@ -1,4 +1,5 @@
 "use client";
+import RenderPostMediaPreview from "@/components/common/renderPostMediaPreview";
 import { UserStats } from "@/components/providers/UserStats.provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,18 +7,22 @@ import {
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import Line from "@/components/ui/Line";
-import { SkeletonProfile } from "@/components/ui/Skeleton-examples";
+import {
+  SkeletonPosts,
+  SkeletonProfile,
+} from "@/components/ui/Skeleton-examples";
 import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alert.store";
+import { PostsResponse } from "@/types/api-responses";
 import { StatsPreviewType, UserStatsType } from "@/types/global";
 import { Post, UserFollowJoinType } from "@/types/neon";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -40,14 +45,44 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     friend_receive?: {
       id: string;
     };
-    posts?: Post[];
     follow: UserFollowJoinType;
     stats: UserStatsType;
   } | null>(null);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { addAlert } = useAlertStore();
   const tickingRef = useRef(false);
+  const hasMoreRef = useRef(true);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  async function handleFetchPosts(
+    pageParam: string | null,
+  ): Promise<PostsResponse> {
+    if (!user) throw new Error();
+
+    const url = pageParam
+      ? `/api/post/u/${user.id}?cursor=${pageParam}&limit=18`
+      : `/api/post/u/${user.id}?limit=18`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.error) {
+      throw new Error(data.error.description);
+    }
+
+    hasMoreRef.current = data.nextCursor !== null;
+
+    return data;
+  }
+
+  const { data, isLoading, error, isError, fetchNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["user-posts", user?.id],
+      queryFn: ({ pageParam }) => handleFetchPosts(pageParam),
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialPageParam: null as string | null,
+    });
+  const posts: Post[] = data?.pages.flatMap((page) => page.posts) ?? [];
+  console.log(data);
 
   const handleRequestResponse = async (
     action: "accept" | "reject",
@@ -211,10 +246,13 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     }
   };
 
+  const handleViewPost = (id: number) => {
+    router.push(`/post/${id}`);
+  };
+
   useEffect(() => {
     if (!username || !addAlert) return;
     const fetchData = async () => {
-      setLoading(true);
       apiFetch(`/api/user/u/${username}?stats=true&friend_status=true`)
         .then((res) => res?.json())
         .then((data) => {
@@ -229,31 +267,51 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
             });
           }
         })
-        .catch((err) => console.error(err))
-        .finally(() => setLoading(false));
+        .catch((err) => console.error(err));
     };
     fetchData();
   }, [addAlert, username]);
 
   useEffect(() => {
-    if (!user || user.posts) return;
-    if (user.isPrivate && user.friend_status?.status !== "accepted") return;
+    if (error && isError) {
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  }, [error, isError, addAlert]);
 
-    (() => {
-      apiFetch(`/api/post/u/${user.id}`)
-        .then((res) => res?.json())
-        .then((data) => {
-          if (data.ok) {
-            setUser((prev: any) => ({ ...(prev ?? {}), posts: data.posts }));
-          }
-        });
-    })();
-  }, [user]);
+  useEffect(() => {
+    const el = loadMoreRef.current;
+
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (hasMoreRef.current && entry.isIntersecting) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(el);
+
+    return () => {
+      if (el) {
+        observer.unobserve(el);
+      } else {
+        observer.disconnect();
+      }
+    };
+  }, [fetchNextPage]);
 
   return (
     <div className="pt-32">
       <div className="flex flex-col items-start gap-1 px-10 max-lg:px-5">
-        {loading ? (
+        {isLoading ? (
           <SkeletonProfile />
         ) : user ? (
           <div className="flex pl-20 max-md:pl-0 gap-4 max-md:flex-col">
@@ -396,37 +454,57 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
         )}
         <Line />
         <div className="w-full gap-8 max-lg:gap-4 max-lg:mt-0 grid grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 mt-5">
-          {user?.posts?.map((post) => (
-            <Card
-              className="gap-2 pb-0 overflow-hidden justify-between"
-              key={post.id}
-            >
-              <CardHeader>
-                <CardTitle>{post.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="self-start line-clamp-3">
-                  {post.description}
-                </CardDescription>
-              </CardContent>
-              <CardFooter className="bg-card-footer/60 border-t border-card-border">
-                <div className="py-2 w-full">
-                  <Button
-                    variant={"outline"}
-                    className="bg-button-bg border border-button-border cursor-pointer w-full"
-                    onClick={() => router.push(`/post/${post.id}`)}
-                  >
-                    View
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
+          {data ? (
+            posts
+              .sort(
+                (a: any, b: any) =>
+                  new Date(b.created_at).getTime() -
+                  new Date(a.created_at).getTime(),
+              )
+              .map((post: Post) => (
+                <Card
+                  className={clsx(
+                    "gap-2 overflow-hidden justify-between",
+                    post.media ? "py-0" : "pb-0",
+                  )}
+                  key={post.id}
+                >
+                  {RenderPostMediaPreview({ media: post.media })}
+                  <CardContent className="flex flex-col gap-2">
+                    <CardTitle>{post.title}</CardTitle>
+                    <CardDescription className="line-clamp-3">
+                      {post.description}
+                    </CardDescription>
+                  </CardContent>
+                  <CardFooter className="bg-card-footer/60 border-t border-card-border max-h-15">
+                    <div className="py-2 w-full">
+                      <Button
+                        variant={"outline"}
+                        onClick={() => handleViewPost(post.id)}
+                        className="bg-button-bg border border-button-border cursor-pointer w-full"
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </CardFooter>
+                </Card>
+              ))
+          ) : isLoading ? (
+            <SkeletonPosts length={4} />
+          ) : (
+            data === null && <CardDescription>No posts found.</CardDescription>
+          )}
           {user?.isPrivate && (
             <div>
               <CardDescription>Account is private</CardDescription>
             </div>
           )}
+        </div>
+        <div
+          ref={loadMoreRef}
+          className="min-h-20 w-full gap-8 max-lg:gap-4 max-lg:mt-0 grid grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 mt-2"
+        >
+          {isFetchingNextPage && <SkeletonPosts length={4} />}
         </div>
       </div>
     </div>

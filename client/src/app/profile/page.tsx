@@ -1,14 +1,13 @@
 "use client";
 import NotificationsContainer from "@/components/common/containers/Notifications-container";
+import renderPostMediaPreview from "@/components/common/renderPostMediaPreview";
 import ToggleController from "@/components/common/ToggleController";
-import DataFetcher from "@/components/data-fetcher";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import Line from "@/components/ui/Line";
@@ -18,14 +17,16 @@ import {
   SkeletonPosts,
 } from "@/components/ui/Skeleton-examples";
 import Title from "@/components/ui/title";
-import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alert.store";
+import { PostsResponse } from "@/types/api-responses";
 import { Post } from "@/types/neon";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import clsx from "clsx";
 import { Bell } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const ProfilePage = () => {
   const [user, setUser] = useState<{
@@ -39,6 +40,38 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { addAlert } = useAlertStore();
+  const hasMoreRef = useRef(true);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  async function handleFetchPosts(
+    pageParam: string | null,
+  ): Promise<PostsResponse> {
+    if (!user) throw new Error();
+
+    const url = pageParam
+      ? `/api/post/u/${user.id}?cursor=${pageParam}&limit=18`
+      : `/api/post/u/${user.id}?limit=18`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.error) {
+      throw new Error(data.error.description);
+    }
+
+    hasMoreRef.current = data.nextCursor !== null;
+
+    return data;
+  }
+
+  const { data, error, isError, fetchNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["user-posts", user?.id],
+      queryFn: ({ pageParam }) => handleFetchPosts(pageParam),
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialPageParam: null as string | null,
+    });
+
+  const posts: Post[] = data?.pages.flatMap((page) => page.posts) ?? [];
 
   const handleViewPost = (id: number) => {
     router.push(`/post/${id}`);
@@ -55,11 +88,46 @@ const ProfilePage = () => {
           } else if (data.ok) {
             setUser({ id: data.user.payload.userId, ...data.user.user });
           }
-        })
-        .finally(() => setLoading(false));
+        });
     };
     fetchData();
   }, [addAlert]);
+
+  useEffect(() => {
+    const el = loadMoreRef.current;
+
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMoreRef.current) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(el);
+
+    return () => {
+      if (el) {
+        observer.unobserve(el);
+      } else {
+        observer.disconnect();
+      }
+    };
+  }, [fetchNextPage]);
+
+  useEffect(() => {
+    if (error && isError) {
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  }, [error, isError, addAlert]);
 
   return (
     <div className="pt-32 bg-background">
@@ -113,49 +181,52 @@ const ProfilePage = () => {
         </div>
         <Line />
         <div className="w-full gap-8 grid grid-cols-4 mt-5 px-7 max-lg:grid-cols-3 max-lg:mt-3 max-lg:px-5 max-lg:gap-5 max-md:grid-cols-2 max-md:mt-0 max-md:gap-4 max-md:px-3 max-sm:grid-cols-1">
-          <DataFetcher
-            url={`/api/post/u/${user?.id}`}
-            config={{ ...ApiConfig.get, enabled: user !== null }}
-            targetKey="posts"
-            loadingUI={<SkeletonPosts length={5} />}
-          >
-            {(posts: Post[]) => (
-              <>
-                {posts
-                  .sort(
-                    (a, b) =>
-                      new Date(b.created_at).getTime() -
-                      new Date(a.created_at).getTime(),
-                  )
-                  .map((post) => (
-                    <Card
-                      className="gap-2 pb-0 overflow-hidden justify-between"
-                      key={post.id}
-                    >
-                      <CardHeader>
-                        <CardTitle>{post.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <CardDescription className=" line-clamp-3">
-                          {post.description}
-                        </CardDescription>
-                      </CardContent>
-                      <CardFooter className="bg-card-footer/60 border-t border-card-border max-h-15">
-                        <div className="py-2 w-full">
-                          <Button
-                            variant={"outline"}
-                            onClick={() => handleViewPost(post.id)}
-                            className="bg-button-bg border border-button-border cursor-pointer w-full"
-                          >
-                            View
-                          </Button>
-                        </div>
-                      </CardFooter>
-                    </Card>
-                  ))}
-              </>
-            )}
-          </DataFetcher>
+          {data ? (
+            posts
+              .sort(
+                (a: any, b: any) =>
+                  new Date(b.created_at).getTime() -
+                  new Date(a.created_at).getTime(),
+              )
+              .map((post: Post) => (
+                <Card
+                  className={clsx(
+                    "gap-2 overflow-hidden justify-between",
+                    post.media ? "py-0" : "pb-0",
+                  )}
+                  key={post.id}
+                >
+                  {renderPostMediaPreview({ media: post.media })}
+                  <CardContent className="flex flex-col gap-2">
+                    <CardTitle>{post.title}</CardTitle>
+                    <CardDescription className="line-clamp-3">
+                      {post.description}
+                    </CardDescription>
+                  </CardContent>
+                  <CardFooter className="bg-card-footer/60 border-t border-card-border max-h-15">
+                    <div className="py-2 w-full">
+                      <Button
+                        variant={"outline"}
+                        onClick={() => handleViewPost(post.id)}
+                        className="bg-button-bg border border-button-border cursor-pointer w-full"
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </CardFooter>
+                </Card>
+              ))
+          ) : loading ? (
+            <SkeletonPosts length={4} />
+          ) : (
+            posts === null && <CardDescription>No posts found.</CardDescription>
+          )}
+        </div>
+        <div
+          ref={loadMoreRef}
+          className="w-full min-h-20 gap-8 grid grid-cols-4 mt-5 px-7 max-lg:grid-cols-3 max-lg:mt-3 max-lg:px-5 max-lg:gap-5 max-md:grid-cols-2 max-md:mt-0 max-md:gap-4 max-md:px-3 max-sm:grid-cols-1"
+        >
+          {isFetchingNextPage && <SkeletonPosts length={4} />}
         </div>
       </div>
     </div>
