@@ -22,13 +22,14 @@ import Title from "@/components/ui/title";
 import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alert.store";
+import { PostsResponse } from "@/types/api-responses";
 import { Post } from "@/types/neon";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { Bell } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const ProfilePage = () => {
   const [user, setUser] = useState<{
@@ -42,28 +43,39 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { addAlert } = useAlertStore();
-  const { data: posts } = useQuery({
-    queryFn: async () => {
-      const res = await fetch(`/api/post/u/${user?.id}?limit=12`);
-      const data = await res.json();
+  const hasMoreRef = useRef(true);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-      if (!res.ok) {
-        addAlert({
-          id: crypto.randomUUID(),
-          type: "error",
-          ...data.error,
-        });
+  async function handleFetchPosts(
+    pageParam: string | null,
+  ): Promise<PostsResponse> {
+    if (!user) throw new Error();
 
-        return null;
-      }
+    const url = pageParam
+      ? `/api/post/u/${user.id}?cursor=${pageParam}&limit=18`
+      : `/api/post/u/${user.id}?limit=18`;
+    const res = await fetch(url);
+    const data = await res.json();
 
-      setLoading(false);
+    if (data.error) {
+      throw new Error(data.error.description);
+    }
 
-      return data;
-    },
-    queryKey: ["posts"],
-    enabled: !!user?.id,
-  });
+    hasMoreRef.current = data.nextCursor !== null;
+
+    return data;
+  }
+
+  const { data, isLoading, error, isError, fetchNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["user-posts", user?.id],
+      queryFn: ({ pageParam }) => handleFetchPosts(pageParam),
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialPageParam: null as string | null,
+    });
+
+  const posts: Post[] = data?.pages.flatMap((page) => page.posts) ?? [];
+
   const handleViewPost = (id: number) => {
     router.push(`/post/${id}`);
   };
@@ -84,7 +96,30 @@ const ProfilePage = () => {
     fetchData();
   }, [addAlert]);
 
-  console.log(posts);
+  useEffect(() => {
+    const el = loadMoreRef.current
+
+    if(!el) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if(entry.isIntersecting && hasMoreRef.current) {
+          fetchNextPage()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(el)
+
+    return () => {
+      if(loadMoreRef.current) {
+        observer.unobserve(loadMoreRef.current)
+      } else {
+        observer.disconnect()
+      }
+    }
+  }, [])
 
   return (
     <div className="pt-32 bg-background">
@@ -138,8 +173,8 @@ const ProfilePage = () => {
         </div>
         <Line />
         <div className="w-full gap-8 grid grid-cols-4 mt-5 px-7 max-lg:grid-cols-3 max-lg:mt-3 max-lg:px-5 max-lg:gap-5 max-md:grid-cols-2 max-md:mt-0 max-md:gap-4 max-md:px-3 max-sm:grid-cols-1">
-          {posts ? (
-            posts.posts
+          {data ? (
+            posts
               .sort(
                 (a: any, b: any) =>
                   new Date(b.created_at).getTime() -
@@ -178,6 +213,12 @@ const ProfilePage = () => {
           ) : (
             posts === null && <CardDescription>No posts found.</CardDescription>
           )}
+        </div>
+        <div
+          ref={loadMoreRef}
+          className="w-full min-h-20 gap-8 grid grid-cols-4 mt-5 px-7 max-lg:grid-cols-3 max-lg:mt-3 max-lg:px-5 max-lg:gap-5 max-md:grid-cols-2 max-md:mt-0 max-md:gap-4 max-md:px-3 max-sm:grid-cols-1"
+        >
+          {isFetchingNextPage && <SkeletonPosts length={4} />}
         </div>
       </div>
     </div>

@@ -20,6 +20,7 @@ import { ApiConfig } from "@/configs/api-configs";
 import { ERRORS } from "@/constants/error-handling";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alert.store";
+import { PostsResponse } from "@/types/api-responses";
 import { StatsPreviewType, UserStatsType } from "@/types/global";
 import { Post, UserFollowJoinType } from "@/types/neon";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -27,11 +28,6 @@ import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { use, useCallback, useEffect, useRef, useState } from "react";
-
-type PostsResponse = {
-  posts: Post[];
-  nextCursor: string | null;
-};
 
 const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   const { username } = use(params);
@@ -75,9 +71,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     }
 
     hasMoreRef.current = data.nextCursor !== null;
-
-    console.log(data);
-
+    
     return data;
   }
 
@@ -297,7 +291,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (hasMoreRef.current) {
+        if (hasMoreRef.current && entry.isIntersecting) {
           fetchNextPage();
         }
       },
@@ -507,7 +501,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
             </div>
           )}
         </div>
-        <div
+        <div    
           ref={loadMoreRef}
           className="min-h-20 w-full gap-8 max-lg:gap-4 max-lg:mt-0 grid grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 mt-2"
         >
