@@ -2,14 +2,12 @@
 import NotificationsContainer from "@/components/common/containers/Notifications-container";
 import renderPostMediaPreview from "@/components/common/renderPostMediaPreview";
 import ToggleController from "@/components/common/ToggleController";
-import DataFetcher from "@/components/data-fetcher";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import Line from "@/components/ui/Line";
@@ -19,12 +17,11 @@ import {
   SkeletonPosts,
 } from "@/components/ui/Skeleton-examples";
 import Title from "@/components/ui/title";
-import { ApiConfig } from "@/configs/api-configs";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAlertStore } from "@/store/zustand/alert.store";
 import { PostsResponse } from "@/types/api-responses";
 import { Post } from "@/types/neon";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { Bell } from "lucide-react";
 import Image from "next/image";
@@ -66,7 +63,7 @@ const ProfilePage = () => {
     return data;
   }
 
-  const { data, isLoading, error, isError, fetchNextPage, isFetchingNextPage } =
+  const { data, error, isError, fetchNextPage, isFetchingNextPage } =
     useInfiniteQuery({
       queryKey: ["user-posts", user?.id],
       queryFn: ({ pageParam }) => handleFetchPosts(pageParam),
@@ -97,29 +94,40 @@ const ProfilePage = () => {
   }, [addAlert]);
 
   useEffect(() => {
-    const el = loadMoreRef.current
+    const el = loadMoreRef.current;
 
-    if(!el) return
+    if (!el) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if(entry.isIntersecting && hasMoreRef.current) {
-          fetchNextPage()
+        if (entry.isIntersecting && hasMoreRef.current) {
+          fetchNextPage();
         }
       },
-      { threshold: 0.1 }
-    )
+      { threshold: 0.1 },
+    );
 
-    observer.observe(el)
+    observer.observe(el);
 
     return () => {
-      if(loadMoreRef.current) {
-        observer.unobserve(loadMoreRef.current)
+      if (el) {
+        observer.unobserve(el);
       } else {
-        observer.disconnect()
+        observer.disconnect();
       }
+    };
+  }, [fetchNextPage]);
+
+  useEffect(() => {
+    if (error && isError) {
+      addAlert({
+        id: crypto.randomUUID(),
+        type: "error",
+        title: "Error",
+        description: error.message,
+      });
     }
-  }, [])
+  }, [error, isError, addAlert]);
 
   return (
     <div className="pt-32 bg-background">

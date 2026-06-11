@@ -7,7 +7,6 @@ import {
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import Line from "@/components/ui/Line";
@@ -23,11 +22,11 @@ import { useAlertStore } from "@/store/zustand/alert.store";
 import { PostsResponse } from "@/types/api-responses";
 import { StatsPreviewType, UserStatsType } from "@/types/global";
 import { Post, UserFollowJoinType } from "@/types/neon";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { use, useCallback, useEffect, useRef, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 
 const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
   const { username } = use(params);
@@ -71,7 +70,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     }
 
     hasMoreRef.current = data.nextCursor !== null;
-    
+
     return data;
   }
 
@@ -282,7 +281,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
         description: error.message,
       });
     }
-  }, [error, isError]);
+  }, [error, isError, addAlert]);
 
   useEffect(() => {
     const el = loadMoreRef.current;
@@ -301,13 +300,13 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
     observer.observe(el);
 
     return () => {
-      if (loadMoreRef.current) {
+      if (el) {
         observer.unobserve(el);
       } else {
         observer.disconnect();
       }
     };
-  }, []);
+  }, [fetchNextPage]);
 
   return (
     <div className="pt-32">
@@ -501,7 +500,7 @@ const UserPage = ({ params }: { params: Promise<{ username: string }> }) => {
             </div>
           )}
         </div>
-        <div    
+        <div
           ref={loadMoreRef}
           className="min-h-20 w-full gap-8 max-lg:gap-4 max-lg:mt-0 grid grid-cols-4 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 mt-2"
         >
