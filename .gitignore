@@ -52,3 +52,4 @@ server/dist/
 # workspace
 
 .vscode/
+.vercel
