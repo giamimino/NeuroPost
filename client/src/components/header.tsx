@@ -106,12 +106,7 @@ const profileNavigationPages: {
   url: string;
   label: string;
   variant:
-    | "ghost"
-    | "link"
-    | "default"
-    | "destructive"
-    | "outline"
-    | "secondary";
+    "ghost" | "link" | "default" | "destructive" | "outline" | "secondary";
 }[] = [
   { url: "p/create", label: "Upload", variant: "default" },
   { url: "", label: "Profile", variant: "ghost" },

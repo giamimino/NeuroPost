@@ -91,11 +91,7 @@ export interface UserFollowJoinType {
 }
 
 export type NotificationEnumType =
-  | "FRIEND_REQUEST"
-  | "SYSTEM"
-  | "NEW_MESSAGE"
-  | "NEW_FOLLOWER"
-  | "NEW_POST";
+  "FRIEND_REQUEST" | "SYSTEM" | "NEW_MESSAGE" | "NEW_FOLLOWER" | "NEW_POST";
 
 export interface NotificationType {
   id: string;

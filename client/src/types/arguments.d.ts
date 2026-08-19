@@ -1,3 +1,2 @@
 export type HandleLikeArgs =
-  | { action: "post"; postId: number }
-  | { action: "delete"; id: string };
+  { action: "post"; postId: number } | { action: "delete"; id: string };
