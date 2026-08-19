@@ -1,0 +1,143 @@
+name: Auto create PR from issue assignment
+
+on:
+  workflow_dispatch:
+  issue_comment:
+    types:
+      - created
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  cancel-in-progress: true
+  group: auto-create-pr-${{ github.ref }}
+
+jobs:
+  create-pr:
+    if: contains(github.event.comment.body, 'assign me')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get issue data
+        id: issue
+        run: |
+          echo "title=${{ github.event.issue.title }}" >> $GITHUB_OUTPUT
+          echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+
+      - name: Extract users
+        id: users
+        run: |
+          USERS=$(echo "${{ github.event.comment.body }}" | grep -o '@[a-zA-Z0-9_-]*' | tr '\n' ' ')
+
+          echo "users=$USERS" >> $GITHUB_OUTPUT
+
+      - name: Check self assignment
+        run: |
+          COMMENT="${{ github.event.comment.body }}"
+          USER="@${{ github.event.comment.user.login }}"
+
+          if [[ "$COMMENT" != *"$USER" ]]; then
+            echo "User must mention themselves"
+            exit 1
+          fi
+
+      - name: Create branch name
+        id: branch
+        run: |
+          TITLE="${{ github.event.issue.title }}"
+
+          SLUG=$(echo "$TITLE" \
+          | tr '[:upper:]' '[:lower:]' \
+          | sed 's/[^a-z0-9]/-/g')
+
+          BRANCH="issue-${{ github.event.issue.number }}-$SLUG"
+
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Create branch
+        run: |
+          SHA=$(gh api repos/${{ github.repository }}/git/ref/heads/main \
+          --jq '.object.sha')
+
+          gh api \
+          --method POST \
+          repos/${{ github.repository }}/git/refs \
+          -f ref="refs/heads/${{ steps.branch.outputs.branch }}" \
+          -f sha="$SHA"
+        env:
+          GH_TOKEN: ${{ secrets.SECRET_BOT }}
+
+
+      - name: Create initial commit
+        run: |
+          git checkout -b "${{ steps.branch.outputs.branch }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          echo "# Issue #${{ github.event.issue.number }}" > ISSUE.md
+
+          git add ISSUE.md
+
+          git commit -m "Initialize issue branch"
+
+          git push origin "${{ steps.branch.outputs.branch }}"
+  
+      - name: Create pull request
+        id: pr
+        run: |
+
+          PR=$(gh pr create \
+          --title "${{ github.event.issue.title }}" \
+          --body "Created automatically from issue #${{ github.event.issue.number }}" \
+          --base main \
+          --head "${{ steps.branch.outputs.branch }}")
+
+          echo "$PR"
+
+        env:
+          GH_TOKEN: ${{ secrets.SECRET_BOT }}
+
+      - name: Assign users
+        run: |
+          USERS_JSON=$(echo "${{ steps.users.outputs.users }}" \
+            | sed 's/@//g' \
+            | awk '{print "[\"" $1 "\""} {for (i=2; i<=NF; i++) printf ",\"" $i "\""} END {print "]"}')
+
+          gh api \
+            --method POST \
+            repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/assignees \
+            -f "assignees=$USERS_JSON"
+
+        env:
+          GH_TOKEN: ${{ secrets.SECRET_BOT }}
+
+      - name: Comment on issue
+        run: |
+          gh issue comment \
+            ${{ github.event.issue.number }} \
+            --body "## ✅ Assignment completed successfully
+
+            **Branch:** \`${{ steps.branch.outputs.branch }}\`
+
+            The development branch has been created and is ready to use."
+        env:
+          GH_TOKEN: ${{ secrets.SECRET_BOT }}
+
+      - name: Update issue labels
+        run: |
+          gh issue edit
+            ${{ github.event.issue.number }} \ 
+            --add-label "pending"
+        env:
+          GH_TOKEN: ${{ secrets.SECRET_BOT }}
+
+
+          
