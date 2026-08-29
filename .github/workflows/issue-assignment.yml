@@ -16,7 +16,7 @@ concurrency:
   group: auto-create-pr-${{ github.ref }}
 
 jobs:
-  create-pr:
+  assing-me:
     if: contains(github.event.comment.body, 'assign me')
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -137,5 +137,82 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  close-issue-resources:
+    if: contains(github.event.comment.body, '.close')
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get issue and connected PR data
+        id: issue_data
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "title=${{ github.event.issue.title }}"
+          echo "number=${{ github.event.issue.number }}"
           
+          QUERY='
+            query($owner: String!, $name: String!, $number: Int!) {
+              repository(owner: $owner, name: $name) {
+                issue(number: $number) {
+                  timelineItems(first: 30, itemTypes: [CROSS_REFERENCED_EVENT]) {
+                    nodes {
+                      ... on CrossReferencedEvent {
+                        source {
+                          ... on PullRequest {
+                            number
+                            headRefName
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          '
+          
+          OWNER=$(echo "$REPO" | cut -d'/' -f1)
+          NAME=$(echo "$REPO" | cut -d'/' -f2)
+
+          RESPONSE=$(gh api graphql -F owner="$OWNER" -F name="$NAME" -F number=$ISSUE_NUMBER -f query="$QUERY")
+
+          PR_NUMBER=$(echo "$RESPONSE" | jq -r '.data.repository.issue.timelineItems.nodes[].source | select(.number != null) | .number' | head -n 1)
+          HEAD_BRANCH=$(echo "$RESPONSE" | jq -r '.data.repository.issue.timelineItems.nodes[].source | select(.headRefName != null) | .headRefName' | head -n 1)
+
+          if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" = "null" ]; then
+            echo "No connected Pull Request found."
+            echo "pr_found=false" >> $GITHUB_OUTPUT
+          else
+            echo "Found connected PR #$PR_NUMBER on branch $HEAD_BRANCH"
+            echo "pr_found=true" >> $GITHUB_OUTPUT
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            echo "head_branch=$HEAD_BRANCH" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Close Pull Request and delete feature branch
+        if: steps.issue_data.outputs.pr_found == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.issue_data.outputs.pr_number }}
+          HEAD_BRANCH: ${{ steps.issue_data.outputs.head_branch }}
+        run: |
+          echo "Closing Pull Request #$PR_NUMBER..."
+          gh pr close "$PR_NUMBER" --comment "Closing pull request because the linked issue was commanded to close."
+
+          if [[ "$HEAD_BRANCH" != "main" && "$HEAD_BRANCH" != "master" && -n "$HEAD_BRANCH" ]]; then
+            echo "Deleting branch $HEAD_BRANCH..."
+            gh api --method DELETE "repos/${{ github.repository }}/git/refs/heads/$HEAD_BRANCH" || echo "Branch already deleted."
+          fi
+
+      - name: Close Issue and Clean Labels
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue edit "$ISSUE_NUMBER" --remove-label "pending"
+          gh issue close "$ISSUE_NUMBER" --reason "completed"
