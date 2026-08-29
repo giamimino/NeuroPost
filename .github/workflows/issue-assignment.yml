@@ -133,9 +133,7 @@ jobs:
 
       - name: Update issue labels
         run: |
-          gh issue edit \
-            ${{ github.event.issue.number }} \ 
-            --add-label "pending"
+          gh issue edit "${{ github.event.issue.number }}" --add-label "pending"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
