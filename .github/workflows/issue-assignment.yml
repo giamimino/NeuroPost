@@ -72,7 +72,7 @@ jobs:
           -f ref="refs/heads/${{ steps.branch.outputs.branch }}" \
           -f sha="$SHA"
         env:
-          GH_TOKEN: ${{ secrets.SECRET_BOT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
       - name: Create initial commit
@@ -103,7 +103,7 @@ jobs:
           echo "$PR"
 
         env:
-          GH_TOKEN: ${{ secrets.SECRET_BOT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Assign users
         run: |
@@ -117,7 +117,7 @@ jobs:
             -f "assignees=$USERS_JSON"
 
         env:
-          GH_TOKEN: ${{ secrets.SECRET_BOT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment on issue
         run: |
@@ -129,7 +129,7 @@ jobs:
 
             The development branch has been created and is ready to use."
         env:
-          GH_TOKEN: ${{ secrets.SECRET_BOT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update issue labels
         run: |
@@ -137,7 +137,7 @@ jobs:
             ${{ github.event.issue.number }} \ 
             --add-label "pending"
         env:
-          GH_TOKEN: ${{ secrets.SECRET_BOT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
           
