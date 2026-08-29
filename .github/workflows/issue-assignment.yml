@@ -133,7 +133,7 @@ jobs:
 
       - name: Update issue labels
         run: |
-          gh issue edit
+          gh issue edit \
             ${{ github.event.issue.number }} \ 
             --add-label "pending"
         env:
