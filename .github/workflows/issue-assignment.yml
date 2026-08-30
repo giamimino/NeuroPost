@@ -16,7 +16,7 @@ concurrency:
   group: auto-create-pr-${{ github.ref }}
 
 jobs:
-  assing-me:
+  assign-me:
     if: contains(github.event.comment.body, 'assign me')
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -201,12 +201,32 @@ jobs:
           PR_NUMBER: ${{ steps.issue_data.outputs.pr_number }}
           HEAD_BRANCH: ${{ steps.issue_data.outputs.head_branch }}
         run: |
-          echo "Closing Pull Request #$PR_NUMBER..."
-          gh pr close "$PR_NUMBER" --comment "Closing pull request because the linked issue was commanded to close."
+          PR_STATE=$(gh pr view "$PR_NUMBER" \
+            --json state \
+            --jq '.state')
+
+          echo "Pull Request #$PR_NUMBER state: $PR_STATE"
+
+          if [ "$PR_STATE" = "OPEN" ]; then
+            echo "Closing Pull Request #$PR_NUMBER..."
+            gh pr close "$PR_NUMBER" \
+              --comment "Closing pull request because the linked issue was commanded to close."
+          else
+            echo "Pull Request #$PR_NUMBER is already $PR_STATE. Skipping close."
+          fi
 
           if [[ "$HEAD_BRANCH" != "main" && "$HEAD_BRANCH" != "master" && -n "$HEAD_BRANCH" ]]; then
             echo "Deleting branch $HEAD_BRANCH..."
-            gh api --method DELETE "repos/${{ github.repository }}/git/refs/heads/$HEAD_BRANCH" || echo "Branch already deleted."
+
+            if gh api "repos/${{ github.repository }}/git/ref/heads/$HEAD_BRANCH" >/dev/null 2>&1; then
+              gh api \
+                --method DELETE \
+                "repos/${{ github.repository }}/git/refs/heads/$HEAD_BRANCH"
+
+              echo "Branch deleted."
+            else
+              echo "Branch already deleted."
+            fi
           fi
 
       - name: Close Issue and Clean Labels
@@ -214,5 +234,18 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          gh issue edit "$ISSUE_NUMBER" --remove-label "pending"
-          gh issue close "$ISSUE_NUMBER" --reason "completed"
+          ISSUE_STATE=$(gh issue view "$ISSUE_NUMBER" \
+            --json state \
+            --jq '.state')
+
+          echo "Issue #$ISSUE_NUMBER state: $ISSUE_STATE"
+
+          gh issue edit "$ISSUE_NUMBER" \
+            --remove-label "pending" || true
+
+          if [ "$ISSUE_STATE" = "OPEN" ]; then
+            echo "Closing issue #$ISSUE_NUMBER..."
+            gh issue close "$ISSUE_NUMBER" --reason "completed"
+          else
+            echo "Issue #$ISSUE_NUMBER is already closed. Skipping close."
+          fi
