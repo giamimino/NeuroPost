@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+
+FILES=$(git diff --cached --name-only)
+
+if echo "$FILES" | grep -q "^client/"; then
+  echo "Checking client changes..."
+  npm run prettier:client:check
+  npm run lint:client
+  npm run typecheck:client
+fi
+
+if echo "$FILES" | grep -q "^server/"; then
+  echo "Checking server changes..."
+  npm run prettier:server:check
+  npm run lint
+  npm run typecheck:server
+  npm run test:server:run
+fi

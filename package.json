@@ -39,12 +39,14 @@
     "test:client": "npm run test -w client",
     "test:client:run": "npm run test:run -w client",
     "worker": "npm run worker -w server",
-    "worker:dev": "npm run worker:dev -w server"
+    "worker:dev": "npm run worker:dev -w server",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.28",
     "concurrently": "^9.2.1",
     "eslint": "^9",
+    "husky": "^9.1.7",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3"
   },
