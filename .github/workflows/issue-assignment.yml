@@ -100,7 +100,10 @@ jobs:
           --base main \
           --head "${{ steps.branch.outputs.branch }}")
 
-          echo "$PR"
+          PR_NUMBER="${PR##*/}"
+
+          echo "PR=$PR" >> "$GITHUB_ENV"
+          echo "PR_NUMBER=$PR_NUMBER" >> "$GITHUB_ENV"
 
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -130,6 +133,15 @@ jobs:
             The development branch has been created and is ready to use."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync PR issue labels
+        run: |
+          LABELS=$(gh issue view "${{ github.event.issue.number }}" \ 
+          --json labels \ 
+          --jq '.labels[].name' | paste -sd ',' -)
+
+          gh pr edit "$PR_NUMBER" --add-label "$LABELS"
+          
 
       - name: Update issue labels
         run: |
