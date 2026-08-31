@@ -23,6 +23,7 @@ const Header = () => {
   const [show, setShow] = useState(true);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
+  const showRef = useRef(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,49 +31,72 @@ const Header = () => {
       if (ticking.current) return;
 
       ticking.current = true;
+
       requestAnimationFrame(() => {
         const scrollY = window.scrollY;
+        const delta = scrollY - lastScrollY.current;
 
-        if (lastScrollY.current < scrollY && show) {
-          setShow(false);
-        } else if (lastScrollY.current > scrollY && !show) {
-          setShow(true);
+        if (Math.abs(delta) >= 15) {
+          if (delta > 0 && showRef.current) {
+            showRef.current = false;
+            setShow(false);
+          } else if (delta < 0 && !showRef.current) {
+            showRef.current = true;
+            setShow(true);
+          }
+          lastScrollY.current = scrollY;
         }
 
-        lastScrollY.current = scrollY;
         ticking.current = false;
       });
     };
 
-    document.addEventListener("scroll", onScroll);
+    document.addEventListener("scroll", onScroll, { passive: true });
 
     return () => document.removeEventListener("scroll", onScroll);
-  }, [show]);
+  }, []);
+
   return (
     <header
-      className={`w-full px-12 flex justify-center items-center py-3 fixed top-0 left-0 transition-all duration-300`}
+      className={`w-full px-3 flex justify-center items-center py-3 fixed top-0 left-0 transition-all duration-300`}
     >
       <motion.div
-        initial={{ opacity: 0, y: "-100%" }}
-        animate={show ? { opacity: 1, y: 0 } : { opacity: 0.5, y: "-150%" }}
-        transition={{ stiffness: 80, type: "spring", damping: 20 }}
+        initial={{ opacity: 0, scale: 1 }}
+        animate={
+          show
+            ? { opacity: 1, scale: 1, y: 0 }
+            : { opacity: 0, scale: 0.95, y: -10 }
+        }
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
         layout
-        className={`flex gap-4 items-center px-5 py-2.5 dark:bg-card
-       rounded-full border-input ring ring-ring/80 z-99`}
+        className={`flex gap-4 items-center justify-between px-5 py-2.5 dark:bg-card/50 backdrop-blur-xs
+       rounded-md border border-border z-999 w-full`}
       >
-        {pages.map((page) => (
-          <div
-            onClick={
-              page.type === "router" ? () => router.push(page.url) : undefined
-            }
-            className={`${page.label === "Logout" ? "text-red-400" : "text-muted-foreground"} font-inter text-center font-medium 
-              tracking-tight cursor-pointer px-2.5 py-1.5 hover:bg-active-bg ${page.label === "Logout" ? "hover:text-red-500" : "hover:text-white"} hover:tracking-wide 
-              transition-all duration-300 rounded-xl hover:px-4`}
-            key={page.url}
-          >
-            {page.label}
-          </div>
-        ))}
+        <div className="flex gap-5 items-center">
+          {pages.map((page) => (
+            <Button
+              onClick={
+                page.type === "router" ? () => router.push(page.url) : undefined
+              }
+              className={`
+                text-foreground text-center tracking-tight cursor-pointer px-2.5 
+                py-1.5 group relative
+                transition-all duration-300 rounded-xl bg-transparent hover:bg-transparet
+              `}
+              key={page.url}
+            >
+              {page.label}
+              <div
+                className={`
+                absolute pointer-events-none scale-x-0 h-0.5 left-0 w-full 
+                -bottom-0.5 bg-white transition-transform duration-500 ease-out 
+                origin-right group-hover:scale-x-100 group-hover:origin-center 
+                group-hover:not-hover:origin-left
+              `}
+              ></div>
+            </Button>
+          ))}
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant={"outline"} className="cursor-pointer">
