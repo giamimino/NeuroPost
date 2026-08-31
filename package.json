@@ -40,7 +40,7 @@
     "test:client:run": "npm run test:run -w client",
     "worker": "npm run worker -w server",
     "worker:dev": "npm run worker:dev -w server",
-    "prepare": "husky"
+    "prepare": "if [ -z \"$CI\" ]; then husky; fi"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.28",
