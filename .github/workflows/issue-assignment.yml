@@ -136,11 +136,15 @@ jobs:
 
       - name: Sync PR issue labels
         run: |
-          LABELS=$(gh issue view "${{ github.event.issue.number }}" \ 
-          --json labels \ 
-          --jq '.labels[].name' | paste -sd ',' -)
+          LABELS=$(gh issue view "${{ github.event.issue.number }}" \
+            --json labels \
+            --jq '.labels[].name')
 
-          gh pr edit "$PR_NUMBER" --add-label "$LABELS"
+          if [ -n "$LABELS" ]; then
+            while IFS= read -r LABEL; do
+              gh pr edit "$PR_NUMBER" --add-label "$LABEL"
+            done <<< "$LABELS"
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
