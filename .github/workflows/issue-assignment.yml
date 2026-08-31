@@ -141,7 +141,8 @@ jobs:
           --jq '.labels[].name' | paste -sd ',' -)
 
           gh pr edit "$PR_NUMBER" --add-label "$LABELS"
-          
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update issue labels
         run: |
