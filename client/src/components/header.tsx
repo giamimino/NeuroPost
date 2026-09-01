@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-import { Heart, Menu, MessageCircle } from "lucide-react";
+import { Bell, Heart, Menu, MessageCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,10 +13,12 @@ import {
 import { Card, CardHeader, CardTitle } from "./ui/card";
 import Line from "./ui/Line";
 import clsx from "clsx";
+import NotificationsContainer from "./common/containers/Notifications-container";
 
 const pages = [
   { label: "Home", url: "/", type: "router" },
   { label: "Profile", url: "/profile", type: "router" },
+  { label: "Create", url: "/profile/p/create", type: "router" },
 ];
 
 const Header = () => {
@@ -59,6 +61,9 @@ const Header = () => {
   return (
     <header
       className={`w-full px-3 flex justify-center items-center py-3 fixed top-0 left-0 transition-all duration-300`}
+      style={{
+        zIndex: 99,
+      }}
     >
       <motion.div
         initial={{ opacity: 0, scale: 1 }}
@@ -69,8 +74,8 @@ const Header = () => {
         }
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
         layout
-        className={`flex gap-4 items-center justify-between px-5 py-2.5 dark:bg-card/50 backdrop-blur-xs
-       rounded-md border border-border z-999 w-full`}
+        className={`flex gap-4 items-center justify-between px-5 py-2.5 dark:bg-card/50 backdrop-blur-sm  
+       rounded-md border border-border w-full`}
       >
         <div className="flex gap-5 items-center">
           {pages.map((page) => (
@@ -97,30 +102,50 @@ const Header = () => {
             </Button>
           ))}
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant={"outline"} className="cursor-pointer">
-              Search
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            sideOffset={20}
-            className="max-h-60 overflow-y-auto mr-5"
-          >
-            <DropdownMenuItem
-              onClick={() => router.push("/search/posts")}
-              className="cursor-pointer"
+        <div className="flex gap-4 items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant={"none"}
+                className={`
+                  w-9 h-9 rounded-md border border-border 
+                  bg-secondary/30 text-n-3 hover:border-sidebar-ring
+                  transition-all duration-300 hover:outline-none hover:ring-2 hover:ring-accent
+                `}
+                size={"sm"}
+              >
+                <Bell />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent sideOffset={20} className="">
+              <NotificationsContainer />
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant={"outline"} className="cursor-pointer bg-secondary/30">
+                Search
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              sideOffset={20}
+              className="max-h-60 overflow-y-auto mr-5"
             >
-              <p>Posts</p>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => router.push("/search/users")}
-              className="cursor-pointer"
-            >
-              <p>Users</p>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuItem
+                onClick={() => router.push("/search/posts")}
+                className="cursor-pointer"
+              >
+                <p>Posts</p>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => router.push("/search/users")}
+                className="cursor-pointer"
+              >
+                <p>Users</p>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </motion.div>
     </header>
   );
