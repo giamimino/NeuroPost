@@ -56,9 +56,10 @@ export async function POST(req: Request) {
     });
 
     const url = `${process.env.DOMAIN_URL!}auth/password_reset/${token}`;
+    const domain = process.env.RESEND_DOMAIN
 
     const { data, error } = await resend.emails.send({
-      from: "neuropost@greenmindmail.shop",
+      from: `neuropost@${domain}`,
       to: parsedBody.data.email,
       subject: "NeuroPost verify",
       react: PasswordResetEmailTemplate({ url }),
