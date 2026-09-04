@@ -52,8 +52,8 @@
     "prepare": "if [ -z \"$CI\" ]; then husky; fi"
   },
   "lint-staged": {
-    "client/**/*.{js,jsx,ts,tsx}": "eslint --fix",
-    "server/**/*.{js,jsx,ts,tsx}": "eslint --fix",
+    "client/**/*.{js,jsx,ts,tsx}": "eslint --config client/eslint.config.mjs",
+    "server/**/*.{js,jsx,ts,tsx}": "eslint --config server/eslint.config.mjs",
     "client/**/*.{json,css,ts,tsx,js,jsx}": "prettier --write",
     "server/**/*.{json,css,ts,tsx,js,jsx}": "prettier --write"
   },
