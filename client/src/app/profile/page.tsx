@@ -1,7 +1,5 @@
 "use client";
-import NotificationsContainer from "@/components/common/containers/Notifications-container";
 import renderPostMediaPreview from "@/components/common/renderPostMediaPreview";
-import ToggleController from "@/components/common/ToggleController";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,7 +21,6 @@ import { PostsResponse } from "@/types/api-responses";
 import { Post } from "@/types/neon";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Bell } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";

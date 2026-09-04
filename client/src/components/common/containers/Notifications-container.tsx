@@ -7,7 +7,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import React, { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NotificationType } from "@/types/neon";
 import { timeAgo } from "@/utils/functions/timeAgo";

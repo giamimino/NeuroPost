@@ -3,7 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const auth = await getAuthUser();
     if (auth.error)

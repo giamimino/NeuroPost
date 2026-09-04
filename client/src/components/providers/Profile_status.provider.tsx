@@ -3,10 +3,10 @@ import { ERRORS } from "@/constants/error-handling";
 import { useAlertStore } from "@/store/zustand/alert.store";
 import { useProfileStatusStore } from "@/store/zustand/profile_status.store";
 import { ProfileStatusStoreType } from "@/types/zustand.store";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 const ProfileStatusProvider = () => {
-  const { editData, setData } = useProfileStatusStore();
+  const { setData } = useProfileStatusStore();
   const { addAlert } = useAlertStore();
 
   useEffect(() => {
@@ -40,7 +40,7 @@ const ProfileStatusProvider = () => {
     };
 
     fetchData();
-  }, []);
+  }, [addAlert, setData]);
 
   return null;
 };
