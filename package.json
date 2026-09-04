@@ -10,43 +10,59 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "npm run dev --workspace=server",
     "dev:client": "npm run dev --workspace=client",
-    "build": "npm run build:server && npm run build:client",
-    "build:server": "npm run build -w server",
+
+    "build": "concurrently \"npm run build:server\" \"npm run build:client\"", 
+    "build:server": "npm run build -w server", 
     "build:client": "npm run build -w client",
-    "start": "npm run start:server -w server & npm run start:client -w client",
-    "start:server": "npm run start --workspace=server",
+
+    "start": "npm run start:server -w server & npm run start:client -w client", 
+    "start:server": "npm run start --workspace=server", 
     "start:client": "npm run start --workspace=client",
+
     "lint": "npm run lint:server && npm run lint:client",
     "lint:client": "npm run lint --workspace=client",
     "lint:server": "npm run lint --workspace=server",
     "lint:fix": "npm run lint:server:fix && npm run lint:client:fix",
     "lint:server:fix": "npm run lint:fix --workspace=server",
     "lint:client:fix": "npm run lint:fix --workspace=client",
+
     "prettier": "npm run prettier:server && npm run prettier:client",
     "prettier:client": "npm run prettier:fix --workspace=client",
     "prettier:server": "npm run prettier:fix --workspace=server",
     "prettier:check": "npm run prettier:server:check && npm run prettier:client:check",
     "prettier:client:check": "npm run prettier:check --workspace=client",
     "prettier:server:check": "npm run prettier:check --workspace=server",
+
     "typecheck": "npm run typecheck:server && npm run typecheck:client",
     "typecheck:server": "npm run typecheck --workspace=server",
     "typecheck:client": "npm run typecheck --workspace=client",
+
     "clean": "npm run clean:server && npm run clean:client && rimraf node_modules",
     "clean:client": "npm run clean --workspace=client",
     "clean:server": "npm run clean --workspace=server",
+
     "test:server": "npm run test -w server",
     "test:server:run": "npm run test:run -w server",
     "test:client": "npm run test -w client",
     "test:client:run": "npm run test:run -w client",
+
     "worker": "npm run worker -w server",
     "worker:dev": "npm run worker:dev -w server",
+    
     "prepare": "if [ -z \"$CI\" ]; then husky; fi"
+  },
+  "lint-staged": {
+    "client/**/*.{js,jsx,ts,tsx}": "eslint --fix",
+    "server/**/*.{js,jsx,ts,tsx}": "eslint --fix",
+    "client/**/*.{json,css,ts,tsx,js,jsx}": "prettier --write",
+    "server/**/*.{json,css,ts,tsx,js,jsx}": "prettier --write"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.28",
     "concurrently": "^9.2.1",
     "eslint": "^9",
     "husky": "^9.1.7",
+    "lint-staged": "^17.4.1",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3"
   },
