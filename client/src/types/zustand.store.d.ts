@@ -38,3 +38,14 @@ export interface CommentsStoreType {
   deleteComment: (commentId: string) => void;
   clearComments: () => void;
 }
+
+export interface ProfileStatusStoreType {
+  data: {
+    hasNewNotifications: boolean;
+  };
+  editData: <k extends keyof ProfileStatusStoreType["data"]>(
+    key: K,
+    value: ProfileStatusStoreType["data"][K],
+  ) => void;
+  setData: (data: ProfileStatusStoreType["data"]) => void;
+}

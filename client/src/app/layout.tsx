@@ -1,12 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import Providers from "./providers";
 import "./globals.css";
-import { Header } from "@/components/header";
-import { ScrollContextProvider } from "@/store/contexts/ScrollContext";
-import { ThemeProvider } from "@/components/providers/theme-provider";
-import AlertsProvider from "@/components/providers/AlertsProvider";
-import { Analytics } from "@vercel/analytics/next";
-import ReactQueryProvider from "@/components/providers/ReactQueryProvider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -26,17 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" style={{ colorScheme: "dark" }} suppressHydrationWarning>
       <body className={`${plusJakartaSans.variable} antialiased`}>
-        <Analytics />
-        <ThemeProvider attribute={"class"} defaultTheme="system" enableSystem>
-          <ScrollContextProvider>
-            <ReactQueryProvider>
-              <Header />
-              <AlertsProvider />
-              {children}
-              <div className="h-10"></div>
-            </ReactQueryProvider>
-          </ScrollContextProvider>
-        </ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

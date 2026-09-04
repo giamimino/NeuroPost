@@ -7,7 +7,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import React, { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NotificationType } from "@/types/neon";
 import { timeAgo } from "@/utils/functions/timeAgo";
@@ -137,14 +136,8 @@ const NotificationsContainer = () => {
   }, [select, addAlert]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{ type: "spring", stiffness: 120, damping: 20 }}
-      className="z-99 fixed right-5 max-xs:right-3"
-    >
-      <Card className="w-100 max-xs:w-85 max-h-[75vh] pt-3 pb-0 flex flex-col">
+    <div>
+      <Card className="w-100 max-xs:w-85 border-0 max-h-[75vh] pt-3 pb-0 flex flex-col">
         <CardAction className="px-3">
           <div className="flex gap-2.5 relative z-100">
             <DropdownMenu>
@@ -235,7 +228,7 @@ const NotificationsContainer = () => {
           </div>
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 };
 
