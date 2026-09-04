@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Providers from "./providers";
-// @ts-expect-error CSS is loaded by Next.js and has no TypeScript declarations.
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({

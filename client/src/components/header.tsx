@@ -62,7 +62,7 @@ const Header = () => {
 
   return (
     <header
-      className={`w-full px-3 flex justify-center items-center py-3 fixed top-0 left-0 transition-all duration-300`}
+      className={`w-full p-3 flex justify-center items-center max-sm:p-1.5 fixed top-0 left-0 transition-all duration-300`}
       style={{
         zIndex: 99,
       }}
@@ -76,8 +76,8 @@ const Header = () => {
         }
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
         layout
-        className={`flex gap-4 items-center justify-between px-5 py-2.5 dark:bg-card/50 backdrop-blur-sm  
-       rounded-md border border-border w-full`}
+        className={`flex gap-4 items-center justify-between px-5 py-2.5 max-sm:px-2 max-sm:py-1.25 dark:bg-card/50 backdrop-blur-sm  
+       rounded-md border border-border w-full max-sm:gap-2`}
       >
         <div className="flex gap-5 items-center">
           {pages.map((page) => (
@@ -104,7 +104,7 @@ const Header = () => {
             </Button>
           ))}
         </div>
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-4 items-center max-sm:gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
