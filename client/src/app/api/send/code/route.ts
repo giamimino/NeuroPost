@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     const payload = auth.user;
 
     const code = Math.floor(100000 + Math.random() * 900000);
-    const domain = process.env.RESEND_DOMAIN
+    const domain = process.env.RESEND_DOMAIN;
 
     const { data, error } = await resend.emails.send({
       from: `neuropost@${domain}`,

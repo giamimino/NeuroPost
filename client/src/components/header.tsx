@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-import { Bell, Heart, Menu, MessageCircle } from "lucide-react";
+import { Bell, Heart, Menu, MessageCircle, Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,7 @@ import { Card, CardHeader, CardTitle } from "./ui/card";
 import Line from "./ui/Line";
 import clsx from "clsx";
 import NotificationsContainer from "./common/containers/Notifications-container";
+import { useProfileStatusStore } from "@/store/zustand/profile_status.store";
 
 const pages = [
   { label: "Home", url: "/", type: "router" },
@@ -22,6 +23,7 @@ const pages = [
 ];
 
 const Header = () => {
+  const { data } = useProfileStatusStore();
   const [show, setShow] = useState(true);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
@@ -96,7 +98,7 @@ const Header = () => {
                 absolute pointer-events-none scale-x-0 h-0.5 left-0 w-full 
                 -bottom-0.5 bg-white transition-transform duration-500 ease-out 
                 origin-right group-hover:scale-x-100 group-hover:origin-center 
-                group-hover:not-hover:origin-left
+                group-hover:not-hover:origin-left delay-150
               `}
               ></div>
             </Button>
@@ -108,23 +110,44 @@ const Header = () => {
               <Button
                 variant={"none"}
                 className={`
-                  w-9 h-9 rounded-md border border-border 
-                  bg-secondary/30 text-n-3 hover:border-sidebar-ring
+                  w-9 h-9 rounded-md border border-border cursor-pointer
+                  bg-secondary/30 text-n-3 hover:border-sidebar-ring relative
                   transition-all duration-300 hover:outline-none hover:ring-2 hover:ring-accent
                 `}
                 size={"sm"}
               >
                 <Bell />
+                {data.hasNewNotifications && (
+                  <div
+                    className={`
+                    absolute top-2 right-2.5 text-[0.6rem] w-1.5 h-1.5 bg-[#ff006a] 
+                    rounded-full flex justify-center items-center font-bold
+                  `}
+                  ></div>
+                )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent sideOffset={20} className="">
+            <DropdownMenuContent
+              side="bottom"
+              align="end"
+              sideOffset={20}
+              alignOffset={-50}
+              className="w-fit h-fit"
+            >
               <NotificationsContainer />
             </DropdownMenuContent>
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant={"outline"} className="cursor-pointer bg-secondary/30">
-                Search
+              <Button
+                variant={"none"}
+                className={`
+                  rounded-md border border-border cursor-pointer
+                  bg-secondary/30 text-n-3 hover:border-sidebar-ring
+                  transition-all duration-300 hover:outline-none hover:ring-2 hover:ring-accent
+                `}
+              >
+                <Search />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
