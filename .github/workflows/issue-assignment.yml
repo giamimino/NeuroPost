@@ -110,7 +110,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Assign users
+      - name: Assign users to Pull Request
         run: |
           USERS_JSON=$(echo "${{ steps.users.outputs.users }}" \
             | sed 's/@//g' \
@@ -118,7 +118,7 @@ jobs:
 
           gh api \
             --method POST \
-            repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/assignees \
+            repos/${{ github.repository }}/issues/$PR_NUMBER/assignees \
             --input - <<< "{\"assignees\": $USERS_JSON}"
 
         env:
@@ -144,8 +144,13 @@ jobs:
 
           if [ -n "$LABELS" ]; then
             while IFS= read -r LABEL; do
-              gh pr edit "$PR_NUMBER" --add-label "$LABEL"
-            done <<< "$LABELS"
+              if [ -n "$LABEL" ]; then
+                gh pr edit "$PR_NUMBER" --add-label "$LABEL"
+              fi
+
+            done <<< EOF
+          $LABELS
+          EOF
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -259,8 +264,10 @@ jobs:
 
           echo "Issue #$ISSUE_NUMBER state: $ISSUE_STATE"
 
+          echo "Removing pending label..."
+
           gh issue edit "$ISSUE_NUMBER" \
-            --remove-label "pending" || true
+            --remove-label "pending" || echo "Label not found."
 
           if [ "$ISSUE_STATE" = "OPEN" ]; then
             echo "Closing issue #$ISSUE_NUMBER..."
