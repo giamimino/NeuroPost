@@ -113,7 +113,7 @@ jobs:
         run: |
           USERS_JSON=$(echo "${{ steps.users.outputs.users }}" \
             | sed 's/@//g' \
-            | jq -R -c '[.]'
+            | jq -R -c 'split(" ") | del(.[] | select(. == ""))')
 
           gh api \
             --method POST \
