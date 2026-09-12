@@ -36,6 +36,7 @@ jobs:
         run: |
           USERS=$(echo "${{ github.event.comment.body }}" | grep -o '@[a-zA-Z0-9_-]*' | tr '\n' ' ')
 
+          echo "$USERS"
           echo "users=$USERS" >> $GITHUB_OUTPUT
 
       - name: Check self assignment
@@ -112,12 +113,12 @@ jobs:
         run: |
           USERS_JSON=$(echo "${{ steps.users.outputs.users }}" \
             | sed 's/@//g' \
-            | awk '{print "[\"" $1 "\""} {for (i=2; i<=NF; i++) printf ",\"" $i "\""} END {print "]"}')
+            | jq -R
 
           gh api \
             --method POST \
             repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/assignees \
-            -f "assignees=$USERS_JSON"
+            --input - <<< "{\"assignees\": $USERS_JSON}"
 
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
