@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   cancel-in-progress: true
-  group: auto-create-pr-${{ github.ref }}
+  group: auto-create-pr-${{ github.event.issue.number }}
 
 jobs:
   assign-me:
