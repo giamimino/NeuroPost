@@ -115,6 +115,8 @@ jobs:
           USERS_JSON=$(echo "${{ steps.users.outputs.users }}" \
             | sed 's/@//g' \
             | jq -R -c 'split(" ") | del(.[] | select(. == ""))')
+          
+          echo $USERS_JSON
 
           gh api \
             --method POST \
@@ -139,16 +141,16 @@ jobs:
       - name: Sync PR issue labels
         run: |
           LABELS=$(gh issue view       "$ISSUE_NUMBER" \
-  --json labels \
-  --jq '.labels[].name')
+            --json labels \
+            --jq '.labels[].name')
 
-if [ -n "$LABELS" ]; then
-  while IFS= read -r LABEL; do
-    if [ -n "$LABEL" ]; then
-      gh pr edit "$PR_NUMBER" --add-label "$LABEL"
-    fi
-  done <<< "$LABELS"
-fi
+          if [ -n "$LABELS" ]; then
+            while IFS= read -r LABEL; do
+              if [ -n "$LABEL" ]; then
+                gh pr edit "$PR_NUMBER" --add-label "$LABEL"
+              fi
+            done <<< "$LABELS"
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
