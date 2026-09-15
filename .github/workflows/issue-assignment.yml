@@ -145,7 +145,11 @@ jobs:
             --jq '.labels[].name')
 
           if [ -n "$LABELS" ]; then
-            gh pr edit "$PR_NUMBER" --add-label $LABELS
+            while IFS= read -r LABEL; do
+              if [ -n "$LABEL" ]; then
+                gh pr edit "$PR_NUMBER" --add-label "$LABEL"
+              fi
+            done <<< "$LABELS"
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
